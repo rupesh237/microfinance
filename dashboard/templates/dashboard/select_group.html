@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Select Group</title>
+</head>
+<body>
+    <h2>Select Group</h2>
+    <form method="post" action="{% url 'select_group' %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Next</button>
+    </form>
+</body>
+</html>

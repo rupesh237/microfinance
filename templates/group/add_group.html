@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Group</title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <h2>Add Group</h2>
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-danger" role="alert">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">
+                {{ form.non_field_errors|join:"" }}
+            </div>
+        {% endif %}
+    
+
+        <!-- Render form fields with errors -->
+        <div class="form-group">
+            <label for="{{ form.center.id_for_label }}">{{ form.center.label }}: </label>
+            {{ form.center }}
+            {% if form.center.errors %}
+                <div class="text-danger">
+                    {{ form.center.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.position.id_for_label }}">{{ form.position.label }}:</label>
+            {{ form.position }}
+            {% if form.position.errors %}
+                <div class="text-danger">
+                    {{ form.position.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.code.id_for_label }}">{{ form.code.label }}:</label>
+            {{ form.code }}
+            {% if form.code.errors %}
+                <div class="text-danger">
+                    {{ form.code.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.name.id_for_label }}">{{ form.name.label }}:</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+                <div class="text-danger">
+                    {{ form.name.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <button type="submit">Add Group</button>
+    </form>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const centerSelect = document.getElementById("id_center");
+            const positionSelect = document.getElementById("id_position");
+        
+            centerSelect.addEventListener("change", function() {
+                const centerId = centerSelect.value;
+                
+                if (centerId) {
+                    fetch(`/get-no-of-groups/${centerId}/`)
+                        .then(response => response.json())
+                        .then(data => {
+                            // Clear existing options
+                            positionSelect.innerHTML = '';
+                            // Populate with new options
+                            // Add the default "Select Group" option
+                            const defaultOption = document.createElement('option');
+                            defaultOption.value = "";
+                            defaultOption.textContent = "Select Position";
+                            defaultOption.disabled = true;
+                            defaultOption.selected = true;
+                            positionSelect.appendChild(defaultOption);
+
+                            // Populate with new options
+                            for (let i = 1; i <= data.no_of_group; i++) {  // Start from 1 to avoid 0 as an option
+                                const option = document.createElement('option');
+                                option.value = i;
+                                option.textContent = i;
+                                positionSelect.appendChild(option);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching number of groups:', error);
+                        });
+                } else {
+                    positionSelect.innerHTML = '';
+                }
+            });
+        });
+        
+        document.addEventListener("DOMContentLoaded", function() {
+            const centerSelect = document.getElementById("id_center");
+            const positionSelect = document.getElementById("id_position");
+            const codeInput = document.getElementById("id_code");
+
+            function updateCodeField(centerCode, position) {
+                if (centerCode && position) {
+                    codeInput.value = `${centerCode}.${position}`;
+                } else {
+                    codeInput.value = "";
+                }
+            }
+
+            {% comment %} centerSelect.addEventListener("change", function() {
+                const centerId = centerSelect.value;
+                if (centerId) {
+                    fetch(`/get-center-code/${centerId}/`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.code) {
+                                updateCodeField(data.code, positionSelect.value);
+                            } else {
+                                codeInput.value = "";  // Clear the code field if there's an error
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching center code:', error);
+                            codeInput.value = "";  // Clear the code field on error
+                        });
+                } else {
+                    codeInput.value = "";  // Clear the code field if no center is selected
+                }
+            }); {% endcomment %}
+
+            positionSelect.addEventListener("change", function() {
+                const centerId = centerSelect.value;
+                if (centerId) {
+                    fetch(`/get-center-code/${centerId}/`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.code) {
+                                updateCodeField(data.code, positionSelect.value);
+                                codeInput.readOnly = true;  
+                            } else {
+                                codeInput.value = "";  // Clear the code field if there's an error
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching center code:', error);
+                            codeInput.value = "";  // Clear the code field on error
+                        });
+                } else {
+                    codeInput.value = "";  // Clear the code field if no center is selected
+                }
+            });
+        });
+        
+    </script>
+</body>
+</html>

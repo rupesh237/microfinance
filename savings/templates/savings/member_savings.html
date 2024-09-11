@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Member Savings</title>
+    {% comment %} <link rel="stylesheet" href="{% static 'css/style.css' %}"> {% endcomment %}
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        
+        h1, h2 {
+            color: #333;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f4f4f4;
+        }
+        
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        
+        a:hover {
+            background-color: #0056b3;
+        }
+        
+    </style>
+</head>
+<body>
+    <a href="{% url 'dashboard' %}">Home</a>
+    <a href="{% url 'add_savings_account' member_id=member.id %}">Add Savings Account</a>
+    <a href="{% url 'add_fixed_deposit' member_id=member.id %}">Add Fixed Deposit</a>
+    <a href="{% url 'add_recurring_deposit' member_id=member.id %}">Add Recurring Deposit</a>
+    <div class="container">
+        <h1>{{ member.personalinformation.name }}'s Savings</h1>
+
+        <h2>Savings Accounts</h2>
+        {% if savings_accounts %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Account Number</th>
+                    <th>Balance</th>
+                    <th>Created On</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for account in savings_accounts %}
+                <tr>
+                    <td>{{ account.account_number }}</td>
+                    <td>{{ account.balance }}</td>
+                    <td>{{ account.created_on }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No savings accounts found.</p>
+        {% endif %}
+
+        <h2>Fixed Deposits</h2>
+        {% if fixed_deposits %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Amount</th>
+                    <th>Interest Rate</th>
+                    <th>Maturity Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fd in fixed_deposits %}
+                <tr>
+                    <td>{{ fd.amount }}</td>
+                    <td>{{ fd.interest_rate }}</td>
+                    <td>{{ fd.maturity_date }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No fixed deposits found.</p>
+        {% endif %}
+
+        <h2>Recurring Deposits</h2>
+        {% if recurring_deposits %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Amount</th>
+                    <th>Duration (Months)</th>
+                    <th>Interest Rate</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rd in recurring_deposits %}
+                <tr>
+                    <td>{{ rd.amount }}</td>
+                    <td>{{ rd.duration }}</td>
+                    <td>{{ rd.interest_rate }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No recurring deposits found.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

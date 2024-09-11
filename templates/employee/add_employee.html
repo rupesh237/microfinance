@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Employee</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Add Employee</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Save</button>
+    </form>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $("#id_district").change(function () {
+                var url = "{% url 'load_branches' %}";  // Update this with your url name
+                var districtId = $(this).val();
+
+                $.ajax({
+                    url: url,
+                    data: {
+                        'district': districtId
+                    },
+                    success: function (data) {
+                        $("#id_branch").html('');
+                        $("#id_branch").append('<option value="">Select branch</option>');
+                        $.each(data, function (key, value) {
+                            $("#id_branch").append('<option value="' + value.id + '">' + value.name + '</option>');
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

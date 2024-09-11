@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Member Details</title>
+    {% comment %} <link rel="stylesheet" href="{% static 'css/style.css' %}"> {% endcomment %}
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        
+        h1, h2 {
+            color: #333;
+        }
+        
+        p {
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        
+        a:hover {
+            background-color: #0056b3;
+        }
+        
+    </style>
+</head>
+<body>
+    <a href="{% url 'dashboard' %}">Home</a>
+    <a href="">Edit</a>
+    <a href="{% url 'member_savings' member.id %}">Savings</a>
+    <a href="">loans</a>
+    <a href="{% url 'member_loans' member.id %}">View loans</a>
+    <a href="">fixed deposit</a>
+    <a href="">Recurring Deposits</a>
+    <a href="">update profile</a>
+    <div class="container">
+        <h1>Member Details</h1>
+
+        <h2>Personal Information</h2>
+        <p><strong>Name:</strong> {{ personal_info.name }}</p>
+        <p><strong>Phone Number:</strong> {{ personal_info.phone_number }}</p>
+        <p><strong>Current Address:</strong> {{ personal_info.current_address }}</p>
+        <p><strong>Permanent Address:</strong> {{ personal_info.permanent_address }}</p>
+
+        <h2>Family Information</h2>
+        <p><strong>Sons:</strong> {{ family_info.sons }}</p>
+        <p><strong>Daughters:</strong> {{ family_info.daughters }}</p>
+        <p><strong>Husband:</strong> {{ family_info.husband }}</p>
+        <p><strong>Father:</strong> {{ family_info.father }}</p>
+
+        <h2>Livestock Information</h2>
+        <p><strong>Cows:</strong> {{ livestock_info.cows }}</p>
+        <p><strong>Buffalo:</strong> {{ livestock_info.buffalo }}</p>
+        <p><strong>Goat:</strong> {{ livestock_info.goat }}</p>
+        <p><strong>Sheep:</strong> {{ livestock_info.sheep }}</p>
+
+        <h2>House Information</h2>
+        <p><strong>Concrete:</strong> {{ house_info.concrete }}</p>
+        <p><strong>Mud:</strong> {{ house_info.mud }}</p>
+        <p><strong>Iron:</strong> {{ house_info.iron }}</p>
+
+        <h2>Land Information</h2>
+        <p><strong>Farming:</strong> {{ land_info.farming }}</p>
+        <p><strong>Others:</strong> {{ land_info.others }}</p>
+
+        <h2>Income Information</h2>
+        <p><strong>Earning:</strong> {{ income_info.earning }}</p>
+        <p><strong>Farming:</strong> {{ income_info.farming }}</p>
+        <p><strong>Cattle:</strong> {{ income_info.cattle }}</p>
+
+        <h2>Expenses Information</h2>
+        <p><strong>House Rent:</strong> {{ expenses_info.house_rent }}</p>
+        <p><strong>Food:</strong> {{ expenses_info.food }}</p>
+        <p><strong>Health:</strong> {{ expenses_info.health }}</p>
+        <p><strong>Other:</strong> {{ expenses_info.other }}</p>
+
+        <a href="{% url 'dashboard' %}">Back to Member List</a>
+    </div>
+</body>
+</html>

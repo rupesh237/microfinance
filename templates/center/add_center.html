@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Center</title>
+    {% comment %} <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const branchSelect = document.getElementById("id_branch");
+            const codeInput = document.getElementById("id_code");
+
+            branchSelect.addEventListener("change", function() {
+                const branchId = branchSelect.value;
+
+                if (branchId) {
+                    codeInput.value = branchId;  // Set the code field to the selected branch's ID
+                } else {
+                    codeInput.value = "";  // Clear the code field if no branch is selected
+                }
+            });
+        });
+    </script> {% endcomment %}
+</head>
+<body>
+    <h2>Add Center</h2>
+    <form method="post" action="{% url 'add_center' %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Add Center</button>
+    </form>
+</body>
+</html>

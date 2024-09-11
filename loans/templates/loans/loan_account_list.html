@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Loan Accounts</title>
+</head>
+<body>
+    <h1>Loan Accounts</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Member</th>
+                <th>Account Number</th>
+                <th>Loan Amount</th>
+                <th>Interest Rate</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Balance</th>
+                <th>Created On</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for account in accounts %}
+            <tr>
+                <td>{{ account.member }}</td>
+                <td>{{ account.account_number }}</td>
+                <td>{{ account.loan_amount }}</td>
+                <td>{{ account.interest_rate }}</td>
+                <td>{{ account.start_date }}</td>
+                <td>{{ account.end_date }}</td>
+                <td>{{ account.balance }}</td>
+                <td>{{ account.created_on }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{% url 'add_loan_account' %}">Add Loan Account</a>
+</body>
+</html>

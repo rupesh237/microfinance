@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manager Dashboard</title>
+</head>
+<body>
+    <h2>Manager Dashboard</h2>
+    <p>Branch: {{ branch.name }}</p>
+    <a href="{% url 'add_employee' %}">Add Employee</a>
+    <a href="{% url 'add_member' %}">Add Members</a>
+    <a href="{% url 'logout' %}">Logout</a>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Branch</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Add Branch</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Save</button>
+    </form>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $("#id_province").change(function () {
+                var url = "{% url 'load_districts' %}"; 
+                var provinceId = $(this).val();
+
+                $.ajax({
+                    url: url,
+                    data: {
+                        'province': provinceId
+                    },
+                    success: function (data) {
+                        $("#id_district").html('');
+                        $("#id_district").append('<option value="">Select district</option>');
+                        $.each(data, function (key, value) {
+                            $("#id_district").append('<option value="' + value.id + '">' + value.name + '</option>');
+                        });
+                    }
+                });
+            });
+
+            $("#id_district").change(function () {
+                var url = "{% url 'load_municipalities' %}";  // Update this with your url name
+                var districtId = $(this).val();
+
+                $.ajax({
+                    url: url,
+                    data: {
+                        'district': districtId
+                    },
+                    success: function (data) {
+                        $("#id_municipality").html('');
+                        $("#id_municipality").append('<option value="">Select municipality</option>');
+                        $.each(data, function (key, value) {
+                            $("#id_municipality").append('<option value="' + value.id + '">' + value.name + '</option>');
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

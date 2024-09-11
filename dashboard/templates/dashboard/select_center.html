@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Center</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h2>Center</h2>
+    <form method="post" action="{% url 'select_center' %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Next</button>
+    </form>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            function updateCodeField() {
+                var groupCode = $('#id_group').find('option:selected').text();;  // Get the selected group code from the dropdown
+                var memberCode = $('#id_member_code').val();  // Get the selected member code
+                
+                // Check if both group and member code have selected values
+                if (groupCode && memberCode) {
+                    var codeValue = groupCode + '.' + memberCode;
+                    $('#id_code').val(codeValue);  // Update the code field
+                    $('#id_code').prop('readonly', true);  // Make the code field readonly
+                } else {
+                    $('#id_code').val('');  // Clear the code field if any value is missing
+                    $('#id_code').prop('readonly', false);  // Make the code field editable again
+                }
+            }
+
+            $('#id_center').change(function () {
+                var centerId = $(this).val();  // Get the selected center ID
+                
+                // Load Groups based on Center
+                var groupUrl = "{% url 'load_groups' %}";  
+                $.ajax({
+                    url: groupUrl,
+                    data: {
+                        'center': centerId
+                    },
+                    success: function (data) {
+                        $('#id_group').empty();
+                        $('#id_group').append('<option value="">Select Group...</option>');
+                        $.each(data, function (key, value) {
+                            // Use value.id to store the group ID in the dropdown
+                            $('#id_group').append('<option value="' + value.id + '">' + value.code + '</option>');
+                        });
+                    }
+                });
+        
+                // Load Member Codes based on Center
+                var memberCodeUrl = "{% url 'load_member_codes' %}";  
+                $.ajax({
+                    url: memberCodeUrl,
+                    data: {
+                        'center': centerId
+                    },
+                    success: function (data) {
+                        $('#id_member_code').empty();
+                        $('#id_member_code').append('<option value="">Select Member Code...</option>');
+                        $.each(data, function (index, value) {
+                            // Ensure value is treated as an integer
+                            $('#id_member_code').append('<option value="' + value + '">' + value + '</option>');
+                        });
+                    },
+                    error: function(xhr, status, error) {
+                        console.log("Error: " + error);
+                    }
+                });
+            });
+
+            // Update the code field when group or member code is selected
+            $('#id_group, #id_member_code').change(function () {
+                updateCodeField();
+            });
+        });        
+    </script>
+</body>
+</html>

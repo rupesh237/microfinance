@@ -1,0 +1,31 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Member Loans</title>
+</head>
+<body>
+    <h1>Loans for {{ member.personalinformation.name }}</h1>
+    <ul>
+        {% for loan in loans %}
+        <li>
+            {{ loan.loan_type }} - {{ loan.amount }} - {{ loan.interest_rate }}% - {{ loan.duration_months }} months
+            {% if loan.loan_type == 'flat' %}
+            - Monthly Repayment: {{ loan.calculate_flat_interest|floatformat:2 }}
+            {% elif loan.loan_type == 'declining' %}
+            - Monthly Repayment: {{ loan.calculate_declining_interest|floatformat:2 }}
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+
+    <h2>Take a New Loan</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Submit</button>
+    </form>
+
+    <a href="{% url 'dashboard' %}">Back to Dashboard</a>
+</body>
+</html>

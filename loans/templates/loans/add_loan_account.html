@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Loan Account</title>
+</head>
+<body>
+    <h1>Add Loan Account</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Add Account</button>
+    </form>
+    <a href="{% url 'loan_account_list' %}">Back to Loan Accounts</a>
+</body>
+</html>

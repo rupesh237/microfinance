@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Savings Accounts</title>
+</head>
+<body>
+    <h1>Savings Accounts</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Member</th>
+                <th>Account Number</th>
+                <th>Balance</th>
+                <th>Created On</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for account in accounts %}
+            <tr>
+                <td>{{ account.member }}</td>
+                <td>{{ account.account_number }}</td>
+                <td>{{ account.balance }}</td>
+                <td>{{ account.created_on }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{% url 'add_savings_account' %}">Add Savings Account</a>
+</body>
+</html>
