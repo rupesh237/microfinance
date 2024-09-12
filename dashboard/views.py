@@ -288,10 +288,13 @@ class MemberWizard(SessionWizardView):
         return [TEMPLATES[self.steps.current]]
 
     def done(self, form_list, **kwargs):
-        group_id = self.request.session['group']
-        group = GRoup.objects.get(id=group_id)
-        
-        member = Member.objects.create(group=group)
+        # Get the member from the session
+        member_id = self.request.session.get('member_id')
+        if member_id:
+            member = Member.objects.get(id=member_id)
+        else:
+            # Handle the case where member_id is not found
+            return redirect('select_center')
 
         for form in form_list:
             form_instance = form.save(commit=False)
@@ -332,6 +335,14 @@ class SelectCenterView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
     template_name = 'dashboard/select_center.html'
     success_url = reverse_lazy('add_member') 
 
+    def form_valid(self, form):
+       member = form.save()  # This creates the Member object
+
+       # Store the member ID in session to access it later in MemberWizard
+       self.request.session['member_id'] = member.id
+       return redirect(self.success_url)
+
+
     def form_invalid(self, form):
         # Re-populate `group` queryset and `member_code` choices if form is invalid
         center_id = self.request.POST.get('center')
@@ -344,6 +355,12 @@ class SelectCenterView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
             except Center.DoesNotExist:
                 form.fields['member_code'].choices = []
         return super().form_invalid(form)
+    
+class MemberDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
+    model = Member
+    success_url = reverse_lazy('member_list')
+    template_name = 'member/delete_member.html'
+
 
 
 def member_detail_view(request, member_id):

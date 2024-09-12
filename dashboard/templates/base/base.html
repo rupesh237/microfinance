@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Group List</title>
+    <title>Dashboard</title>
     <style>
         .container {
             max-width: 800px;
@@ -46,33 +46,30 @@
         
     </style>
     <link rel="stylesheet" href="{% static 'bootstrap-icons/bootstrap-icons.css' %}">  
+    {% comment %} <link rel="stylesheet" href="{% static 'bootstrap/bootstrap.min.css' %}">   {% endcomment %}
+
+    <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
 </head>
 <body>
-    <h1>Group List</h1>
-    <a href="{% url 'dashboard' %}">Home</a>
-    <a href="{% url 'add_group' %}">Add Group</a>
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Center</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for group in groups %}
-            <tr>
-                <td>{{ group.id }}</td>
-                <td>{{ group.name }}</td>
-                <td>{{ group.center.name }}</td>
-                <td>
-                    <a href="{% url 'edit_group' group.id %}"><i class='bi bi-pencil-fill'></i></a>
-                    <a href="{% url 'delete_group' group.id %}"><i class='bi bi-trash-fill'></i></a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <h2>Admin Dashboard</h2>
+    
+    <a href="{% url 'branch_list' %}">Branches</a>
+    <a href="{% url 'employee_list' %}">Employees</a>
+    <a href="{% url 'center_list' %}">Centers</a>
+    <a href="{% url 'group_list' %}">Groups</a>
+    <a href="{% url 'select_center' %}">
+        Add Member
+    </a>
+    <a href="{% url 'transactions' %}">Transactions</a>
+    <a href="{% url 'deposits' %}">Deposits</a>
+    <a href="{% url 'reports' %}">Reports</a>
+    <br>
+    {% comment %} <a href="{%url 'member_list' %}">Members</a> {% endcomment %}
+    <br>
+    
+    {% block content %}
+    {% endblock %}
+
+    <a href="{% url 'logout' %}">Logout</a>
 </body>
 </html>

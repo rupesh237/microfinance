@@ -86,7 +86,8 @@
         <p><strong>Health:</strong> {{ expenses_info.health }}</p>
         <p><strong>Other:</strong> {{ expenses_info.other }}</p>
 
-        <a href="{% url 'dashboard' %}">Back to Member List</a>
+        <a href="{% url 'dashboard' %}">Go Back</a>
+        <a href="{% url 'delete_member'  member.id %}">Delete</a>
     </div>
 </body>
 </html>

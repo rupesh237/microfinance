@@ -179,6 +179,17 @@ class CenterSelectionForm(forms.ModelForm):
             self.fields['group'].queryset = GRoup.objects.none()
             self.fields['member_code'].choices = []
 
+    def clean_member_code(self):
+        member_code = self.cleaned_data.get('member_code')
+        center = self.cleaned_data.get('center')
+        
+        if center and member_code:
+            # Check if the member_code is already used in the given center
+            if Member.objects.filter(center=center, member_code=member_code).exists():
+                raise ValidationError(f"The member code {member_code} is already used in this center.")
+        
+        return member_code
+
 
 
 class PersonalInformationForm(forms.ModelForm):

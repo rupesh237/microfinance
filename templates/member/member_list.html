@@ -62,9 +62,9 @@
             <tbody>
                 {% for member in members %}
                 <tr>
-                    <td>{{ member.personalinformation.name }}</td>
-                    <td>{{ member.personalinformation.phone_number }}</td>
-                    <td>{{ member.personalinformation.current_address }}</td>
+                    <td>{{ member.personalInfo.name }}</td>
+                    <td>{{ member.personalInfo.phone_number }}</td>
+                    <td>{{ member.personalInfo.current_address }}</td>
                     <td><a href="{% url 'member_detail' member.id %}">View Details</a></td>
                     <td><a href="">Statement</a></td>
                 </tr>

@@ -1,65 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Admin Dashboard</title>
-    <style>
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            font-family: Arial, sans-serif;
-        }
-        
-        h1 {
-            color: #333;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        
-        th, td {
-            padding: 10px;
-            border: 1px solid #ccc;
-            text-align: left;
-        }
-        
-        th {
-            background-color: #f4f4f4;
-        }
-        
-        a {
-            display: inline-block;
-            padding: 5px 10px;
-            background-color: #007bff;
-            color: #fff;
-            text-decoration: none;
-            border-radius: 5px;
-        }
-        
-        a:hover {
-            background-color: #0056b3;
-        }
-        
-    </style>
-</head>
-<body>
-    <h2>Admin Dashboard</h2>
-    <a href="{% url 'branch_list' %}">Branches</a>
-    <a href="{% url 'employee_list' %}">Employees</a>
-    <a href="{% url 'center_list' %}">Centers</a>
-    <a href="{% url 'group_list' %}">Groups</a>
-    <a href="{% url 'select_center' %}">
-        Add Member
-    </a>
-    <a href="{% url 'transactions' %}">Transactions</a>
-    <a href="{% url 'deposits' %}">Deposits</a>
-    <a href="{% url 'reports' %}">Reports</a>
-    <br>
-    {% comment %} <a href="{%url 'member_list' %}">Members</a> {% endcomment %}
-    <br>
+{% extends 'base/base.html' %}
+
+{% block content %}
     <div class="container">
         <h1>Member List</h1>
         <table>
@@ -84,6 +25,4 @@
             </tbody>
         </table>
     </div>
-    <a href="{% url 'logout' %}">Logout</a>
-</body>
-</html>
+{% endblock %}

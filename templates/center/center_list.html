@@ -1,7 +1,9 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
     <title>Center List</title>
+    <link rel="stylesheet" href="{% static 'bootstrap-icons/bootstrap-icons.css' %}">  
     <style>
         .container {
             max-width: 800px;
@@ -64,8 +66,8 @@
                 <td>{{ center.name }}</td>
                 <td>{{ center.branch.name }}</td>
                 <td>
-                    <a href="{% url 'edit_center' center.id %}">Edit</a>
-                    <a href="{% url 'delete_center' center.id %}">Delete</a>
+                    <a href="{% url 'edit_center' center.id %}"><i class='bi bi-pencil-fill'></i></a>
+                    <a href="{% url 'delete_center' center.id %}"><i class='bi bi-trash-fill'></i></a>
                 </td>
             </tr>
             {% endfor %}

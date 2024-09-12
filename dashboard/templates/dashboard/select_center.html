@@ -1,13 +1,31 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
     <title>Center</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="{% static 'bootstrap/bootstrap.min.css' %}">  
+
+    <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
 </head>
 <body>
     <h2>Center</h2>
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-danger" role="alert">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+
     <form method="post" action="{% url 'select_center' %}">
         {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">
+                {{ form.non_field_errors|join:"" }}
+            </div>
+        {% endif %}
+        
         {{ form.as_p }}
         <button type="submit">Next</button>
     </form>
