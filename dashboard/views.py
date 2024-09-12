@@ -208,6 +208,54 @@ class CenterDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
     success_url = reverse_lazy('center_list')
     template_name = 'center/delete_center.html'
 
+
+## GROUPS ##
+class GroupListView(LoginRequiredMixin, ListView):
+    model = GRoup
+    context_object_name = 'groups'
+    template_name = 'group/group_list.html'
+
+def get_center_code(request, center_id):
+    try:
+        center = Center.objects.get(id=center_id)
+        return JsonResponse({'code': center.code})
+    except Center.DoesNotExist:
+        return JsonResponse({'error': 'Center not found'}, status=404)
+    
+def get_no_of_groups(request, center_id):
+    try:
+        center = Center.objects.get(id=center_id)
+        return JsonResponse({'no_of_group': center.no_of_group})
+    except Center.DoesNotExist:
+        return JsonResponse({'error': 'Center not found'}, status=404)
+
+
+class GroupCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
+    model = GRoup
+    form_class = GroupForm
+    template_name = 'group/add_group.html'
+    success_url = reverse_lazy('group_list')
+
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        return super().form_invalid(form)
+    
+class GroupUpdateView(LoginRequiredMixin, RoleRequiredMixin, UpdateView):
+    model = GRoup
+    form_class = GroupForm
+    template_name = 'group/edit_group.html'
+    success_url = reverse_lazy('group_list')
+
+class GroupDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
+    model = GRoup
+    success_url = reverse_lazy('group_list')
+    template_name = 'group/delete_group.html'
+
+
+
 from .forms import (
     CenterSelectionForm, PersonalInformationForm, FamilyInformationForm, 
     LivestockInformationForm, HouseInformationForm, LandInformationForm, 
@@ -343,50 +391,6 @@ def employee_list_view(request):
         'employees': employees
     })
 
-## Groups ##
-class GroupListView(LoginRequiredMixin, ListView):
-    model = GRoup
-    context_object_name = 'groups'
-    template_name = 'group/group_list.html'
-
-def get_center_code(request, center_id):
-    try:
-        center = Center.objects.get(id=center_id)
-        return JsonResponse({'code': center.code})
-    except Center.DoesNotExist:
-        return JsonResponse({'error': 'Center not found'}, status=404)
-    
-def get_no_of_groups(request, center_id):
-    try:
-        center = Center.objects.get(id=center_id)
-        return JsonResponse({'no_of_group': center.no_of_group})
-    except Center.DoesNotExist:
-        return JsonResponse({'error': 'Center not found'}, status=404)
-
-
-class GroupCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
-    model = GRoup
-    form_class = GroupForm
-    template_name = 'group/add_group.html'
-    success_url = reverse_lazy('group_list')
-
-    def form_valid(self, form):
-        form.instance.created_by = self.request.user
-        return super().form_valid(form)
-
-    def form_invalid(self, form):
-        return super().form_invalid(form)
-    
-class GroupUpdateView(LoginRequiredMixin, RoleRequiredMixin, UpdateView):
-    model = GRoup
-    form_class = GroupForm
-    template_name = 'group/edit_group.html'
-    success_url = reverse_lazy('group_list')
-
-class GroupDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
-    model = GRoup
-    success_url = reverse_lazy('group_list')
-    template_name = 'group/delete_group.html'
 
 
 def deposits(request):
