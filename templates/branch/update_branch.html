@@ -7,11 +7,11 @@
 </head>
 <body>
     <h3>Update Branch:</h3>
-    <form action="post">
+    <form method="post" action="{% url 'update_branch' branch.id %}">
         {% csrf_token %}
         {{form.as_p}}
-        <a href="{% url 'update_branch' branch.id %}">Update:</a>
-        <a href="{% url 'branch_list' %}">Cancel</a>
+        <button type="submit">Update</button>
+        <button href="{% url 'delete_branch' branch.id %}">Cancel</button>
     </form>
 </body>
 </html>

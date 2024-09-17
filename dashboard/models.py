@@ -94,8 +94,7 @@ class District(models.Model):
     
 class Municipality(models.Model):
     name = models.CharField(max_length=64)
-    tole = models.CharField(max_length=64)
-    wardNo = models.IntegerField()
+    
     district = models.ForeignKey(District, on_delete=models.CASCADE, related_name="municipalities")
 
     def __str__(self):
@@ -109,6 +108,8 @@ class Branch(models.Model):
     province = models.ForeignKey(Province, on_delete=models.CASCADE, related_name="branches")
     district = models.ForeignKey(District, on_delete=models.CASCADE, related_name="branches")
     municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE, related_name="branches")
+    tole = models.CharField(max_length=64, null=True, blank=True)
+    wardNo = models.IntegerField(default=1)
 
     def __str__(self):
         return f'{self.name} ({self.municipality})'

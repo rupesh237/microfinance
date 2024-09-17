@@ -1,7 +1,9 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
     <title>Branch List</title>
+    <link rel="stylesheet" href="{% static 'bootstrap-icons/bootstrap-icons.css' %}"> 
     <style>
         .container {
             max-width: 800px;
@@ -66,7 +68,10 @@
                 <td>{{ branch.name }}</td>
                 <td>{{ branch.location }}</td>
                 <td>{{ branch.manager }}</td>
-                <td><a href="{% url 'update_branch' branch.id %}">update</a> <a href="">delete</a></td>
+                <td>
+                    <a href="{% url "update_branch" branch.id %}"><i class='bi bi-pencil-fill'></i></a>
+                    <a href=""><i class='bi bi-trash-fill'></i></a>
+                </td>
             </tr>
             {% endfor %}
         </tbody>

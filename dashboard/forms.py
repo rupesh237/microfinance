@@ -7,7 +7,7 @@ from .models import PersonalInformation, FamilyInformation, LivestockInformation
 class BranchForm(forms.ModelForm):
     class Meta:
         model = Branch
-        fields = ['code', 'name', 'province', 'district', 'municipality']
+        fields = '__all__'
 
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
