@@ -1,9 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Edit Center</title>
-</head>
-<body>
+{% extends "base/index.html" %}
+
+{% block content %}
     <h2>Edit Center</h2>
     <form method="post" action="{% url 'edit_center' center.id %}">
         {% csrf_token %}
@@ -11,5 +8,4 @@
         <button type="submit">Update</button>
         <button href ="{% url 'center_list' %}">Cancel</button>
     </form>
-</body>
-</html>
+{% endblock %}

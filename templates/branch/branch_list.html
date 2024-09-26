@@ -1,55 +1,8 @@
-{% load static %}
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Branch List</title>
-    <link rel="stylesheet" href="{% static 'bootstrap-icons/bootstrap-icons.css' %}"> 
-    <style>
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            font-family: Arial, sans-serif;
-        }
-        
-        h1 {
-            color: #333;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        
-        th, td {
-            padding: 10px;
-            border: 1px solid #ccc;
-            text-align: left;
-        }
-        
-        th {
-            background-color: #f4f4f4;
-        }
-        
-        a {
-            display: inline-block;
-            padding: 5px 10px;
-            background-color: #007bff;
-            color: #fff;
-            text-decoration: none;
-            border-radius: 5px;
-        }
-        
-        a:hover {
-            background-color: #0056b3;
-        }
-        
-    </style>
-</head>
-<body>
+{% extends "base/index.html" %}
+
+{% block content %}
     <h1>Branch List</h1>
-    <a href="{% url 'dashboard' %}">Home</a>
+    {% comment %} <a href="{% url 'dashboard' %}">Home</a> {% endcomment %}
     <a href="{% url 'add_branch' %}">Add Branch</a>
     <table>
         <thead>
@@ -70,11 +23,11 @@
                 <td>{{ branch.manager }}</td>
                 <td>
                     <a href="{% url "update_branch" branch.id %}"><i class='bi bi-pencil-fill'></i></a>
-                    <a href=""><i class='bi bi-trash-fill'></i></a>
+                    <a href="#"><i class='bi bi-trash-fill'></i></a>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-</body>
-</html>
+
+{% endblock %}

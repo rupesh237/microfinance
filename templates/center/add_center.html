@@ -1,6 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
+{% extends "base/index.html" %}
+
+{% block content %}
     <title>Add Center</title>
     {% comment %} <script>
         document.addEventListener("DOMContentLoaded", function() {
@@ -26,5 +26,4 @@
         {{ form.as_p }}
         <button type="submit">Add Center</button>
     </form>
-</body>
-</html>
+{% endblock %}

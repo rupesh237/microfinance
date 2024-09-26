@@ -1,13 +1,6 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Add Group</title>
+{% extends "base/index.html" %}
 
-    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
-</head>
-<body>
+{% block content %}
     <h2>Add Group</h2>
 
     {% if messages %}
@@ -168,5 +161,4 @@
         });
         
     </script>
-</body>
-</html>
+{% endblock %}

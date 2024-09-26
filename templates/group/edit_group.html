@@ -1,9 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Edit Group</title>
-</head>
-<body>
+{% extends "base/index.html" %}
+
+{% block content %}
     <h2>Edit Group</h2>
     <form method="post">
         {% csrf_token %}
@@ -11,5 +8,4 @@
         <button type="submit">Update</button>
         <button href="{% url 'group_list' %}">Cancel</button>
     </form>
-</body>
-</html>
+{% endblock %}

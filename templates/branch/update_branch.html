@@ -1,17 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Branch</title>
-</head>
-<body>
+{% extends "base/index.html" %}
+
+{% block content %}
     <h3>Update Branch:</h3>
     <form method="post" action="{% url 'update_branch' branch.id %}">
         {% csrf_token %}
         {{form.as_p}}
         <button type="submit">Update</button>
-        <button href="{% url 'delete_branch' branch.id %}">Cancel</button>
+        <button href="{% url 'branch_list' %}">Cancel</button>
     </form>
-</body>
-</html>
+{% endblock %}

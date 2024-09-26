@@ -1,0 +1,68 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechinFin</title>
+    {% comment %} <link rel="stylesheet" href="{% static 'bootstrap/bootstrap.min.css' %}"> {% endcomment %}
+    <link rel="stylesheet" href="{% static 'css/header-footer.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'bootstrap-icons/bootstrap-icons.css' %}">
+    <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
+</head>
+<body>
+    
+        <nav class="navbar">
+            <ul class="nav-left">
+                <li><a href="{% url 'dashboard' %}">Home</a></li>
+                <li><a href="{% url 'branch_list' %}">Branch</a></li>
+                <li><a href="{% url 'employee_list' %}">Employee</a></li>
+                <li><a href="{% url 'center_list' %}">Center</a></li>
+                <li><a href="{% url 'group_list' %}">Group</a></li>
+                <li><a href="{% url 'member_list' %}">Member</a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropbtn">Transactions <i class="bi bi-chevron-down"></i></a>
+                    <div class="dropdown-content">
+                        <a href="#">Receipts</a>
+                        <a href="#">Payments</a>
+                    </div>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="dropbtn">Deposit <i class="bi bi-chevron-down"></i></a>
+                    <div class="dropdown-content">
+                        <a href="#">Recurring</a>
+                        <a href="#">Fixed</a>
+                    </div>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="dropbtn">Reports <i class="bi bi-chevron-down"></i></a>
+                    <div class="dropdown-content">
+                        <a href="#">MIS report</a>
+                        <a href="#">General ledger</a>
+                        <a href="#">Receipts Compile voucher report</a>
+                        <a href="#">Payments compile voucher report</a>
+                        <a href="#">Daybook report</a>
+                        <a href="#">statements</a>
+                    </div>
+                </li>
+            </ul>
+            <div class="nav-right">
+                <p><i class="bi bi-bank"></i> Branch Office - Baneshwor <i class="bi bi-calendar"></i> 2081-06-1</p>
+                <p>Rupesh Kumar Mandal <a href="{% url 'logout' %}"> <i class="bi bi-person-check" style="font-size: 25px; color: white;"></i></a></p>
+            </div>
+        </nav>
+    
+
+
+
+    {% block content %}
+    {% endblock %}
+
+    {% include "base/footer.html" %}
+    
+    
+
+    
+</body>
+</html>
