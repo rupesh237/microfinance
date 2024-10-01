@@ -103,7 +103,7 @@ p {
     color: white;
     text-align: center;
     padding: 20px 0;
-    position: relative;
+    position: fixed;
     bottom: 0;
     width: 100%;
     font-size: 16px;

@@ -1,10 +1,75 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Login</title>
+    <title>Login - TechinFin</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;    
+            height: 100vh;           
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+        form {
+            background-color: white;
+            padding: 20px 40px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); /* Light shadow for form */
+            width: 300px;
+            text-align: center;
+        }
+
+        h2, label {
+            color: #716a6a;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        /* Style the submit button */
+        button {
+            background-color: #716a6a;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #595353;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0;
+        }
+
+        ul li {
+            color: red;
+        }
+    </style>
 </head>
 <body>
-    <h2>Login</h2>
+    <h2>Login :   </h2>
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
     <form method="post" action="{% url 'login' %}">
         {% csrf_token %}
         <label for="username">Username:</label>
@@ -13,12 +78,5 @@
         <input type="password" id="password" name="password"><br>
         <button type="submit">Login</button>
     </form>
-    {% if messages %}
-        <ul>
-            {% for message in messages %}
-                <li>{{ message }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
 </body>
 </html>
