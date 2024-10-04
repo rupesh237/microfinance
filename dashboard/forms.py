@@ -1,4 +1,7 @@
 from django import forms
+from django.forms.widgets import DateInput, TimeInput
+from django.utils import timezone
+
 from . models import Branch, Employee, District, Municipality, Center, Member
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -54,13 +57,70 @@ class EmployeeForm(forms.ModelForm):
     
 
 class CenterForm(forms.ModelForm):
+    formed_date_display = forms.DateTimeField(label="Formed Date", required=False, 
+                                              widget=forms.DateTimeInput(attrs={'readonly': 'readonly'}))
     class Meta:
         model = Center
-        fields = ['branch', 'code', 'name', 'no_of_group', 'no_of_members']
+        fields = ['input_code', 'name', 'branch', 'province', 'district', 'municipality', 'category', 'no_of_group', 'no_of_members', 'meeting_place', 'meeting_distance', 'formed_by', 'meeting_start_date', 'meeting_start_time', 'meeting_end_time', 'walking_time', 'meeting_by', 'meeting_repeat_type', 'meeting_interval', 'meeting_date', 'every', 'pgt_by', 'from_date', 'to_date', 'grt_by', 'approved_by' ]
+        widgets = {
+            'meeting_start_date': DateInput(attrs={'type': 'date'}),
+            'meeting_start_time': TimeInput(attrs={'type': 'time'}),
+            'meeting_end_time': TimeInput(attrs={'type': 'time'}),
+            'walking_time': TimeInput(attrs={'type': 'time'}),
+            'from_date': DateInput(attrs={'type': 'date'}),
+            'to_date': DateInput(attrs={'type': 'date'}),
+            'meeting_repeat_type': forms.Select(attrs={'id': 'id_meeting_repeat_type'}),
+            'meeting_interval': forms.Select(attrs={'id': 'id_meeting_interval'}),
+            'meeting_date': forms.NumberInput(attrs={'id': 'id_meeting_date'}),
+            'every': forms.NumberInput(attrs={'id': 'id_every'}),
+
+        }
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super(CenterForm, self).__init__(*args, **kwargs)
+        # Disable only the 'every' field
+        self.fields['every'].disabled = True
+        self.fields['formed_date_display'].disabled = True
+        self.fields['district'].queryset = District.objects.none()
+        self.fields['municipality'].queryset = Municipality.objects.none()
+
+        # If editing an existing center, use the saved formed_date value (formatted to date only)
+        if self.instance and self.instance.pk:
+            self.fields['formed_date_display'].initial = self.instance.formed_date.date()
+
+             # Set initial values for district and municipality if they exist
+            if self.instance.district:
+                self.fields['district'].initial = self.instance.district.id
+            if self.instance.municipality:
+                self.fields['municipality'].initial = self.instance.municipality.id
+        else:
+            # If adding a new center, use the current date (without time)
+            self.fields['formed_date_display'].initial = timezone.now().date()
+
+        # Handle province change for district
+        if 'province' in self.data:
+            try:
+                province_id = int(self.data.get('province'))
+                self.fields['district'].queryset = District.objects.filter(province_id=province_id).order_by('name')
+
+            except (ValueError, TypeError):
+                pass
+        elif self.instance and self.instance.province:
+            # If editing, set district queryset based on the province of the instance
+            self.fields['district'].queryset = District.objects.filter(province_id=self.instance.branch.province.id).order_by('name')
+
+        # Handle district change for municipality
+        if 'district' in self.data:
+            try:
+                district_id = int(self.data.get('district'))
+                self.fields['municipality'].queryset = Municipality.objects.filter(district_id=district_id).order_by('name')
+
+            except (ValueError, TypeError):
+                pass
+        elif self.instance and self.instance.district:
+            # If editing, set municipality queryset based on the district of the instance
+            self.fields['municipality'].queryset = Municipality.objects.filter(district_id=self.instance.district.id).order_by('name')
 
         # Hide the branch field when updating
         if self.instance and self.instance.pk:
@@ -89,6 +149,34 @@ class CenterForm(forms.ModelForm):
             # If no user is provided, set an empty queryset or handle it appropriately
             self.fields['branch'].queryset = Branch.objects.none()
 
+    def clean(self):
+        cleaned_data = super().clean()
+        from_date = cleaned_data.get('from_date')
+        to_date = cleaned_data.get('to_date')
+
+        # Validate that both dates are provided
+        if from_date and to_date:
+            # Check that the difference is exactly 7 days
+            if (to_date - from_date).days != 7:
+                raise ValidationError('The "to date" must be exactly 7 days after the "from date".')
+        return cleaned_data
+
+    def save(self, commit=True):
+        center = super(CenterForm, self).save(commit=False)
+
+        # Get the branch code
+        branch_code = self.cleaned_data['branch'].code
+        print(branch_code)
+
+        # Format the code field as <branch_code>.<user_inputted_code>
+        user_input_code = self.cleaned_data['input_code']
+        print(user_input_code)
+        center.code = f"{branch_code}.{user_input_code}"
+        print(center)
+
+        if commit:
+            center.save()
+        return center
                 
 class GroupForm(forms.ModelForm):
     position = forms.ChoiceField(choices=[])

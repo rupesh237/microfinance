@@ -135,13 +135,60 @@ class Employee(models.Model):
 
 # center infromation
 class Center(models.Model):
-    code = models.CharField(max_length=20)
+
+    CATEGORY_CHOICES = [
+        ('general', 'General'),
+        ('public', 'Public'),
+        ('business', 'Business'),
+        ('others', 'Others'), 
+    ]
+
+    MEETING_REPEAT_TYPE_CHOICES = [
+        ('fixed interval', 'Fixed Interval'),
+        ('fixed date', 'Fixed Date'),
+    ]
+
+    class MeetingInterval(models.IntegerChoices):
+        TWO_WEEKS = 14, '14 days'
+        FOUR_WEEKS = 28, '28 days'
+
+    code = models.CharField(max_length=20, null=True)
+    input_code = models.CharField(max_length=20, null=True)
     name = models.CharField(max_length=100)
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
+
+    province = models.ForeignKey(Province, on_delete=models.CASCADE, related_name="centerprovince", null=True)
+    district = models.ForeignKey(District, on_delete=models.CASCADE, related_name="centerdistrict", null=True)
+    municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE, related_name="centermunicipality", null=True)
+
+    category = models.CharField(max_length=15, choices=CATEGORY_CHOICES,null=True)
+
     no_of_group = models.IntegerField( default=1, null=True)
     no_of_members = models.IntegerField( default=4, null=True)
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    created_on = models.DateTimeField(auto_now_add=True)
+    meeting_place = models.CharField(max_length=50, null=True)
+    meeting_distance = models.IntegerField(default=0, null=True)
+    formed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="formed_by", null=True)
+    formed_date = models.DateTimeField(auto_now_add=True)
+
+    meeting_start_date = models.DateTimeField(null=True)
+    meeting_start_time = models.TimeField(null=True)
+    meeting_end_time = models.TimeField(null=True)
+    walking_time = models.TimeField(null=True)
+    meeting_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name="meeting_by") #optional
+
+    meeting_repeat_type = models.CharField(max_length=25, choices=MEETING_REPEAT_TYPE_CHOICES, null=True)
+    meeting_interval = models.IntegerField(choices=MeetingInterval.choices, default=MeetingInterval.TWO_WEEKS, null=True)
+    meeting_date = models.IntegerField(default=1,null=True)
+    every = models.IntegerField(default=1, null=True)
+
+
+    #CENTER ESTD
+    pgt_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="pgt_by", null=True)
+    from_date = models.DateTimeField(null=True)
+    to_date = models.DateTimeField(null=True)
+    grt_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="grt_by", null=True)
+    approved_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="app_by", null=True)
+
 
     def __str__(self):
         return self.code

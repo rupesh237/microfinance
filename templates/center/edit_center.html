@@ -1,7 +1,9 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
     <title>Edit Center</title>
+    <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
 </head>
 <body>
     <h2>Edit Center</h2>
@@ -10,5 +12,107 @@
         {{ form.as_p }}
         <button type="submit">Update</button>
     </form>
+
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function () {
+            const meetingRepeatType = document.getElementById("id_meeting_repeat_type");
+            const meetingIntervalFields = document.getElementById("id_meeting_interval");
+            const meetingDateFields = document.getElementById("id_meeting_date");
+            const everyFields = document.getElementById("id_every");
+        
+            // Function to hide both label and input field
+            function hideFieldWithLabel(field) {
+                const label = document.querySelector(`label[for='${field.id}']`);
+                if (label) {
+                    label.style.display = "none";  // Hide the label
+                }
+                field.style.display = "none";  // Hide the input field
+            }
+        
+            // Function to show both label and input field
+            function showFieldWithLabel(field) {
+                const label = document.querySelector(`label[for='${field.id}']`);
+                if (label) {
+                    label.style.display = "block";  // Show the label
+                }
+                field.style.display = "block";  // Show the input field
+            }
+        
+            function toggleFields() {
+                const selectedType = meetingRepeatType.value;  // Get the current value
+                console.log("Selected meeting_repeat_type:", selectedType); 
+                
+                if (selectedType === "fixed interval") {
+                    showFieldWithLabel(meetingIntervalFields);   // Show interval fields
+                    hideFieldWithLabel(meetingDateFields);  // Hide fixed date fields
+                    hideFieldWithLabel(everyFields); 
+                } else if (selectedType === "fixed date") {
+                    hideFieldWithLabel(meetingIntervalFields);    // Hide interval fields
+                    showFieldWithLabel(meetingDateFields);  // Show fixed date fields
+                    showFieldWithLabel(everyFields); 
+                } else {
+                    hideFieldWithLabel(meetingIntervalFields);    // Hide all if no match
+                }
+            }
+        
+            // Initial call to set fields visibility on page load
+            toggleFields();
+        
+            // Add event listener to toggle fields when meeting_repeat_type changes
+            meetingRepeatType.addEventListener("change", toggleFields);
+        });
+        
+        $(document).ready(function () {
+            // Handle province change
+            $("#id_province").change(function () {
+                var url = "{% url 'load_districts' %}"; 
+                var provinceId = $(this).val();
+    
+                if (provinceId) {
+                    $.ajax({
+                        url: url,
+                        data: {
+                            'province': provinceId
+                        },
+                        success: function (data) {
+                            $("#id_district").html('');  // Clear the district select box
+                            $("#id_district").append('<option value="">Select district</option>');
+                            $.each(data, function (key, value) {
+                                $("#id_district").append('<option value="' + value.id + '">' + value.name + '</option>');
+                            });
+                        }
+                    });
+                } else {
+                    $("#id_district").html('<option value="">Select district</option>');  // Reset district options
+                }
+                $("#id_municipality").html('<option value="">Select municipality</option>');  // Reset municipality options
+            });
+    
+            // Handle district change
+            $("#id_district").change(function () {
+                var url = "{% url 'load_municipalities' %}"; 
+                var districtId = $(this).val();
+    
+                if (districtId) {
+                    $.ajax({
+                        url: url,
+                        data: {
+                            'district': districtId
+                        },
+                        success: function (data) {
+                            $("#id_municipality").html('');  // Clear the municipality select box
+                            $("#id_municipality").append('<option value="">Select municipality</option>');
+                            $.each(data, function (key, value) {
+                                $("#id_municipality").append('<option value="' + value.id + '">' + value.name + '</option>');
+                            });
+                        }
+                    });
+                } else {
+                    $("#id_municipality").html('<option value="">Select municipality</option>');  // Reset municipality options
+                }
+            });
+        });
+    </script> 
+
 </body>
 </html>

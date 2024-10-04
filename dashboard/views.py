@@ -185,8 +185,25 @@ class CenterCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
         return kwargs
 
     def form_valid(self, form):
+        # Set the user who created the center
         form.instance.created_by = self.request.user
+        # Save the center instance to access its ID
+        center = form.save()
+
+        # Check if groups should be created automatically
+        if self.request.POST.get('create_groups') == 'yes':
+            no_of_groups = form.cleaned_data.get('no_of_group', 0)  # Assuming there's a field for the number of groups
+            for i in range(no_of_groups):
+                GRoup.objects.create(center=center,
+                                      name=f"{center.name}0{i + 1}", 
+                                      code=f"{center.code}.{i+1}", 
+                                      position=i+1, 
+                                      created_by=self.request.user
+                                    )  # Create groups with names
+
+        messages.success(self.request, 'Center added successfully!')
         return super().form_valid(form)
+    
 
     def form_invalid(self, form):
         messages.error(self.request, 'Error adding center, please check the form data')
