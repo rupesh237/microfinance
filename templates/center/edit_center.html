@@ -1,7 +1,7 @@
 {% load static %}
-<!DOCTYPE html>
-<html>
-<head>
+{% extends "base/index.html" %}
+
+{% block content %}
     <title>Edit Center</title>
     <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
 </head>
@@ -116,3 +116,5 @@
 
 </body>
 </html>
+{% endblock %}
+

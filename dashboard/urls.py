@@ -15,6 +15,7 @@ urlpatterns= [
     path('add-branch', views.add_branch, name="add_branch"),
     path('branches/', views.branch_list_view, name='branch_list'),
     path('branch/update/<int:pk>/', views.update_branch, name='update_branch'),
+    path('branch/delete/<int:pk>/', views.delete_branch, name='delete_branch'),
 
     path('ajax/load-districts', views.load_districts, name="load_districts"),
     path('ajax/load-municipalities', views.load_municipalities, name="load_municipalities"),

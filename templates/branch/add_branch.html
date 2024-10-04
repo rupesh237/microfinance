@@ -1,10 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Add Branch</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-</head>
-<body>
+{% extends "base/index.html" %}
+
+{% block content %}
     <h1>Add Branch</h1>
     <form method="post">
         {% csrf_token %}
@@ -53,5 +49,4 @@
             });
         });
     </script>
-</body>
-</html>
+{% endblock %}

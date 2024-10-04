@@ -112,12 +112,21 @@ def update_branch(request, pk):
         form = BranchForm(request.POST, instance=branch)
         if form.is_valid():
             branch = form.save()
-            return messages.success(request, 'Successfully updated the branch!!')
+            message=messages.success(request, 'Successfully updated the branch!!')
+            return redirect('branch_list')
+
         return messages.error(request, form.errors)
     return render(request, 'branch/update_branch.html',{
         'form': form,
         'branch': branch
     })
+@login_required
+def delete_branch(request, pk):
+    branch = get_object_or_404(Branch, pk)
+    if request.method == 'POST':
+        branch.delete()
+        return redirect('branch_list')
+    return messages.error(request, 'Error while deleting branch, please try again')
 
 @login_required
 def add_employee(request):

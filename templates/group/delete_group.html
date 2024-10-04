@@ -1,9 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Delete Group</title>
-</head>
-<body>
+{% extends "base/index.html" %}
+
+{% block content %}
     <h2>Delete Group</h2>
     <form method="post">
         {% csrf_token %}
@@ -11,5 +8,4 @@
         <input type="submit" class="btn btn-danger" value='Confirm'>
         <button><a href="{% url 'group_list' %}">Cancel</a></button>
     </form>
-</body>
-</html>
+{% endblock %}
