@@ -3,6 +3,14 @@
 <html>
 <head>
     <title>Member Loans</title>
+    <style>
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+            padding: 8px;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
     <h1>Loans for {{ member.personalinformation.name }}</h1>
@@ -15,9 +23,37 @@
             {% elif loan.loan_type == 'declining' %}
             - Monthly Repayment: {{ loan.calculate_declining_interest|floatformat:2 }}
             {% endif %}
+            <!-- Link to view EMI schedule -->
+            <a href="?loan_id={{ loan.id }}">View EMI Schedule</a>
         </li>
         {% endfor %}
     </ul>
+
+    {% if emi_schedule %}
+    <h2>EMI Schedule</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Month</th>
+                <th>EMI Amount</th>
+                <th>Principal Component</th>
+                <th>Interest Component</th>
+                <th>Remaining Principal</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for emi in emi_schedule %}
+            <tr>
+                <td>{{ emi.month }}</td>
+                <td>{{ emi.emi_amount|floatformat:2 }}</td>
+                <td>{{ emi.principal_component|floatformat:2 }}</td>
+                <td>{{ emi.interest_component|floatformat:2 }}</td>
+                <td>{{ emi.remaining_principal|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
 
     <h2>Take a New Loan</h2>
     <form method="post">
