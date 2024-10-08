@@ -9,7 +9,9 @@
                 <th>Code</th>
                 <th>Name</th>
                 <th>Branch</th>
-                <th></th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
@@ -18,6 +20,8 @@
                 <td>{{ center.code }}</td>
                 <td>{{ center.name }}</td>
                 <td>{{ center.branch.name }}</td>
+                <td>{{ center.category }}</td>
+                <td>{{ center.status }}</td>
                 <td>
                     <a href="{% url 'edit_center' center.id %}"><i class='bi bi-pencil-fill'></i></a>
                     <a href="{% url 'delete_center' center.id %}"><i class='bi bi-trash-fill'></i></a>

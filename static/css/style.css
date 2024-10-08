@@ -16,3 +16,18 @@ th, td {
 th {
     background-color: #f4f4f4;
 }
+
+/* Highlight the selected row */
+.highlighted {
+    background-color: #a3a5a7; /* Light blue background for the selected row */
+}
+
+.error {
+    color: red; /* Change to the desired error message color */
+    font-weight: bold; /* Optionally make it bold */
+}
+
+.disabled {
+    pointer-events: none;  /* Prevents clicking */
+    opacity: 0.5;          /* Visual cue for disabled state */
+}

@@ -77,6 +77,48 @@ class PaymentTypes(models.TextChoices):
     FIXED_WITHDRAWAL = 'FixedWithdrawal', _('Fixed Deposit Withdrawal')
     RECURRING_WITHDRAWAL = 'RecurringWithdrawal', _('Recurring Deposit Withdrawal')
 
+GENDER_CHOICES = [
+        ('Male', 'Male'),
+        ('Female', 'Female'),
+        ('Other', 'Other')
+    ]
+MARITAL_STATUS_CHOICES = [
+    ('Single', 'Single'),
+    ('Married', 'Married'),
+    ('Divorced', 'Divorced'),
+    ('Widow', 'Widow'),
+]
+FAMILY_STATUS_CHOICES = [
+    ('Poor', 'Poor'),
+    ('Medium', 'Medium'),
+    ('High', 'High'),
+    ('Rich', 'Rich'),
+]
+EDUCATION_CHOICES = [
+    ('Illiterate', 'Illiterate'),
+    ('Literate', 'Literate'),
+    ('Under SLC', 'High'),
+    ('SLC', 'SLC'),
+    ('Intermediate', 'Intermediate'),
+    ('Bachelor', 'Bachelor'),
+    ("Master's Degree", "Master's Degree"),
+    ("Ph.D.", "Ph.D."),
+]
+RELIGION_CHOICES = [
+    ('Hinduism', 'Hinduism'),
+    ('Buddhism', 'Buddhism'),
+    ('Kirat', 'Kirat'),
+    ('Christainity', 'Christainity'),
+    ('Islam', 'Islam'),
+    ('Jainism', 'Jainism'),
+    ('Bon', 'Bon'),
+]
+OCCUPATION_CHOICES = [
+    ('Agriculture', 'Agriculture'),
+    ('Business', 'Buddhism'),
+    ('Housewife', 'Housewife'),
+    ('Foreign Employment', 'Foreign Employment'),
+]
 
 class Province(models.Model):
     name = models.CharField(max_length=64, unique=True)
@@ -138,10 +180,10 @@ class Employee(models.Model):
 class Center(models.Model):
 
     CATEGORY_CHOICES = [
-        ('general', 'General'),
-        ('public', 'Public'),
-        ('business', 'Business'),
-        ('others', 'Others'), 
+        ('GENERAL', 'General'),
+        ('PUBLIC', 'Public'),
+        ('BUSINESS', 'Business'),
+        ('OTHERS', 'Others'), 
     ]
 
     MEETING_REPEAT_TYPE_CHOICES = [
@@ -153,6 +195,8 @@ class Center(models.Model):
         TWO_WEEKS = 14, '14 days'
         FOUR_WEEKS = 28, '28 days'
 
+    status = models.CharField(max_length=25, default="Active")
+
     code = models.CharField(max_length=20, null=True)
     input_code = models.CharField(max_length=20, null=True)
     name = models.CharField(max_length=100)
@@ -162,7 +206,7 @@ class Center(models.Model):
     district = models.ForeignKey(District, on_delete=models.CASCADE, related_name="centerdistrict", null=True)
     municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE, related_name="centermunicipality", null=True)
 
-    category = models.CharField(max_length=15, choices=CATEGORY_CHOICES,null=True)
+    category = models.CharField(max_length=15, choices=CATEGORY_CHOICES, default='general')
 
     no_of_group = models.IntegerField( default=1, null=True)
     no_of_members = models.IntegerField( default=4, null=True)
@@ -203,34 +247,118 @@ class GRoup(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     created_on = models.DateTimeField(auto_now_add=True)
 
+    status = models.CharField(max_length=50, default='Active')
+
     def __str__(self):
         return self.name
     
 class Member(models.Model):
+    MEMBER_CATEGORY_CHOICES = [
+        ('Group Member', 'Group Member'),
+        ('Public Member', 'Public Member'),
+    ]
+
+    MEMBER_STATUS = [
+        ('A', 'Active'),
+        ('IA', 'In-Active'),
+        ('RTR', 'Ready To Register'),
+        ('D', 'Dropout'),
+        ('p', 'Public'),
+        ('D', 'Death'),
+    ]
+
+    member_category = models.CharField(max_length=20, choices=MEMBER_CATEGORY_CHOICES, default="General Member")
     center = models.ForeignKey(Center, on_delete=models.CASCADE, null=True)
     group = models.ForeignKey(GRoup, on_delete=models.CASCADE)
     member_code = models.IntegerField(null=True)
     code = models.CharField(max_length=20, null=True)
+    position = models.IntegerField(null=True)
+
+    status = models.CharField(max_length=25, choices=MEMBER_STATUS, default='RTR')
     def __str__(self):
         return f'Member {self.id} in group {self.group.name}'
 
 # Member information from here on:
+class AddressInformation(models.Model):
+    # permanent address
+    permanent_province = models.ForeignKey(Province, on_delete=models.CASCADE, related_name="member_permanent_province", null=True)
+    permanent_district = models.ForeignKey(District, on_delete=models.CASCADE, related_name="member_permanent_district", null=True)
+    permanent_municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE, related_name="member_permanent_municipality", null=True)
+    permanent_ward_no = models.IntegerField(default=1)
+    permanent_tole = models.CharField(max_length=50)
+    permanent_house_no = models.CharField(max_length=50, blank=True, null=True)
+
+    # current address
+    current_province = models.ForeignKey(Province, on_delete=models.CASCADE, related_name="member_current_province", null=True)
+    current_district = models.ForeignKey(District, on_delete=models.CASCADE, related_name="member_current_district", null=True)
+    current_municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE, related_name="member_current_municipality", null=True)
+    current_ward_no = models.IntegerField(default=1)
+    current_tole = models.CharField(max_length=50)
+    current_house_no = models.CharField(max_length=50, blank=True, null=True)
+
+    # old address
+    old_province = models.ForeignKey(Province, on_delete=models.CASCADE, related_name="member_old_province", null=True)
+    old_district = models.ForeignKey(District, on_delete=models.CASCADE, related_name="member_old_district", null=True)
+    old_municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE, related_name="member_old_municipality", null=True)
+    old_ward_no = models.IntegerField(default=1)
+    old_tole = models.CharField(max_length=50)
+    old_house_no = models.CharField(max_length=50, blank=True, null=True)
+
 class PersonalInformation(models.Model):
     member = models.OneToOneField(Member, on_delete=models.CASCADE, related_name='personalInfo')
-    name = models.CharField(max_length=100)
-    phone_number = models.CharField(max_length=20)
-    current_address = models.TextField()
-    permanent_address = models.TextField()
+    first_name = models.CharField(max_length=50)
+    middle_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    phone_number = models.CharField(max_length=15, null=True)
+    gender = models.CharField(max_length=15, choices=GENDER_CHOICES, default='Female')
+    marital_status = models.CharField(max_length=30, choices=MARITAL_STATUS_CHOICES)
+    family_status = models.CharField(max_length=20, choices=FAMILY_STATUS_CHOICES)
+    education = models.CharField(max_length=30, choices=EDUCATION_CHOICES)
+    religion = models.CharField(max_length=30, choices=RELIGION_CHOICES)
+    occupation = models.CharField(max_length=30, choices=OCCUPATION_CHOICES)
+    family_member_no = models.IntegerField()
+    date_of_birth = models.DateField()
+
+    voter_id = models.CharField(max_length=20, blank=True, null=True)
+    voter_id_issued_on = models.DateField(blank=True, null=True)
+
+    citizenship_no = models.CharField(max_length=20)
+    issued_from = models.CharField(max_length=20)
+    issued_date = models.DateField()
+
+    marriage_reg_no = models.CharField(max_length=20, blank=True, null=True)
+    registered_vdc = models.CharField(max_length=20, blank=True, null=True)
+    marriage_regd_date = models.DateField(blank=True, null=True)
+
+    registered_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    registered_date = models.DateField(auto_now_add=True)
+
+    file_no = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
         return self.name
 
+RELATIONSHIP_CHOICES = [
+    ('Father', 'Father'),
+    ('Husband', 'Husband'),
+    ('Father-In-Law', 'Father-In-Law'),
+    ('Son', 'Son'),
+    ('Daughter', 'Daughter'),
+]
 class FamilyInformation(models.Model):
     member = models.OneToOneField(Member, on_delete=models.CASCADE, related_name='familyInfo')
-    sons = models.IntegerField(default=0)
-    daughters = models.IntegerField(default=0)
-    husband = models.CharField(max_length=100, blank=True, null=True)
-    father = models.CharField(max_length=100, blank=True, null=True)
+
+    family_member_name = models.CharField(max_length=50)
+    relationship = models.CharField(max_length=30, choices=RELATIONSHIP_CHOICES)
+    date_of_birth = models.DateField()
+    citizenship_no = models.CharField(max_length=20, blank=True, null=True)
+    issued_from = models.CharField(max_length=20, blank=True, null=True)
+    issued_date = models.DateField(blank=True, null=True)
+
+    education = models.CharField(max_length=30, choices=EDUCATION_CHOICES, null=True, blank=True)
+    occupation = models.CharField(max_length=30, blank=True, null=True)
+    monthly_income = models.FloatField(default=0.00, blank=True, null=True)
+    phone_number = models.CharField(max_length=15)
 
 class LivestockInformation(models.Model):
     member = models.OneToOneField(Member, on_delete=models.CASCADE, related_name='livestockInfo')

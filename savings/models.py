@@ -2,8 +2,16 @@
 from django.db import models
 from dashboard.models import Member
 
+INITIAL_SAVING_ACCOUNT_TYPE = [
+        ('CS', 'Complusory Saving'),
+        ('CF', 'Center Fund'),
+        ('RTR', 'Optional Saving'),
+        ('SBK', 'Samayojan Bachhat Khata'),
+]
+
 class SavingsAccount(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    account_type = models.CharField(max_length=50, choices=INITIAL_SAVING_ACCOUNT_TYPE, default='CS')
     account_number = models.CharField(max_length=20, unique=True)
     balance = models.DecimalField(max_digits=10, decimal_places=2)
     created_on = models.DateTimeField(auto_now_add=True)

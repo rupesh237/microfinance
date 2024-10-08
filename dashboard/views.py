@@ -12,6 +12,7 @@ from django.views.generic import (
     CreateView, ListView, UpdateView, DeleteView )
 
 from .models import Employee, District, Municipality, Branch, GRoup, Member, Center
+from savings.models import SavingsAccount, INITIAL_SAVING_ACCOUNT_TYPE
 
 from .forms import BranchForm, EmployeeForm, CenterForm, GroupForm
 
@@ -283,13 +284,14 @@ class GroupDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
 
 
 from .forms import (
-    CenterSelectionForm, PersonalInformationForm, FamilyInformationForm, 
+    CenterSelectionForm, AddressInformationForm, PersonalInformationForm, FamilyInformationForm, 
     LivestockInformationForm, HouseInformationForm, LandInformationForm, 
     IncomeInformationForm, ExpensesInformationForm
 )
 from formtools.wizard.views import SessionWizardView
 
 FORMS = [
+    ("address", AddressInformationForm),
     ("personal", PersonalInformationForm),
     ("family", FamilyInformationForm),
     ("livestock", LivestockInformationForm),
@@ -300,6 +302,7 @@ FORMS = [
 ]
 
 TEMPLATES = {
+    "address": "member/add_member/address_info.html",
     "personal": "member/add_member/personal_info.html",
     "family": "member/add_member/family_info.html",
     "livestock": "member/add_member/livestock_info.html",
@@ -312,22 +315,53 @@ TEMPLATES = {
 class MemberWizard(SessionWizardView):
     def get_template_names(self):
         return [TEMPLATES[self.steps.current]]
+    
+    def get_context_data(self, form, **kwargs):
+        context = super().get_context_data(form=form, **kwargs)
+
+        if self.steps.current == 'family':  # Adjust based on your step name
+            relationships = ['Husband', 'Father', 'Father-In-Law']
+            family_forms = [FamilyInformationForm(initial={'relationship': rel}) for rel in relationships]
+            context.update({
+                'family_forms': family_forms
+            })
+
+        return context
+
+    def get_form_kwargs(self, step=None):
+        kwargs = super().get_form_kwargs(step)
+        
+        # Pass relationships to the FamilyInformationForm step
+        if step == 'family':  # Adjust to match your step
+            kwargs['relationships'] = ['Father', 'Husband', 'Father-In-Law']
+        return kwargs
+    
+    def get_form(self, step=None, data=None, files=None):
+        form = super().get_form(step, data, files)
+        if self.request.method == 'POST':
+            if not form.is_valid():
+                print(form.errors)  # Log form errors to debug
+        return form
 
     def done(self, form_list, **kwargs):
-        # Get the member from the session
         member_id = self.request.session.get('member_id')
-        if member_id:
-            member = Member.objects.get(id=member_id)
-        else:
-            # Handle the case where member_id is not found
-            return redirect('select_center')
+        member = Member.objects.get(id=member_id)
 
         for form in form_list:
-            form_instance = form.save(commit=False)
-            form_instance.member = member
-            form_instance.save()
+            if isinstance(form, FamilyInformationForm):
+                family_member = form.save(commit=False)
+                family_member.member = member
+                family_member.relationship = form.cleaned_data.get('relationship')
+                family_member.save()
+            else:
+                instance = form.save(commit=False)
+                instance.member = member
+                instance.save()
 
-        return redirect('member_list')
+        return redirect('success_url')
+
+
+
 
 # def select_group(request):
 #     if request.method == 'POST':
@@ -358,7 +392,7 @@ def load_member_codes(request):
 class SelectCenterView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
     model = Member
     form_class = CenterSelectionForm
-    template_name = 'dashboard/select_center.html'
+    template_name = 'member/add_member/select_center.html'
     success_url = reverse_lazy('add_member') 
 
     def form_valid(self, form):
@@ -412,12 +446,51 @@ def member_detail_view(request, member_id):
     
     return render(request, 'member/member_detail.html', context)
 
+class MemberListView(ListView):
+    model = Member
+    template_name = 'member/member_list.html'
+    context_object_name = 'members'
 
-def member_list_view(request):
-    members =Member.objects.all().select_related('personalInfo')
-    return render(request, 'member/member_list.html',{
-        'members': members
-    })
+    # Pass the MEMBER_STATUS choices to the template
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['member_status'] = Member.MEMBER_STATUS  # Assuming MEMBER_STATUS is defined in the Member model
+        return context
+
+
+    def get_queryset(self):
+        queryset = Member.objects.all().select_related('personalInfo').filter(status='A')
+        status_filter = self.request.GET.get('status')
+        # Ensure the filter value is one of the valid status codes
+        valid_status_codes = [code for code, label in Member.MEMBER_STATUS]
+        if status_filter in valid_status_codes:
+           queryset = Member.objects.all().select_related('personalInfo').filter(status__iexact=status_filter)
+        return queryset
+    
+def change_member_status(request):
+    if request.method == 'POST':
+        member_id = request.POST.get('memberId')
+        new_status = request.POST.get('status')
+
+        member = get_object_or_404(Member, id=member_id)
+        member.status = new_status 
+        member.save() 
+
+       # Check if the accounts should be created automatically
+        if request.POST.get('create_accounts') == 'yes':
+            # Loop through each account type and create them for the member
+            for account_code, account_name in INITIAL_SAVING_ACCOUNT_TYPE:
+                SavingsAccount.objects.create(
+                    member=member,
+                    account_type=account_name,
+                    account_number=f"{member.code}.{account_code}.1", 
+                    balance=0.00 ,
+                )
+            
+        return JsonResponse({'success': True})
+
+    return JsonResponse({'success': False}, status=400)
+
 
 @login_required
 def branch_list_view(request):

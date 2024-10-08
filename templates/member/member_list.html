@@ -1,29 +1,247 @@
 {% extends "base/index.html" %}
 
 {% block content %}
-    <a href="{% url 'select_center' %}">Add member</a>
     <div class="container">
         <h1>Member List</h1>
+
+        <div class="d-flex justify-content-end">
+            <div class="member-navbar mr-3"><!-- Add margin-right -->
+                <a href="{% url 'select_center' %}"><i class="bi bi-plus-square-fill"></i></a>
+            </div>
+            <div class="selected-member" id="selected-member" class="disabled">
+                <a href="#" class="mr-3"><i class='bi bi-pencil-fill'></i></a>
+                <a id="changeStatusLink" href="#"><i class="bi bi-arrows-move"></i></a>
+            </div>
+        </div>
+        
+        
+
         <table>
             <thead>
                 <tr>
+                    <th>Code</th>
                     <th>Name</th>
+                    <th>Center</th>
                     <th>Phone Number</th>
                     <th>Current Address</th>
+                    <th>Category</th>
+                    <th>
+                        <!-- Filter Form -->
+                        <form method="GET" action="">
+                            <label for="status">Status:</label>
+                            <br>
+                            <select name="status" id="status" onchange="this.form.submit()">
+                                <option value="">Select One ...</option>
+                                {% for code, label in member_status %}
+                                <option value="{{ code }}" {% if request.GET.status == code %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </th>
                     <th>Details</th>
                 </tr>
             </thead>
             <tbody>
                 {% for member in members %}
-                <tr>
+                <tr class="selectable-row" data-member-id="{{ member.id }}">
+                    <td>{{ member.code }}</td>
                     <td>{{ member.personalInfo.name }}</td>
+                    <td>{{ member.center }}</td>
                     <td>{{ member.personalInfo.phone_number }}</td>
                     <td>{{ member.personalInfo.current_address }}</td>
-                    <td><a href="{% url 'member_detail' member.id %}">View Details</a></td>
-                    <td><a href="">Statement</a></td>
+                    <td>{{ member.member_category }}</td>
+                    <td>{{ member.status }}</td>
+                    <td><a href="{% url 'member_detail' member.id %}"><i class="bi bi-file-person"></i></a></td>
+                    <td><a href="#"><i class="bi bi-journal-text"></i></a></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9">No record found.</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+
+    <!-- Modal for Changing Member Status -->
+    <div class="modal" id="statusModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Change Member Status</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="statusForm">
+                        <input type="hidden" id="memberId" name="memberId">
+                        <div class="form-group">
+                            <label for="newStatus">Status:</label>
+                            <select id="newStatus" name="status" class="form-control">
+                                <option value="">Select Status</option>
+                                {% for code, label in member_status %}
+                                <option value="{{ code }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class='active-status' style="display: none;">  <!-- Initially hidden -->
+                            <p>This member doesn't have any accounts. Do you want to create default accounts with default settings.</p>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="create_accounts" id="inlineRadio1" value="yes" checked>
+                                <label class="form-check-label" for="inlineRadio1">Yes</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="create_accounts" id="inlineRadio2" value="no">
+                                <label class="form-check-label" for="inlineRadio2">No, I will create them manually</label>
+                            </div>
+
+                            <h5>Fees</h5>
+                            <div class="accounts" style="display: none;">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Account</th>
+                                            <th>Fee</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Compulsory Saving</td>
+                                            <td>Membership Fee</td>
+                                            <td>100.00</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Compulsory Saving</td>
+                                            <td>Passbook Fee</td>
+                                            <td>25.00</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="submitStatusChange">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript to handle row selection, highlighting, and showing the modal -->
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const rows = document.querySelectorAll('.selectable-row');
+            const changeStatusLink = document.getElementById('changeStatusLink');
+            const statusModal = document.getElementById('statusModal');
+            const memberIdInput = document.getElementById('memberId');
+            const newStatusSelect = document.getElementById('newStatus');
+            const activeStatusDiv = document.querySelector('.active-status');
+            const selectedMember = document.querySelector('.selected-member');
+
+            // Get the radio buttons and the accounts div
+            const createAccountsYes = document.getElementById('inlineRadio1');
+            const createAccountsNo = document.getElementById('inlineRadio2');
+            const accountsDiv = document.querySelector('.accounts');
+
+            // Initially disable the link
+            selectedMember.classList.add('disabled');
+
+            // Enable the link based on your logic (e.g., after row selection)
+            function enableChangeStatus() {
+                changeStatusLink.classList.remove('disabled');
+                selectedMember.classList.remove('disabled');
+            }
+
+        
+            let selectedRow = null;
+        
+            rows.forEach(row => {
+                row.addEventListener('click', function() {
+                    const memberId = this.getAttribute('data-member-id');
+        
+                    // Remove highlight from the previously selected row
+                    if (selectedRow) {
+                        selectedRow.classList.remove('highlighted');
+                    }
+        
+                    // Highlight the clicked row
+                    this.classList.add('highlighted');
+                    selectedRow = this;
+        
+                    // Show the "Change Member Status" link and update the memberId for the modal
+                    memberIdInput.value = memberId; // Set the selected member's ID
+                    selectedMember.style.display = 'inline'; // Make the link visible
+
+                    enableChangeStatus();  // Call the function to enable the link
+                });
+            });
+        
+            // Show the modal when the Change Status link is clicked
+            changeStatusLink.addEventListener('click', function(event) {
+                event.preventDefault(); // Prevent the default anchor action
+                $(statusModal).modal('show'); // Show the Bootstrap modal
+            });
+
+            // Handle status selection
+            newStatusSelect.addEventListener('change', function() {
+                if (this.value === 'A') { // Assuming 'A' is the code for "Active"
+                    activeStatusDiv.style.display = 'block'; // Show the active-status div
+                } else {
+                    activeStatusDiv.style.display = 'none'; // Hide it for other statuses
+                }
+            });
+
+            // Function to toggle the visibility of the accounts table
+            function toggleAccountsTable() {
+                if (createAccountsYes.checked) {
+                    accountsDiv.style.display = 'block'; // Show the table if 'yes' is selected
+                } else {
+                    accountsDiv.style.display = 'none'; // Hide the table if 'no' is selected
+                }
+            }
+
+            // Initial check on page load
+            toggleAccountsTable();
+
+            // Add event listeners to radio buttons
+            createAccountsYes.addEventListener('change', toggleAccountsTable);
+            createAccountsNo.addEventListener('change', toggleAccountsTable);
+        
+            // Handle form submission
+            document.getElementById('submitStatusChange').addEventListener('click', function() {
+                const formData = new FormData(document.getElementById('statusForm'));
+                
+                fetch('/change_member_status/', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}', // Include CSRF token for Django
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Handle response
+                    if (data.success) {
+                        // Optionally update the row in the table
+                        selectedRow.querySelector('td:nth-child(7)').innerText = newStatusSelect.value; // Update displayed status
+                        $(statusModal).modal('hide'); // Hide the modal
+                    } else {
+                        alert('Failed to change status.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        });
+        
+    </script>
+
 {% endblock %}

@@ -5,11 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TechinFin</title>
-    {% comment %} <link rel="stylesheet" href="{% static 'bootstrap/bootstrap.min.css' %}"> {% endcomment %}
+    <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'bootstrap/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/header-footer.css' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="{% static 'bootstrap-icons/bootstrap-icons.css' %}">
-    <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
 </head>
 <body>
     
@@ -62,6 +62,8 @@
     {% include "base/footer.html" %}
     
     
+<!-- Bootstrap JS (include this line) -->
+<script src="{% static 'bootstrap/bootstrap.min.js' %}"></script>
 
     
 </body>

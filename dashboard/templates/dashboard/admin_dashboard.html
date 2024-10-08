@@ -6,18 +6,26 @@
         <table>
             <thead>
                 <tr>
+                    <th>Code</th>
                     <th>Name</th>
+                    <th>Center</th>
                     <th>Phone Number</th>
                     <th>Current Address</th>
+                    <th>Category</th>
+                    <th>Status</th>
                     <th>Details</th>
                 </tr>
             </thead>
             <tbody>
                 {% for member in members %}
                 <tr>
+                    <td>{{member.code}}</td>
                     <td>{{ member.personalInfo.name }}</td>
+                    <td>{{member.center}}</td>
                     <td>{{ member.personalInfo.phone_number }}</td>
                     <td>{{ member.personalInfo.current_address }}</td>
+                    <td>{{ member.member_category }}</td>
+                    <td>{{ member.status }}</td>
                     <td><a href="{% url 'member_detail' member.id %}">View Details</a></td>
                     <td><a href="">Statement</a></td>
                 </tr>

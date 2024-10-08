@@ -5,7 +5,7 @@ from django.utils import timezone
 from . models import Branch, Employee, District, Municipality, Center, Member
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from .models import PersonalInformation, FamilyInformation, LivestockInformation, LandInformation, HouseInformation, IncomeInformation, ExpensesInformation, GRoup
+from .models import AddressInformation, PersonalInformation, FamilyInformation, LivestockInformation, LandInformation, HouseInformation, IncomeInformation, ExpensesInformation, GRoup
 
 class BranchForm(forms.ModelForm):
     class Meta:
@@ -241,7 +241,7 @@ class CenterSelectionForm(forms.ModelForm):
 
     class Meta:
         model = Member  # Ensure this references the correct model
-        fields = ['center', 'group', 'member_code', 'code']
+        fields = ['member_category', 'center', 'group', 'member_code', 'code', 'position']
 
     def __init__(self, *args, **kwargs):
         super(CenterSelectionForm, self).__init__(*args, **kwargs)
@@ -279,16 +279,65 @@ class CenterSelectionForm(forms.ModelForm):
         return member_code
 
 
+class AddressInformationForm(forms.ModelForm):
+    class Meta:
+        model = AddressInformation
+        fields = "__all__"
 
 class PersonalInformationForm(forms.ModelForm):
     class Meta:
         model = PersonalInformation
-        fields = ['name', 'phone_number', 'current_address', 'permanent_address']
+        fields = ['first_name', 'middle_name', 'last_name', 'phone_number', 'gender', 'marital_status', 'family_status', 'education', 'religion',
+                   'occupation', 'family_member_no', 'date_of_birth', 'voter_id', 'voter_id_issued_on', 'citizenship_no', 'issued_from', 'issued_date', 'marriage_reg_no',
+                   'registered_vdc', 'marriage_regd_date', 'registered_by', 'file_no',
+         ]
+        widgets = {
+            'date_of_birth': DateInput(attrs={'type': 'date'}),
+            'issued_date': DateInput(attrs={'type': 'date'}),
+            'marriage_regd_date': DateInput(attrs={'type': 'date'}),
+        }
+
 
 class FamilyInformationForm(forms.ModelForm):
     class Meta:
         model = FamilyInformation
-        fields = ['sons', 'daughters', 'husband', 'father']
+        fields = ['family_member_name', 'relationship', 'date_of_birth', 'citizenship_no', 
+                  'issued_from', 'issued_date', 'education', 'occupation', 'monthly_income', 'phone_number']
+        widgets = {
+            'date_of_birth': DateInput(attrs={'type': 'date'}),
+            'issued_date': DateInput(attrs={'type': 'date'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.relationships = kwargs.pop('relationships', None)
+        super().__init__(*args, **kwargs)
+
+        if self.relationships:
+            # Make the relationship field disabled for the predefined relationships
+            self.fields['relationship'] = forms.ChoiceField(choices=[(rel, rel) for rel in self.relationships])
+            if self.relationships and len(self.relationships) <= 3:
+                self.fields['relationship'].widget.attrs['disabled'] = True
+            else:
+                self.fields['relationship'].widget.attrs.pop('readonly', None)  # Enable for new forms
+
+    def clean(self):
+        cleaned_data = super().clean()
+        relationship = cleaned_data.get("relationship")
+
+        # Only for Husband, check for required fields
+        if relationship == 'Husband':
+            citizenship_no = cleaned_data.get("citizenship_no")
+            issued_from = cleaned_data.get("issued_from")
+            issued_date = cleaned_data.get("issued_date")
+
+            if not citizenship_no:
+                self.add_error('citizenship_no', "Citizenship number is required for Husband.")
+            if not issued_from:
+                self.add_error('issued_from', "Issued from is required for Husband.")
+            if not issued_date:
+                self.add_error('issued_date', "Issued date is required for Husband.")
+
+        return cleaned_data
 
 class LivestockInformationForm(forms.ModelForm):
     class Meta:
