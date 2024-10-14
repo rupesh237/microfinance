@@ -56,7 +56,7 @@
     <a href="{% url 'add_fixed_deposit' member_id=member.id %}">Add Fixed Deposit</a>
     <a href="{% url 'add_recurring_deposit' member_id=member.id %}">Add Recurring Deposit</a>
     <div class="container">
-        <h1>{{ member.personalinformation.name }}'s Savings</h1>
+        <h1>{{ member.personalInfo.name }}'s Savings</h1>
 
         <h2>Savings Accounts</h2>
         {% if savings_accounts %}

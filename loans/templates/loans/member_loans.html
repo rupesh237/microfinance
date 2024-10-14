@@ -1,60 +1,133 @@
+{% load custom_filters %}
 
 <!DOCTYPE html>
 <html>
 <head>
     <title>Member Loans</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
         table, th, td {
             border: 1px solid black;
             border-collapse: collapse;
             padding: 8px;
             text-align: center;
+            margin-bottom: 20px;
+        }
+        h2 {
+            margin-top: 20px;
+        }
+        .loan-item {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 10px;
+        } 
+        .loan-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .loan-container > div {
+            width: 48%; /* Each table (Payment History and EMI Schedule) takes 48% of the container's width */
+        } 
+        .emi-schedule {
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
 <body>
-    <h1>Loans for {{ member.personalinformation.name }}</h1>
+    <h1>Loans for {{ member.personalInfo.name }}</h1>
+
     <ul>
         {% for loan in loans %}
-        <li>
-            {{ loan.loan_type }} - {{ loan.amount }} - {{ loan.interest_rate }}% - {{ loan.duration_months }} months
+        <li class="loan-item">
+            <strong>{{ loan.loan_type }}</strong> - {{ loan.amount }} - {{ loan.interest_rate }}% - {{ loan.duration_months }} months
             {% if loan.loan_type == 'flat' %}
             - Monthly Repayment: {{ loan.calculate_flat_interest|floatformat:2 }}
             {% elif loan.loan_type == 'declining' %}
             - Monthly Repayment: {{ loan.calculate_declining_interest|floatformat:2 }}
             {% endif %}
-            <!-- Link to view EMI schedule -->
+            
+            <!-- Link to view EMI schedule, passing loan.id as a query parameter -->
             <a href="?loan_id={{ loan.id }}">View EMI Schedule</a>
+
+            <!-- EMI Payment Form -->
+            <h3>Pay EMI</h3>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="loan" value="{{ loan.id }}">
+                <label for="amount_paid">Amount to Pay:</label>
+                <input type="number" name="amount_paid" step="0.01" required>
+                <button type="submit">Pay EMI</button>
+            </form>
+
+            <!-- Container to hold Payment History and EMI Schedule side by side -->
+            <div class="loan-container">
+                <!-- EMI Payment History -->
+                <div>
+                    <h4>EMI Payment History</h4>
+                    <li>Opening Balance: {{ loan.amount }}</li>
+                    <li>With Interest: {{loan.interest_rate}}%</li>
+                    <li>For {{loan.duration_months}} EMIs</li>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Payment Date</th>
+                                <th>Amount Paid</th>
+                                <th>Closing Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payment_history|get_item:loan.id %} 
+                            <tr>
+                                <td>{{ payment.payment_date }}</td>
+                                <td>{{ payment.amount_paid|floatformat:2 }}</td>
+                                <td>{{ payment.closing_balance|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3">No payments made yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Conditional EMI Schedule -->
+                {% if loan.id|stringformat:"s" == request.GET.loan_id %}
+                <div class="loan-container">
+                    <h4>EMI Schedule</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>EMI Amount</th>
+                                <th>Principal Component</th>
+                                <th>Interest Component</th>
+                                <th>Remaining Principal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for emi in emi_schedule %}
+                            <tr>
+                                <td>{{ emi.month }}</td>
+                                <td>{{ emi.emi_amount|floatformat:2 }}</td>
+                                <td>{{ emi.principal_component|floatformat:2 }}</td>
+                                <td>{{ emi.interest_component|floatformat:2 }}</td>
+                                <td>{{ emi.remaining_principal|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
         </li>
         {% endfor %}
     </ul>
 
-    {% if emi_schedule %}
-    <h2>EMI Schedule</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Month</th>
-                <th>EMI Amount</th>
-                <th>Principal Component</th>
-                <th>Interest Component</th>
-                <th>Remaining Principal</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for emi in emi_schedule %}
-            <tr>
-                <td>{{ emi.month }}</td>
-                <td>{{ emi.emi_amount|floatformat:2 }}</td>
-                <td>{{ emi.principal_component|floatformat:2 }}</td>
-                <td>{{ emi.interest_component|floatformat:2 }}</td>
-                <td>{{ emi.remaining_principal|floatformat:2 }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% endif %}
-
+    <!-- Loan Application Form -->
     <h2>Take a New Loan</h2>
     <form method="post">
         {% csrf_token %}
