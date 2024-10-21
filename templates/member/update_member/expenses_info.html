@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Expenses Information</title>
+</head>
+<body>
+    <h2>Expenses Information</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ wizard.management_form }}
+        {{ wizard.form.as_p }}
+        <button type="submit" name="wizard_goto_step" value="{{ wizard.steps.prev }}">Previous</button>
+        <button type="submit">Next</button>
+    </form>
+</body>
+</html>

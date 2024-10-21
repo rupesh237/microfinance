@@ -39,6 +39,7 @@ urlpatterns= [
     path('select-center/', views.SelectCenterView.as_view(), name='select_center'),
     path('add-member/', views.MemberWizard.as_view(views.FORMS), name='add_member'),
     path('member/<int:member_id>/', views.member_detail_view, name='member_detail'),
+    path('update-member/<int:member_id>', views.MemberUpdateWizard.as_view(views.FORMSS), name='update_member'),
     path('members/', views.member_list_view, name="member_list"),
     path('delete-member/<int:pk>/', views.MemberDeleteView.as_view(), name='delete_member'),
 

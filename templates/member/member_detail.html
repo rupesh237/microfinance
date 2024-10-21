@@ -40,11 +40,11 @@
     <a href="{% url 'dashboard' %}">Home</a>
     <a href="">Edit</a>
     <a href="{% url 'member_savings' member.id %}">Savings</a>
-    <a href="">loans</a>
+    <a href="{% url 'take_loan' member.id %}"> Take loans</a>
     <a href="{% url 'member_loans' member.id %}">View loans</a>
     <a href="">fixed deposit</a>
     <a href="">Recurring Deposits</a>
-    <a href="">update profile</a>
+    <a href="{% url 'update_member' member.id %}">update profile</a>
     <div class="container">
         <h1>Member Details</h1>
 

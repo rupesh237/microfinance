@@ -4,4 +4,7 @@ from . import views
 
 urlpatterns = [
     path('member/<int:member_id>/loans/', views.member_loans, name='member_loans'),
+    path('update-member-info-for-loan/<int:member_id>', views.UpdateMemberInfoforLoan.as_view(views.FORMSS), name='update_member_for_loan'),
+    path('take-loan/<int:member_id>', views.take_loan, name='take_loan'),
+    path('take-loan-form/<int:member_id>', views.loan_form, name= 'loan_form')
 ]
