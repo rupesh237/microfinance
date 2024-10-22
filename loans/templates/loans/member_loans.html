@@ -73,21 +73,38 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Payment Date</th>
-                                <th>Amount Paid</th>
+                                <th>Date</th>
+                                <th>EMI Paid</th>
+                                <th>Dr</th>
+                                <th>Cr</th>
+                                <th>Interest</th>
+                                <th>Principal</th>
                                 <th>Closing Balance</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for payment in payment_history|get_item:loan.id %} 
+                            <tr>
+                                <td>{{ loan.start_date }}</td>
+                                <td>-</td>
+                                <td>{{ loan.amount }}</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>-{{ loan.amount|floatformat:2 }}</td>
+                            </tr>
+                            {% for payment in payment_history|get_item:loan.id %}
                             <tr>
                                 <td>{{ payment.payment_date }}</td>
                                 <td>{{ payment.amount_paid|floatformat:2 }}</td>
-                                <td>{{ payment.closing_balance|floatformat:2 }}</td>
+                                <td>-</td>
+                                <td>{{ payment.dr|floatformat:2 }}</td>
+                                <td>{{ payment.interest_paid|floatformat:2 }}</td>
+                                <td>{{ payment.principal_paid|floatformat:2 }}</td>
+                                <td>- {{ payment.closing_balance|floatformat:2 }}</td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="3">No payments made yet.</td>
+                                <td colspan="7">No payments made yet.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -128,12 +145,12 @@
     </ul>
 
     <!-- Loan Application Form -->
-    <h2>Take a New Loan</h2>
+    {% comment %} <h2>Take a New Loan</h2>
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit">Submit</button>
-    </form>
+    </form> {% endcomment %}
 
     <a href="{% url 'dashboard' %}">Back to Dashboard</a>
 </body>

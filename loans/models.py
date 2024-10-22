@@ -56,17 +56,50 @@ class Loan(models.Model):
             })
 
         return breakdown
-    
 
+    
 class EMIPayment(models.Model):
     loan = models.ForeignKey(Loan, on_delete=models.CASCADE, related_name='emi_payments')
     payment_date = models.DateField(auto_now_add=True)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2)
+    principal_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    interest_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def __str__(self):
         return f"Payment of {self.amount_paid} for {self.loan}"
 
     @property
     def closing_balance(self):
-        total_paid = sum(payment.amount_paid for payment in self.loan.emi_payments.all())
-        return self.loan.amount - total_paid
+        """
+        Calculate the remaining loan balance after this payment, considering only the principal paid.
+        This method ensures that the closing balance for each payment is unique to that payment,
+        and reflects the loan balance after that specific payment.
+        """
+        # Get all previous payments including this payment, ordered by date and ID (or created_at for exact order)
+        previous_payments = self.loan.emi_payments.filter(payment_date__lte=self.payment_date).order_by('payment_date', 'id')
+
+        # Sum the principal paid across all previous payments up to and including this one
+        total_principal_paid = 0
+        for payment in previous_payments:
+            # Stop summing once we reach the current payment
+            if payment.id == self.id:
+                break
+            total_principal_paid += payment.principal_paid
+
+        # Add principal paid from this payment
+        total_principal_paid += self.principal_paid
+
+        # Calculate the remaining balance by subtracting the total principal paid from the original loan amount
+        remaining_balance = self.loan.amount - total_principal_paid
+
+        # Ensure the remaining balance is never negative
+        return max(remaining_balance, Decimal('0.00'))
+
+
+    @property
+    def cr(self):
+        return self.loan.amount if not self.loan.emi_payments.exists() else 0
+
+    @property
+    def dr(self):
+        return self.amount_paid
