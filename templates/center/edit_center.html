@@ -1,5 +1,9 @@
 {% extends "base/index.html" %}
 
+{% block title %}
+    <title>Edit center</title>
+{% endblock title %}
+
 {% block content %}
     <h2>Edit Center</h2>
     <form method="post" action="{% url 'edit_center' center.id %}">

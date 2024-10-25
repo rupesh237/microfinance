@@ -1,14 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Loan</title>
-</head>
-<body>
+{% extends "base/index.html" %}
+{% load static %}
+{% block corecss %}
+{% endblock corecss%}
+
+{% block content%}
     Make sure you update the member information before taking Loans!
     Do you want to change information and take loan <br>
     <a href="{% url 'update_member_for_loan' member.id %}">YES</a>
     <a href="{% url 'member_detail' member.id %}">NO</a>
-</body>
-</html>
+{% endblock content %}

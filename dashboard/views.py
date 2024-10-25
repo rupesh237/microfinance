@@ -293,24 +293,60 @@ TEMPLATES = {
 }
 
 class MemberWizard(SessionWizardView):
+    form_list = FORMS
+
     def get_template_names(self):
+        """Dynamically return template names based on the current step."""
         return [TEMPLATES[self.steps.current]]
 
     def done(self, form_list, **kwargs):
-        # Get the member from the session
-        member_id = self.request.session.get('member_id')
-        if member_id:
-            member = Member.objects.get(id=member_id)
-        else:
-            # Handle the case where member_id is not found
-            return redirect('select_center')
+        """This method is called when all the forms are completed successfully."""
+        try:
+            with transaction.atomic():
+                # Retrieve center and group info from the session
+                center_id = self.request.session.get('center_id')
+                group_id = self.request.session.get('group_id')
+                member_code = self.request.session.get('member_code')
 
-        for form in form_list:
-            form_instance = form.save(commit=False)
-            form_instance.member = member
-            form_instance.save()
+                # Create the Member object now that we have all necessary information
+                member = Member.objects.create(
+                    center_id=center_id,
+                    group_id=group_id,
+                    member_code=member_code,
+                )
+
+                # Save each form's data linked to this new Member
+                for form in form_list:
+                    form_instance = form.save(commit=False)  # Don't commit yet
+                    form_instance.member = member  # Link form data to the member
+                    form_instance.save()  # Save the form instance data
+
+                messages.success(self.request, "Member created successfully.")
+
+                # Clear session data after creating member
+                self.request.session.pop('center_id', None)
+                self.request.session.pop('group_id', None)
+                self.request.session.pop('member_code', None)
+
+        except Exception as e:
+            # Handle exception if saving fails
+            messages.error(self.request, f"Error saving member: {e}")
+            return redirect('member_list')
 
         return redirect('member_list')
+
+    def render_next_step(self, form, **kwargs):
+        """Handle 'Next' and 'Cancel' button actions."""
+        if self.request.POST.get('wizard_cancel'):
+            self.storage.reset()  # Clear wizard session data on cancellation
+            return redirect('member_list')
+
+        return super().render_next_step(form, **kwargs)
+
+    def get_form_initial(self, step):
+        """Pre-populate forms with initial data if needed."""
+        initial = super().get_form_initial(step)
+        return initial
 
 # def select_group(request):
 #     if request.method == 'POST':
@@ -337,20 +373,25 @@ def load_member_codes(request):
         member_codes = []
     
     return JsonResponse(member_codes, safe=False)
-    
+
 class SelectCenterView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
     model = Member
     form_class = CenterSelectionForm
     template_name = 'dashboard/select_center.html'
-    success_url = reverse_lazy('add_member') 
+    success_url = reverse_lazy('add_member')
 
     def form_valid(self, form):
-       member = form.save()  # This creates the Member object
+        # Store center and group information in the session instead of saving the Member
+        center_id = form.cleaned_data['center'].id
+        group_id = form.cleaned_data['group'].id
+        member_code = form.cleaned_data['member_code']
+        
+        # Store these details in the session
+        self.request.session['center_id'] = center_id
+        self.request.session['group_id'] = group_id
+        self.request.session['member_code'] = member_code
 
-       # Store the member ID in session to access it later in MemberWizard
-       self.request.session['member_id'] = member.id
-       return redirect(self.success_url)
-
+        return redirect(self.success_url)
 
     def form_invalid(self, form):
         # Re-populate `group` queryset and `member_code` choices if form is invalid
@@ -364,7 +405,8 @@ class SelectCenterView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
             except Center.DoesNotExist:
                 form.fields['member_code'].choices = []
         return super().form_invalid(form)
-    
+
+   
 class MemberDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
     model = Member
     success_url = reverse_lazy('member_list')

@@ -1,56 +1,16 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Add Fixed Deposit</title>
-    {% comment %} <link rel="stylesheet" href="{% static 'css/style.css' %}"> {% endcomment %}
-    <style>
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            font-family: Arial, sans-serif;
-        }
-        
-        h1 {
-            color: #333;
-        }
-        
-        form {
-            margin-top: 20px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 10px;
-        }
-        
-        input[type="number"], input[type="date"] {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        
-        input[type="submit"] {
-            padding: 10px 15px;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        
-        input[type="submit"]:hover {
-            background-color: #0056b3;
-        }
-        
-    </style>
-</head>
-<body>
+{% extends "base/index.html" %}
+{% load static %}
+{% block corecss %}
+    <link rel="stylesheet" href="css/savings.css">
+{% endblock corecss %}
+{% block title %}
+    <title>Add fixed deposit account</title>
+{% endblock title %}
+
+{% block content %}
     <a href="{% url 'member_savings' member_id=member.id %}">Back to Savings</a>
     <div class="container">
-        <h1>Add Fixed Deposit for {{ member.name }}</h1>
+        <h1>Add Fixed Deposit for {{ member.personalInfo.name }}</h1>
 
         <form method="post">
             {% csrf_token %}
@@ -58,5 +18,4 @@
             <input type="submit" value="Save">
         </form>
     </div>
-</body>
-</html>
+{% endblock content %}

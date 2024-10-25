@@ -9,8 +9,24 @@
         {% csrf_token %}
         {{ wizard.management_form }}
         {{ wizard.form.as_p }}
-        <button type="submit" name="wizard_goto_step" value="{{ wizard.steps.prev }}">Previous</button>
-        <button type="submit">Next</button>
+        <div class="form-actions">
+            <!-- Previous button (only shown if not the first step) -->
+            {% if wizard.steps.prev %}
+                <button type="submit" name="wizard_goto_step" value="{{ wizard.steps.prev }}">Previous</button>
+            {% endif %}
+    
+            <!-- Cancel button -->
+            <button type="submit" name="wizard_cancel">Cancel</button>
+    
+            <!-- Next button -->
+            <button type="submit">
+                {% if wizard.steps.next %}
+                    Next
+                {% else %}
+                    Finish
+                {% endif %}
+            </button>
+        </div>
     </form>
 </body>
 </html>
