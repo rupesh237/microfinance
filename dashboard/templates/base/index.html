@@ -16,7 +16,8 @@
     <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
 </head>
 <body>
-    
+
+        {% block navbar %}
         <nav class="navbar">
             <ul class="nav-left">
                 <li><a href="{% url 'dashboard' %}">Home</a></li>
@@ -58,6 +59,7 @@
                 <p>Rupesh Kumar Mandal <a href="{% url 'logout' %}"> <i class="bi bi-person-check" style="font-size: 25px; color: white;"></i></a></p>
             </div>
         </nav>
+        {% endblock navbar %}
     
 
 

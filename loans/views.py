@@ -8,6 +8,10 @@ from dashboard.forms import PersonalInformationForm, FamilyInformationForm, Live
 from django.contrib.auth.mixins import LoginRequiredMixin
 from dashboard.mixins import RoleRequiredMixin
 from django.contrib import messages
+from django.template.loader import get_template
+from django.http import HttpResponse
+from xhtml2pdf import pisa
+
 from formtools.wizard.views import SessionWizardView
 
 @login_required
@@ -53,6 +57,57 @@ def member_loans(request, member_id):
         'payment_form': payment_form,
         'payment_history': payment_history,
     })
+
+def pdf_report(request, member_id):
+    member = get_object_or_404(Member, id=member_id)
+    loans = member.loans.all()
+    emi_schedule = []
+    payment_form = None
+
+    if request.method == 'POST':
+        payment_form = EMIPaymentForm(request.POST)
+        if payment_form.is_valid():
+            payment = payment_form.save(commit=False)
+            loan = payment.loan
+
+            # Calculate EMI schedule and fetch the corresponding EMI info for the current month
+            emi_schedule = loan.calculate_emi_breakdown()
+            current_month = len(loan.emi_payments.all()) + 1  # Increment for the next payment month
+            emi_info = emi_schedule[current_month - 1]
+
+            payment.principal_paid = emi_info['principal_component']
+            payment.interest_paid = emi_info['interest_component']
+            payment.save()
+
+            return redirect('member_loans', member_id=member.id)
+
+    else:
+        form = LoanForm(initial={'member': member})
+        payment_form = EMIPaymentForm()
+
+    loan_id = request.GET.get('loan_id')
+    if loan_id:
+        loan = get_object_or_404(Loan, id=loan_id)
+        emi_schedule = loan.calculate_emi_breakdown()
+
+    payment_history = {loan.id: loan.emi_payments.all() for loan in loans}
+    template_path = 'loans/pdf_report.html'
+    context ={
+        'member': member,
+        'loans': loans,
+        'form': form,
+        'emi_schedule': emi_schedule,
+        'payment_form': payment_form,
+        'payment_history': payment_history,
+    }
+    response = HttpResponse(content_type = 'application/pdf')
+    response['Content-Disposition'] = 'filename="report.pdf"'
+    template = get_template(template_path)
+    html = template.render(context)
+    pisa_status = pisa.CreatePDF(html, dest=response)
+    if pisa_status.err:
+        return HttpResponse('We had some errors <pre>' + html + '</pre>')
+    return response
 
 from django.db import transaction
 FORMSS = [
