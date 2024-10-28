@@ -159,7 +159,6 @@ class Migration(migrations.Migration):
                 ('farming_income', models.FloatField(default=0.0)),
                 ('cattle_income', models.FloatField(default=0.0)),
                 ('member', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='incomeInfo', to='dashboard.member')),
-                ('member', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='incomeInfo', to='dashboard.member')),
             ],
         ),
         migrations.CreateModel(
@@ -169,7 +168,6 @@ class Migration(migrations.Migration):
                 ('concrete', models.BooleanField(default=False)),
                 ('mud', models.BooleanField(default=False)),
                 ('iron', models.BooleanField(default=False)),
-                ('member', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='houseInfo', to='dashboard.member')),
                 ('member', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='houseInfo', to='dashboard.member')),
             ],
         ),
@@ -199,7 +197,6 @@ class Migration(migrations.Migration):
                 ('health_expense', models.FloatField(default=0.0)),
                 ('other_expenses', models.FloatField(default=0.0)),
                 ('member', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='expensesInfo', to='dashboard.member')),
-                ('member', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='expensesInfo', to='dashboard.member')),
             ],
         ),
         migrations.CreateModel(
@@ -209,8 +206,6 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=100)),
                 ('email', models.EmailField(max_length=254, unique=True)),
                 ('phone_number', models.CharField(max_length=20)),
-                ('image', models.ImageField(blank=True, null=True, upload_to='users/')),
-                ('citizenship_card', models.ImageField(blank=True, null=True, upload_to='users/')),
                 ('image', models.ImageField(blank=True, null=True, upload_to='users/')),
                 ('citizenship_card', models.ImageField(blank=True, null=True, upload_to='users/')),
                 ('role', models.CharField(choices=[('admin', 'Admin'), ('manager', 'Manager'), ('employee', 'Employee')], max_length=10)),
