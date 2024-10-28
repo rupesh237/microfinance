@@ -1,6 +1,12 @@
 {% extends 'base/index.html' %}
 
 {% block content %}
+    <div class="grid-container text-center">
+        <div class="grid-item"><i class="bi bi-bank"></i> Branches 2</div>
+        <div class="grid-item">Center</div>
+        <div class="grid-item">Group</div>
+        <div class="grid-item"><i class="bi bi-people-fill"></i> Members 5</div>
+    </div>
     <div class="container">
         <h1>Member List</h1>
         <table>
@@ -24,7 +30,7 @@
                     <td>{{member.center}}</td>
                     <td>{{ member.personalInfo.phone_number }}</td>
                     <td>{{ member.personalInfo.current_address }}</td>
-                    <td>{{ member.member_category }}</td>
+                    {% comment %} <td>{{ member.member_category }}</td> {% endcomment %}
                     <td>{{ member.status }}</td>
                     <td><a href="{% url 'member_detail' member.id %}">View Details</a></td>
                     <td><a href="">Statement</a></td>

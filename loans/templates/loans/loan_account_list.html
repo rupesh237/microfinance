@@ -1,9 +1,9 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Loan Accounts</title>
-</head>
-<body>
+{% extends "base/index.html" %}
+{% load static %}
+{% block corecss %}
+{% endblock corecss %}
+
+{% block content %}
     <h1>Loan Accounts</h1>
     <table>
         <thead>
@@ -33,6 +33,4 @@
             {% endfor %}
         </tbody>
     </table>
-    <a href="{% url 'add_loan_account' %}">Add Loan Account</a>
-</body>
-</html>
+{% endblock content %}

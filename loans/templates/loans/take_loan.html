@@ -1,0 +1,11 @@
+{% extends "base/index.html" %}
+{% load static %}
+{% block corecss %}
+{% endblock corecss%}
+
+{% block content%}
+    Make sure you update the member information before taking Loans!
+    Do you want to change information and take loan <br>
+    <a href="{% url 'update_member_for_loan' member.id %}">YES</a>
+    <a href="{% url 'member_detail' member.id %}">NO</a>
+{% endblock content %}

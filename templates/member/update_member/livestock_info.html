@@ -1,0 +1,16 @@
+{% extends "base/index.html" %}
+{% load static %}
+{% block title %}
+    <title>Livestokc Info</title>
+{% endblock title %}
+
+{% block content %}
+    <h2>Livestock Information</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ wizard.management_form }}
+        {{ wizard.form.as_p }}
+        <button type="submit" name="wizard_goto_step" value="{{ wizard.steps.prev }}">Previous</button>
+        <button type="submit">Next</button>
+    </form>
+{% endblock content %}

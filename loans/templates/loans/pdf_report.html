@@ -10,6 +10,9 @@
 {% endblock title %}
 
 {% block content %}
+    {% block navbar %}
+        <h1>Sana Kishan Savings And Cooperative</h1>
+    {% endblock navbar %}
     <h1>Loans for {{ member.personalInfo.name }}</h1>
 
     <ul>
@@ -112,7 +115,7 @@
                     </table>
                 </div>
                 {% endif %}
-                <a href="{% url 'download_pdf_report' member.id %}">PDF Report</a>
+                <a href="">PDF Report</a>
             </div>
         </li>
         {% endfor %}

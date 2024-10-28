@@ -1,14 +1,13 @@
 {% extends "base/index.html" %}
 {% load static %}
-
 {% block corecss %}
-{% endblock corecss %}
+{% endblock corecss%}
 
 {% block content %}
-    <h1>Add Loan Account</h1>
+    <h2>Take a New Loan</h2>
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Add Account</button>
+        <button type="submit">Submit</button>
     </form>
 {% endblock content %}

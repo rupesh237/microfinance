@@ -1,9 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Family Information</title>
-</head>
-<body>
+{% extends "base/index.html" %}
+{% load static %}
+
+{% block title %}
+    <title>Personal info</title>
+{% endblock title %}
+
+{% block content %}
     <h2>Family Information</h2>
     <form method="post" id="family-info-form">
         {% csrf_token %}
@@ -29,6 +31,7 @@
         <button type="submit" name="wizard_goto_step" value="{{ wizard.steps.prev }}">Previous</button>
         <button type="submit" name="wizard_goto_step" value="{{ wizard.steps.next }}">Next</button>
     </form>
+{% endblock content %}
 
     <script>
         document.getElementById('add-family-member').addEventListener('click', function(event) {

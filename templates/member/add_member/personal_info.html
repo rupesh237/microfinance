@@ -1,16 +1,33 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Personal Information</title>
-</head>
-<body>
+{% extends "base/index.html" %}
+{% load static %}
+
+{% block title %}
+    <title>Personal info</title>
+{% endblock title %}
+
+{% block content %}
     <h2>Personal Information</h2>
     <form method="post">
         {% csrf_token %}
         {{ wizard.management_form }}
         {{ wizard.form.as_p }}
-        <button type="submit" name="wizard_goto_step" value="{{ wizard.steps.prev }}">Previous</button>
-        <button type="submit" name="wizard_goto_step" value="{{ wizard.steps.next }}">Next</button>
+        <div class="form-actions">
+            <!-- Previous button (only shown if not the first step) -->
+            {% if wizard.steps.current != "personal" %}
+                <button type="submit" name="wizard_goto_step" value="{{ wizard.steps.prev }}">Previous</button>
+            {% endif %}
+
+            <!-- Cancel button -->
+            <button type="submit" name="wizard_cancel">Cancel</button>
+
+            <!-- Next button -->
+            <button type="submit">
+                {% if wizard.steps.next %}
+                    Next
+                {% else %}
+                    Finish
+                {% endif %}
+            </button>
+        </div>
     </form>
-</body>
-</html>
+{% endblock content %}
