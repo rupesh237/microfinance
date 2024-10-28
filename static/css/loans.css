@@ -1,0 +1,28 @@
+
+
+    table, th, td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 8px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    h2 {
+        margin-top: 20px;
+    }
+    .loan-item {
+        margin-bottom: 20px;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 10px;
+    } 
+    .loan-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+    .loan-container > div {
+        width: 48%; /* Each table (Payment History and EMI Schedule) takes 48% of the container's width */
+    } 
+    .emi-schedule {
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    }

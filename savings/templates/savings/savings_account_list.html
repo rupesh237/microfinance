@@ -1,9 +1,13 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Savings Accounts</title>
-</head>
-<body>
+{% extends "base/index.html" %}
+{% load static %}
+{% block corecss %}
+    <link rel="stylesheet" href="{% static 'css/savings.css' %}">
+{% endblock corecss %}
+{% block title %}
+    <title>Add fixed account</title>
+{% endblock title %}
+
+{% block content %}
     <h1>Savings Accounts</h1>
     <table>
         <thead>
@@ -26,5 +30,4 @@
         </tbody>
     </table>
     <a href="{% url 'add_savings_account' %}">Add Savings Account</a>
-</body>
-</html>
+{% endblock content %}
