@@ -297,52 +297,79 @@ class PersonalInformationForm(forms.ModelForm):
             'marriage_regd_date': DateInput(attrs={'type': 'date'}),
         }
 
+    def clean(self):
+        cleaned_data = super().clean()
+        print("Cleaned data:", cleaned_data)
+        return cleaned_data
+
 
 class FamilyInformationForm(forms.ModelForm):
     class Meta:
         model = FamilyInformation
-        fields = ['family_member_name', 'relationship', 'date_of_birth', 'citizenship_no', 
-                  'issued_from', 'issued_date', 'education', 'occupation', 'monthly_income', 'phone_number']
+        fields = [
+            'family_member_name', 'relationship', 'date_of_birth', 
+            'citizenship_no', 'issued_from', 'issued_date', 
+            'education', 'occupation', 'monthly_income', 'phone_number'
+        ]
         widgets = {
             'date_of_birth': DateInput(attrs={'type': 'date'}),
             'issued_date': DateInput(attrs={'type': 'date'}),
         }
 
     def __init__(self, *args, **kwargs):
+        # Capture predefined relationships if passed
         self.relationships = kwargs.pop('relationships', None)
         super().__init__(*args, **kwargs)
 
+        # Set up choices for relationship field if relationships are provided
         if self.relationships:
-            # Make the relationship field disabled for the predefined relationships
             self.fields['relationship'] = forms.ChoiceField(choices=[(rel, rel) for rel in self.relationships])
-            if self.relationships and len(self.relationships) <= 3:
+
+            # Disable relationship field for predefined relationships (first three)
+            if self.initial.get('relationship') in self.relationships[:3]:
+                self.fields['relationship'].widget.attrs['readonly'] = True
                 self.fields['relationship'].widget.attrs['disabled'] = True
             else:
-                self.fields['relationship'].widget.attrs.pop('readonly', None)  # Enable for new forms
+                # Ensure it's enabled for dynamically added family members
+                self.fields['relationship'].widget.attrs.pop('disabled', None)
+                self.fields['relationship'].widget.attrs.pop('readonly', None)
+
+    def clean_relationship(self):
+        relationship = self.cleaned_data.get('relationship')
+        
+        # Return initial if field is disabled for predefined relationships
+        if self.fields['relationship'].widget.attrs.get('disabled'):
+            return self.initial.get('relationship')  # Preset relationship remains
+
+        if not relationship:
+            raise forms.ValidationError("This field is required.")
+        return relationship
 
     def clean(self):
         cleaned_data = super().clean()
-        relationship = cleaned_data.get("relationship")
-
-        # Only for Husband, check for required fields
+        relationship = cleaned_data.get('relationship')
+        
+        # Require specific fields if relationship is 'Husband'
         if relationship == 'Husband':
-            citizenship_no = cleaned_data.get("citizenship_no")
-            issued_from = cleaned_data.get("issued_from")
-            issued_date = cleaned_data.get("issued_date")
-
-            if not citizenship_no:
-                self.add_error('citizenship_no', "Citizenship number is required for Husband.")
-            if not issued_from:
-                self.add_error('issued_from', "Issued from is required for Husband.")
-            if not issued_date:
-                self.add_error('issued_date', "Issued date is required for Husband.")
-
+            required_fields = ['citizenship_no', 'issued_from', 'issued_date']
+            for field in required_fields:
+                if not cleaned_data.get(field):
+                    self.add_error(field, f"{field.replace('_', ' ').capitalize()} is required for Husband.")
+                    
         return cleaned_data
+
+
+
 
 class LivestockInformationForm(forms.ModelForm):
     class Meta:
         model = LivestockInformation
         fields = ['cows', 'buffalo', 'goat', 'sheep']
+
+    def clean(self):
+            cleaned_data = super().clean()
+            print("Cleaned data:", cleaned_data)
+            return cleaned_data
 
 class HouseInformationForm(forms.ModelForm):
     class Meta:

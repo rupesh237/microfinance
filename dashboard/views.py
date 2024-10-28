@@ -19,6 +19,7 @@ from .forms import BranchForm, EmployeeForm, CenterForm, GroupForm
 from .mixins import RoleRequiredMixin
 
 from django.utils import timezone
+from datetime import date, datetime
 
 
 def user_login(request):
@@ -121,6 +122,7 @@ def update_branch(request, pk):
         'form': form,
         'branch': branch
     })
+
 @login_required
 def delete_branch(request, pk):
     branch = get_object_or_404(Branch, pk)
@@ -289,6 +291,7 @@ from .forms import (
     IncomeInformationForm, ExpensesInformationForm
 )
 from formtools.wizard.views import SessionWizardView
+from django.shortcuts import redirect
 
 FORMS = [
     ("address", AddressInformationForm),
@@ -312,55 +315,100 @@ TEMPLATES = {
     "expenses": "member/add_member/expenses_info.html",
 }
 
+
 class MemberWizard(SessionWizardView):
+    form_list = FORMS
+    predefined_relationships = ["Husband", "Father", "Father-In-Law"]
+
     def get_template_names(self):
-        return [TEMPLATES[self.steps.current]]
-    
+        return [TEMPLATES.get(self.steps.current)]
+
+    def get_form_initial(self, step):
+        if step == "family":
+            form_count = sum(1 for key in self.storage.data.get('step_data', {}) if 'family' in key)
+            if form_count < len(self.predefined_relationships):
+                return {'relationship': self.predefined_relationships[form_count]}
+        return super().get_form_initial(step)
+
     def get_context_data(self, form, **kwargs):
         context = super().get_context_data(form=form, **kwargs)
-
-        if self.steps.current == 'family':  # Adjust based on your step name
-            relationships = ['Husband', 'Father', 'Father-In-Law']
-            family_forms = [FamilyInformationForm(initial={'relationship': rel}) for rel in relationships]
-            context.update({
-                'family_forms': family_forms
-            })
-
+        if self.steps.current == 'family':
+            family_forms = [
+                FamilyInformationForm(initial={'relationship': rel}, prefix=f'form-{i}')
+                for i, rel in enumerate(self.predefined_relationships)
+            ]
+            context.update({'family_forms': family_forms, 'form_count': len(family_forms)})
         return context
 
-    def get_form_kwargs(self, step=None):
-        kwargs = super().get_form_kwargs(step)
-        
-        # Pass relationships to the FamilyInformationForm step
-        if step == 'family':  # Adjust to match your step
-            kwargs['relationships'] = ['Father', 'Husband', 'Father-In-Law']
-        return kwargs
-    
-    def get_form(self, step=None, data=None, files=None):
-        form = super().get_form(step, data, files)
-        if self.request.method == 'POST':
+    def get_form_step_data(self, step):
+        data = super().get_form_step_data(step)
+        # Convert any date fields to string format
+        for key, value in data.items():
+            if isinstance(value, date):
+                data[key] = value.isoformat()  # Convert date to ISO string
+        return data
+
+    def post(self, *args, **kwargs):
+        form = self.get_form(data=self.request.POST, files=self.request.FILES)
+        if self.steps.current == 'family':
+            family_forms = [
+                FamilyInformationForm(self.request.POST, prefix=f'form-{i}')
+                for i in range(int(self.request.POST.get('form_count', 0)))
+            ]
+
+            if self.validate_family_forms(family_forms):
+                self.storage.extra_data['family_forms_data'] = [
+                    {key: (value.isoformat() if isinstance(value, date) else value) 
+                     for key, value in form.cleaned_data.items()}
+                    for form in family_forms
+                ]
+            else:
+                return self.render_to_response(
+                    self.get_context_data(form=form, family_forms=family_forms)
+                )
+
+        return super().post(*args, **kwargs)
+
+    def validate_family_forms(self, family_forms):
+        all_valid = True
+        for form in family_forms:
             if not form.is_valid():
-                print(form.errors)  # Log form errors to debug
-        return form
+                all_valid = False
+        return all_valid
 
     def done(self, form_list, **kwargs):
         member_id = self.request.session.get('member_id')
-        member = Member.objects.get(id=member_id)
+        if not member_id:
+            # Replace this with actual member creation logic if not in session
+            member = Member.objects.create()  # Assuming Member creation doesn't need extra params
+            self.request.session['member_id'] = member.id
+        else:
+            member = Member.objects.get(id=member_id)
 
+        # Save main forms
         for form in form_list:
-            if isinstance(form, FamilyInformationForm):
-                family_member = form.save(commit=False)
-                family_member.member = member
-                family_member.relationship = form.cleaned_data.get('relationship')
-                family_member.save()
-            else:
+            if form.is_valid():
                 instance = form.save(commit=False)
                 instance.member = member
                 instance.save()
+            else:
+                print("Form validation error:", form.errors)
+                return self.render_goto_step(self.steps.first())  # Go back if any form invalid
 
-        return redirect('success_url')
+        # Save family forms from extra_data
+        family_data_list = self.storage.extra_data.pop('family_forms_data', [])
+        for family_data in family_data_list:
+            family_member_form = FamilyInformationForm(data=family_data)
+            if family_member_form.is_valid():
+                family_member = family_member_form.save(commit=False)
+                family_member.member = member
+                family_member.save()
+            else:
+                print("Family member form validation error:", family_member_form.errors)
+                return self.render_goto_step('family')  # Return to family step if any invalid
 
-
+        # Final redirection after successful save of all forms
+        return redirect('member_list')
 
 
 # def select_group(request):
@@ -420,7 +468,6 @@ class MemberDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
     model = Member
     success_url = reverse_lazy('member_list')
     template_name = 'member/delete_member.html'
-
 
 
 def member_detail_view(request, member_id):

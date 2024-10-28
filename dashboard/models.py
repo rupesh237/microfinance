@@ -115,7 +115,7 @@ RELIGION_CHOICES = [
 ]
 OCCUPATION_CHOICES = [
     ('Agriculture', 'Agriculture'),
-    ('Business', 'Buddhism'),
+    ('Business', 'Business'),
     ('Housewife', 'Housewife'),
     ('Foreign Employment', 'Foreign Employment'),
 ]
@@ -336,7 +336,7 @@ class PersonalInformation(models.Model):
     file_no = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
-        return self.name
+        return f"{self.first_name} {self.last_name}"
 
 RELATIONSHIP_CHOICES = [
     ('Father', 'Father'),
@@ -346,7 +346,7 @@ RELATIONSHIP_CHOICES = [
     ('Daughter', 'Daughter'),
 ]
 class FamilyInformation(models.Model):
-    member = models.OneToOneField(Member, on_delete=models.CASCADE, related_name='familyInfo')
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='familyInfo')
 
     family_member_name = models.CharField(max_length=50)
     relationship = models.CharField(max_length=30, choices=RELATIONSHIP_CHOICES)
