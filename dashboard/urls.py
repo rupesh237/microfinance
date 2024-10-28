@@ -40,7 +40,6 @@ urlpatterns= [
     path('add-member/', views.MemberWizard.as_view(views.FORMS), name='add_member'),
     path('member/<int:member_id>/', views.member_detail_view, name='member_detail'),
     path('update-member/<int:member_id>', views.MemberUpdateWizard.as_view(views.FORMSS), name='update_member'),
-    path('members/', views.member_list_view, name="member_list"),
     path('members/', views.MemberListView.as_view(), name="member_list"),
     path('change_member_status/', views.change_member_status, name="change_member_status"),
     path('delete-member/<int:pk>/', views.MemberDeleteView.as_view(), name='delete_member'),

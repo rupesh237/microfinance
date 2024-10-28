@@ -503,15 +503,12 @@ class MemberUpdateWizard(LoginRequiredMixin, RoleRequiredMixin, SessionWizardVie
     View for updating member information across multiple steps
     """
     def get_template_names(self):
-        """Return the template name for the current step."""
         return [TEMPLATES[self.steps.current]]
 
     def get_form_initial(self, step):
-        """
-        Pre-populate the forms with existing member data for each step.
-        """
         member_id = self.kwargs.get('member_id')
         member = get_object_or_404(Member, pk=member_id)
+        
         # Fetch related models for the member
         personal_info = get_object_or_404(PersonalInformation, member=member)
         family_info = get_object_or_404(FamilyInformation, member=member)
@@ -521,22 +518,44 @@ class MemberUpdateWizard(LoginRequiredMixin, RoleRequiredMixin, SessionWizardVie
         income_info = get_object_or_404(IncomeInformation, member=member)
         expenses_info = get_object_or_404(ExpensesInformation, member=member)
 
-        # Populate initial data for each step based on the form
         initial = super().get_form_initial(step)
 
         if step == "personal":
             initial.update({
-                'name': personal_info.name,
+                'first_name': personal_info.first_name,
+                'middle_name': personal_info.middle_name,
+                'last_name': personal_info.last_name,
                 'phone_number': personal_info.phone_number,
-                'current_address': personal_info.current_address,
-                'permanent_address': personal_info.permanent_address,
+                'gender': personal_info.gender,
+                'marital_status': personal_info.marital_status,
+                'family_status': personal_info.family_status,
+                'education': personal_info.education,
+                'religion': personal_info.religion,
+                'occupation': personal_info.occupation,
+                'family_member_no': personal_info.family_member_no,
+                'date_of_birth': personal_info.date_of_birth,
+                'voter_id': personal_info.voter_id,
+                'voter_id_issued_on': personal_info.voter_id_issued_on,
+                'citizenship_no': personal_info.citizenship_no,
+                'issued_from': personal_info.issued_from,
+                'issued_date': personal_info.issued_date,
+                'marriage_reg_no': personal_info.marriage_reg_no,
+                'registered_vdc': personal_info.registered_vdc,
+                'marriage_regd_date': personal_info.marriage_regd_date,
+                'file_no': personal_info.file_no,
             })
         elif step == "family":
             initial.update({
-                'sons': family_info.sons,
-                'daughters': family_info.daughters,
-                'husband': family_info.husband,
-                'father': family_info.father,
+                'family_member_name': family_info.family_member_name,
+                'relationship': family_info.relationship,
+                'date_of_birth': family_info.date_of_birth,
+                'citizenship_no': family_info.citizenship_no,
+                'issued_from': family_info.issued_from,
+                'issued_date': family_info.issued_date,
+                'education': family_info.education,
+                'occupation': family_info.occupation,
+                'monthly_income': family_info.monthly_income,
+                'phone_number': family_info.phone_number,
             })
         elif step == "livestock":
             initial.update({
@@ -573,63 +592,104 @@ class MemberUpdateWizard(LoginRequiredMixin, RoleRequiredMixin, SessionWizardVie
         return initial
 
     def done(self, form_list, **kwargs):
-        """
-        Save the updated member information after all steps are completed.
-        """
-        member_id = self.kwargs.get('member_id')  # Ensure 'member_id' is used consistently
+        member_id = self.kwargs.get('member_id')
         member = get_object_or_404(Member, pk=member_id)
 
-        with transaction.atomic():  # Ensure all forms save or none
+        with transaction.atomic():
             for form in form_list:
                 form_instance = form.save(commit=False)
-                # Check if the instance already exists for the related member
+                
                 if isinstance(form_instance, PersonalInformation):
-                    personal_info, created = PersonalInformation.objects.get_or_create(
+                    personal_info, created = PersonalInformation.objects.update_or_create(
                         member=member,
-                        defaults={'name': form_instance.name, 'phone_number': form_instance.phone_number,
-                                  'current_address': form_instance.current_address, 'permanent_address': form_instance.permanent_address}
+                        defaults={
+                            'first_name': form_instance.first_name,
+                            'middle_name': form_instance.middle_name,
+                            'last_name': form_instance.last_name,
+                            'phone_number': form_instance.phone_number,
+                            'gender': form_instance.gender,
+                            'marital_status': form_instance.marital_status,
+                            'family_status': form_instance.family_status,
+                            'education': form_instance.education,
+                            'religion': form_instance.religion,
+                            'occupation': form_instance.occupation,
+                            'family_member_no': form_instance.family_member_no,
+                            'date_of_birth': form_instance.date_of_birth,
+                            'voter_id': form_instance.voter_id,
+                            'voter_id_issued_on': form_instance.voter_id_issued_on,
+                            'citizenship_no': form_instance.citizenship_no,
+                            'issued_from': form_instance.issued_from,
+                            'issued_date': form_instance.issued_date,
+                            'marriage_reg_no': form_instance.marriage_reg_no,
+                            'registered_vdc': form_instance.registered_vdc,
+                            'marriage_regd_date': form_instance.marriage_regd_date,
+                            'file_no': form_instance.file_no,
+                        }
                     )
-                    if not created:
-                        # Update the existing instance
-                        personal_info.name = form_instance.name
-                        personal_info.phone_number = form_instance.phone_number
-                        personal_info.current_address = form_instance.current_address
-                        personal_info.permanent_address = form_instance.permanent_address
-                        personal_info.save()
-
                 elif isinstance(form_instance, FamilyInformation):
-                    family_info, created = FamilyInformation.objects.get_or_create(
+                    FamilyInformation.objects.update_or_create(
                         member=member,
-                        defaults={'sons': form_instance.sons, 'daughters': form_instance.daughters,
-                                  'husband': form_instance.husband, 'father': form_instance.father}
+                        defaults={
+                            'family_member_name': form_instance.family_member_name,
+                            'relationship': form_instance.relationship,
+                            'date_of_birth': form_instance.date_of_birth,
+                            'citizenship_no': form_instance.citizenship_no,
+                            'issued_from': form_instance.issued_from,
+                            'issued_date': form_instance.issued_date,
+                            'education': form_instance.education,
+                            'occupation': form_instance.occupation,
+                            'monthly_income': form_instance.monthly_income,
+                            'phone_number': form_instance.phone_number,
+                        }
                     )
-                    if not created:
-                        # Update the existing instance
-                        family_info.sons = form_instance.sons
-                        family_info.daughters = form_instance.daughters
-                        family_info.husband = form_instance.husband
-                        family_info.father = form_instance.father
-                        family_info.save()
-
-                # Repeat this pattern for other models like LivestockInformation, HouseInformation, etc.
-                # Example for LivestockInformation:
                 elif isinstance(form_instance, LivestockInformation):
-                    livestock_info, created = LivestockInformation.objects.get_or_create(
+                    LivestockInformation.objects.update_or_create(
                         member=member,
-                        defaults={'cows': form_instance.cows, 'buffalo': form_instance.buffalo,
-                                  'goat': form_instance.goat, 'sheep': form_instance.sheep}
+                        defaults={
+                            'cows': form_instance.cows,
+                            'buffalo': form_instance.buffalo,
+                            'goat': form_instance.goat,
+                            'sheep': form_instance.sheep,
+                        }
                     )
-                    if not created:
-                        # Update the existing instance
-                        livestock_info.cows = form_instance.cows
-                        livestock_info.buffalo = form_instance.buffalo
-                        livestock_info.goat = form_instance.goat
-                        livestock_info.sheep = form_instance.sheep
-                        livestock_info.save()
+                elif isinstance(form_instance, HouseInformation):
+                    HouseInformation.objects.update_or_create(
+                        member=member,
+                        defaults={
+                            'concrete': form_instance.concrete,
+                            'mud': form_instance.mud,
+                            'iron': form_instance.iron,
+                        }
+                    )
+                elif isinstance(form_instance, LandInformation):
+                    LandInformation.objects.update_or_create(
+                        member=member,
+                        defaults={
+                            'farming_land': form_instance.farming_land,
+                            'other_land': form_instance.other_land,
+                        }
+                    )
+                elif isinstance(form_instance, IncomeInformation):
+                    IncomeInformation.objects.update_or_create(
+                        member=member,
+                        defaults={
+                            'earning': form_instance.earning,
+                            'farming_income': form_instance.farming_income,
+                            'cattle_income': form_instance.cattle_income,
+                        }
+                    )
+                elif isinstance(form_instance, ExpensesInformation):
+                    ExpensesInformation.objects.update_or_create(
+                        member=member,
+                        defaults={
+                            'house_rent': form_instance.house_rent,
+                            'food_expense': form_instance.food_expense,
+                            'health_expense': form_instance.health_expense,
+                            'other_expenses': form_instance.other_expenses,
+                        }
+                    )
 
-                # Repeat for other models (HouseInformation, LandInformation, IncomeInformation, ExpensesInformation)
-
-        return redirect('member_list')
+        return redirect('member_detail', member_id = member.id)
 
 
 def member_detail_view(request, member_id):
