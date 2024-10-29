@@ -26,7 +26,7 @@
                 {% for member in members %}
                 <tr>
                     <td>{{member.code}}</td>
-                    <td>{{ member.personalInfo.name }}</td>
+                    <td>{{ member.personalInfo.first_name }} {{ member.personalInfo.last_name }}</td>
                     <td>{{member.center}}</td>
                     <td>{{ member.personalInfo.phone_number }}</td>
                     <td>{{ member.personalInfo.current_address }}</td>

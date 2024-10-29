@@ -13,7 +13,7 @@
     {% block navbar %}
         <h1>Sana Kishan Savings And Cooperative</h1>
     {% endblock navbar %}
-    <h1>Loans for {{ member.personalInfo.name }}</h1>
+    <h1>Loans for {{ member.personalInfo.first_name }} {{ member.personalInfo.middle_name }} {{ member.personalInfo.last_name }}</h1>
 
     <ul>
         {% for loan in loans %}
