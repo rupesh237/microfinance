@@ -10,7 +10,7 @@
 {% endblock title %}
 
 {% block content %}
-    <h1>Loans for {{ member.personalInfo.name }}</h1>
+    <h1>Loans for {{ member.personalInfo.first_name }} {{ member.personalInfo.middle_name }} {{ member.personalInfo.last_name }}</h1>
 
     <ul>
         {% for loan in loans %}
