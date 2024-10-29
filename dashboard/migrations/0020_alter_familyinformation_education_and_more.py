@@ -5,9 +5,9 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('dashboard', '0019_alter_familyinformation_phone_number'),
-    ]
+    # dependencies = [
+    #     ('dashboard', '0019_alter_familyinformation_phone_number'),
+    # ]
 
     operations = [
         migrations.AlterField(
