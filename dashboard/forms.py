@@ -282,7 +282,9 @@ class CenterSelectionForm(forms.ModelForm):
 class AddressInformationForm(forms.ModelForm):
     class Meta:
         model = AddressInformation
-        fields = "__all__"
+        fields = ['permanent_province', 'permanent_district', 'permanent_municipality', 'permanent_ward_no', 'permanent_tole', 'permanent_house_no',
+                'current_district', 'current_municipality', 'current_province', 'current_ward_no', 'current_tole', 'current_house_no',
+                'old_province', 'old_district', 'old_municipality', 'old_ward_no', 'old_tole', 'old_house_no',]
 
 class PersonalInformationForm(forms.ModelForm):
     class Meta:
@@ -299,7 +301,7 @@ class PersonalInformationForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        print("Cleaned data:", cleaned_data)
+        # print("Cleaned data:", cleaned_data)
         return cleaned_data
 
 
@@ -365,11 +367,6 @@ class LivestockInformationForm(forms.ModelForm):
     class Meta:
         model = LivestockInformation
         fields = ['cows', 'buffalo', 'goat', 'sheep']
-
-    def clean(self):
-            cleaned_data = super().clean()
-            print("Cleaned data:", cleaned_data)
-            return cleaned_data
 
 class HouseInformationForm(forms.ModelForm):
     class Meta:

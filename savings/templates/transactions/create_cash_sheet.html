@@ -1,0 +1,66 @@
+{% extends "base/index.html" %}
+{% load static %}
+{% load savings_filters %}
+
+{% block corecss %}
+    <link rel="stylesheet" href="{% static 'css/savings.css' %}">
+{% endblock corecss %}
+{% block title %}
+    <title>CASH SHEET</title>
+{% endblock title %}
+
+{% block content %}
+    <a href="{% url 'member_list' %}">Back</a>
+    <div class="container">
+        <h4>CASH SHEET</h4>
+
+        <div class="container" id="member-detail">
+            <p><strong>M.Code:</strong>  {{member.code}}</p>
+            <p><strong>Member Name:</strong> {{member.personalInfo.first_name}} {{member.personalInfo.middle_name}} {{member.personalInfo.last_name}}</p>
+        </div>
+
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item active">Saving</li>
+              <li class="breadcrumb-item" aria-current="page"><a href="#">Loan</a></li>
+            </ol>
+          </nav>
+          
+       
+        <form method="post">
+            {% csrf_token %}
+             <!-- Other fields from CashSheetForm, if any -->
+             <table>
+                <thead>
+                    <tr>
+                        <th>Account Number</th>
+                        <th>Balance</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for account, amount_field_name in form.account_amount_fields %}
+                    <tr>
+                        <td>{{ account.account_type_display }}-{{ account.account_number }}</td>
+                        <td>{{ account.balance }}</td>
+                        <td>{{ form|get_field:amount_field_name }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                
+            </table>        
+
+            <!-- Non-table fields like 'deposited_by', 'remarks', etc. -->
+            <div>
+                {{ form.deposited_by.label_tag }} {{ form.deposited_by }}
+            </div>
+            <div>
+                {{ form.remarks.label_tag }} {{ form.remarks }}
+            </div>
+            <div>
+                {{ form.source_of_fund.label_tag }} {{ form.source_of_fund }}
+            </div>
+            <input type="submit" value="Save">
+        </form>
+    </div>
+{% endblock content %}

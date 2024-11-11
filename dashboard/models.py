@@ -163,7 +163,7 @@ class Employee(models.Model):
         ('employee', 'Employee')
     ]
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employee')
     name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=20)
@@ -280,6 +280,7 @@ class Member(models.Model):
 
 # Member information from here on:
 class AddressInformation(models.Model):
+    member = models.OneToOneField(Member, on_delete=models.CASCADE, related_name='addressInfo')
     # permanent address
     permanent_province = models.ForeignKey(Province, on_delete=models.CASCADE, related_name="member_permanent_province", null=True)
     permanent_district = models.ForeignKey(District, on_delete=models.CASCADE, related_name="member_permanent_district", null=True)
@@ -303,6 +304,9 @@ class AddressInformation(models.Model):
     old_ward_no = models.IntegerField(default=1)
     old_tole = models.CharField(max_length=50)
     old_house_no = models.CharField(max_length=50, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.member}"
 
 class PersonalInformation(models.Model):
     member = models.OneToOneField(Member, on_delete=models.CASCADE, related_name='personalInfo')

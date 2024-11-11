@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Account Statements</title>
+    <style>
+        /* Add styles here that apply to the PDF layout */
+        body { font-family: Arial, sans-serif; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 8px; border: 1px solid #ddd; text-align: center; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Account Statements for {{ member_id.name }}</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>S.No.</th>
+                <th>Txn Date</th>
+                <th>Channel</th>
+                <th>Deposit</th>
+                <th>Withdraw</th>
+                <th>Balance</th>
+                <th width='15%'>Remarks</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for statement in statements %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ statement.transaction_date }}</td>
+                <td>{% if statement.cash_sheet %}CASH SHEET{% elif statement.payment_sheet %}PAYMENT SHEET{% endif %}</td>
+                <td>{{ statement.cr_amount|floatformat:2 }}</td>
+                <td>{{ statement.dr_amount|floatformat:2 }}</td>
+                <td>{{ statement.curr_balance|floatformat:2 }}</td>
+                <td>{% if statement.remarks %}
+                    {{ statement.remarks }}
+                    {% else %}
+                    <p> </p>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            <tr>
+                <td><strong>Total</strong></td>
+                <td colspan="2"></td>
+                <td>{{ total_credit|floatformat:2 }}</td>
+                <td>{{ total_debit|floatformat:2 }}</td>
+                <td>{{ total_net|floatformat:2 }}</td>
+                <td colspan="2"></td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>

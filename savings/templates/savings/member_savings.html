@@ -12,31 +12,54 @@
     <a href="{% url 'add_fixed_deposit' member_id=member.id %}">Add Fixed Deposit</a>
     <a href="{% url 'add_recurring_deposit' member_id=member.id %}">Add Recurring Deposit</a>
     <div class="container">
-        <h1>{{ member.personalInfo.name }}'s Savings</h1>
 
         <h2>Savings Accounts</h2>
-        {% if savings_accounts %}
         <table>
             <thead>
                 <tr>
-                    <th>Account Number</th>
-                    <th>Balance</th>
+                    <th>A/C</th>
+                    <th>Code</th>
+                    <th>Name</th>
                     <th>Created On</th>
+                    <th>Saving Type</th>
+                    <th>Rate</th>
+                    <th>Amount</th>
+                    <th>Balance</th>
+                    <th>
+                        <!-- Filter Form -->
+                        <form method="GET" action="">
+                            <label for="account_status">Status:</label>
+                            <br>
+                            <select name="account_status" id="account_status" onchange="this.form.submit()">
+                                <option value="">Select One ...</option>
+                                {% for code, label in account_status %}
+                                <option value="{{ code }}" {% if request.GET.account_status == code %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </th>
                 </tr>
             </thead>
             <tbody>
                 {% for account in savings_accounts %}
                 <tr>
                     <td>{{ account.account_number }}</td>
-                    <td>{{ account.balance }}</td>
+                    <td>{{ member.code }}</td>
+                    <td>{{ member.personalInfo.first_name }} {{ member.personalInfo.middle_name }} {{ member.personalInfo.last_name }}</td>
                     <td>{{ account.created_on }}</td>
+                    <td>{{ account.account_type_display }}</td>
+                    <td>{{ account.interest_rate }}</td>
+                    <td>{{ account.amount }}</td>
+                    <td>{{ account.balance }}</td>
+                    <td>{{ account.status }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9">No record found.</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-        {% else %}
-        <p>No savings accounts found.</p>
-        {% endif %}
 
         <h2>Fixed Deposits</h2>
         {% if fixed_deposits %}

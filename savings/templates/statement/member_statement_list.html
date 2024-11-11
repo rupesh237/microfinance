@@ -1,0 +1,12 @@
+{% extends "base/index.html" %}
+
+{% block title %}
+    <title>Statement</title>
+{% endblock title %}
+
+{% block content %}
+<div class="relative overflow-x-auto text-black" id="statement-block">
+    {% include 'statement/statement-container.html' %}
+</div>
+
+{% endblock %}

@@ -48,3 +48,17 @@ th {
     pointer-events: none;  /* Prevents clicking */
     opacity: 0.5;          /* Visual cue for disabled state */
 }
+
+.breadcrumb {
+    padding: 0.5rem 1rem; /* Adjust padding if necessary */
+}
+
+.breadcrumb-item {
+    display: inline-block; /* Ensure items are displayed inline */
+    margin-right: 0.5rem; /* Add space between items */
+}
+
+.breadcrumb-item a {
+    text-decoration: none; /* Remove underline from links */
+    color: #007bff; /* Default link color */
+}

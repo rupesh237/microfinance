@@ -31,16 +31,23 @@
         <h1>Member Details</h1>
 
         <h2>Personal Information</h2>
-        <p><strong>Name:</strong> {{ personal_info.name }}</p>
+        <p><strong>Name:</strong> {{ personal_info.first_name }} {{ personal_info.middle_name }} {{ personal_info.last_name }}</p>
         <p><strong>Phone Number:</strong> {{ personal_info.phone_number }}</p>
-        <p><strong>Current Address:</strong> {{ personal_info.current_address }}</p>
-        <p><strong>Permanent Address:</strong> {{ personal_info.permanent_address }}</p>
+        <p><strong>Current Address:</strong> <td>{{ address_info.current_tole }}, {{ address_info.current_municipality }}-{{ address_info.current_ward_no }} {{address_info.current_district}}</p>
+        <p><strong>Permanent Address:</strong>{{ address_info.permanent_tole }}, {{ address_info.permanent_municipality }}-{{ address_info.permanent_ward_no }} {{address_info.permanent_district}}</p>
 
         <h2>Family Information</h2>
-        <p><strong>Sons:</strong> {{ family_info.sons }}</p>
-        <p><strong>Daughters:</strong> {{ family_info.daughters }}</p>
-        <p><strong>Husband:</strong> {{ family_info.husband }}</p>
-        <p><strong>Father:</strong> {{ family_info.father }}</p>
+        {% for family in family_info %}
+        <h6>{{family.relationship}}'s Information:</h6>
+        <p><strong>Name:</strong> {{ family.family_member_name }}</p>
+        <p><strong>Date of Birth:</strong> {{ family.date_of_birth }}</p>
+        <p><strong>Phone Number:</strong> {{ family.phone_number }}</p>
+        {% if family.citizenship_no %}
+        <p><strong>Citizenship No:</strong> {{ family.citizenship_no }}</p>
+        <p><strong>Issued Date:</strong> {{ family.issued_date }}</p>
+        <p><strong>Issued From:</strong> {{ family.issued_from }}</p>
+        {% endif %}
+        {% endfor %}
 
         <h2>Livestock Information</h2>
         <p><strong>Cows:</strong> {{ livestock_info.cows }}</p>
@@ -54,19 +61,19 @@
         <p><strong>Iron:</strong> {{ house_info.iron }}</p>
 
         <h2>Land Information</h2>
-        <p><strong>Farming:</strong> {{ land_info.farming }}</p>
-        <p><strong>Others:</strong> {{ land_info.others }}</p>
+        <p><strong>Farming:</strong> {{ land_info.farming_land }}</p>
+        <p><strong>Others:</strong> {{ land_info.other_land }}</p>
 
         <h2>Income Information</h2>
         <p><strong>Earning:</strong> {{ income_info.earning }}</p>
-        <p><strong>Farming:</strong> {{ income_info.farming }}</p>
-        <p><strong>Cattle:</strong> {{ income_info.cattle }}</p>
+        <p><strong>Farming:</strong> {{ income_info.farming_income }}</p>
+        <p><strong>Cattle:</strong> {{ income_info.cattle_income }}</p>
 
         <h2>Expenses Information</h2>
         <p><strong>House Rent:</strong> {{ expenses_info.house_rent }}</p>
-        <p><strong>Food:</strong> {{ expenses_info.food }}</p>
-        <p><strong>Health:</strong> {{ expenses_info.health }}</p>
-        <p><strong>Other:</strong> {{ expenses_info.other }}</p>
+        <p><strong>Food:</strong> {{ expenses_info.food_expense }}</p>
+        <p><strong>Health:</strong> {{ expenses_info.health_expense }}</p>
+        <p><strong>Other:</strong> {{ expenses_info.other_expenses }}</p>
 
         <a href="{% url 'dashboard' %}">Go Back</a>
         <a href="{% url 'delete_member'  member.id %}">Delete</a>

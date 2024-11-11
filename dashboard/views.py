@@ -11,10 +11,10 @@ from django.contrib.auth.models import User
 from django.views.generic import (
     CreateView, ListView, UpdateView, DeleteView )
 
-from .models import Employee, District, Municipality, Branch, GRoup, Member, Center,PersonalInformation, FamilyInformation, LivestockInformation, HouseInformation, LandInformation, IncomeInformation, ExpensesInformation
-from savings.models import SavingsAccount, INITIAL_SAVING_ACCOUNT_TYPE
+from dashboard.models import Employee, District, Municipality, Branch, GRoup, Member, Center,AddressInformation, PersonalInformation, FamilyInformation, LivestockInformation, HouseInformation, LandInformation, IncomeInformation, ExpensesInformation
+from savings.models import SavingsAccount, INITIAL_SAVING_ACCOUNT_TYPE, Statement
 
-from .forms import BranchForm, EmployeeForm, CenterForm, GroupForm
+from dashboard.forms import BranchForm, EmployeeForm, CenterForm, GroupForm
 
 from .mixins import RoleRequiredMixin
 
@@ -82,6 +82,7 @@ def manager_dashboard(request):
         'branch': branch,
         'bank': 'Manager'
     })
+
 @login_required
 def employee_dashboard(request):
     employee = Employee.objects.get(user= request.user)
@@ -321,7 +322,7 @@ class MemberWizard(SessionWizardView):
     predefined_relationships = ["Husband", "Father", "Father-In-Law"]
 
     def get_template_names(self):
-        return [TEMPLATES.get(self.steps.current)]
+        return [TEMPLATES.get(self.steps.current, "member/add_member/address_info.html")]
 
     def get_form_initial(self, step):
         if step == "family":
@@ -384,12 +385,19 @@ class MemberWizard(SessionWizardView):
                 center_id = self.request.session.get('center_id')
                 group_id = self.request.session.get('group_id')
                 member_code = self.request.session.get('member_code')
+                member_category = self.request.session.get('member_category')
+                code = self.request.session.get('code')
+                position = self.request.session.get('position')
+                print(f"{center_id} {group_id} {member_code} {member_category} {code} {position}")
 
                 # Create the Member object now that we have all necessary information
                 member = Member.objects.create(
                     center_id=center_id,
                     group_id=group_id,
                     member_code=member_code,
+                    member_category=member_category,
+                    code=code,
+                    position=position,
                 )
 
                 # Save each form's data linked to this new Member
@@ -404,6 +412,9 @@ class MemberWizard(SessionWizardView):
                 self.request.session.pop('center_id', None)
                 self.request.session.pop('group_id', None)
                 self.request.session.pop('member_code', None)
+                self.request.session.pop('member_category', None)
+                self.request.session.pop('code', None)
+                self.request.session.pop('position', None)
 
         except Exception as e:
             # Handle exception if saving fails
@@ -443,16 +454,6 @@ class MemberWizard(SessionWizardView):
         return redirect('member_list')
 
 
-# def select_group(request):
-#     if request.method == 'POST':
-#         form = GroupSelectionForm(request.POST)
-#         if form.is_valid():
-#             request.session['group'] = form.cleaned_data['group'].id
-#             return redirect('add_member')
-#     else:
-#         form = GroupSelectionForm()
-#     return render(request, 'dashboard/select_group.html', {'form': form})
-
 def load_groups(request):
     center_id = request.GET.get('center')
     groups = GRoup.objects.filter(center_id=center_id).values('id', 'name', 'code')
@@ -482,11 +483,18 @@ class SelectCenterView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
         center_id = form.cleaned_data['center'].id
         group_id = form.cleaned_data['group'].id
         member_code = form.cleaned_data['member_code']
+        member_category = form.cleaned_data['member_category']
+        code = form.cleaned_data['code']
+        position = form.cleaned_data['position']
+        print(f"{center_id} {group_id} {member_code} {member_category} {code} {position}")
         
         # Store these details in the session
         self.request.session['center_id'] = center_id
         self.request.session['group_id'] = group_id
         self.request.session['member_code'] = member_code
+        self.request.session['member_category'] = member_category
+        self.request.session['code'] = code
+        self.request.session['position'] = position
 
         return redirect(self.success_url)
 
@@ -513,6 +521,7 @@ class MemberDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
 from django.db import transaction
 FORMSS = [
     ("personal", PersonalInformationForm),
+    ("address", AddressInformationForm),
     ("family", FamilyInformationForm),
     ("livestock", LivestockInformationForm),
     ("house", HouseInformationForm),
@@ -523,6 +532,7 @@ FORMSS = [
 
 TEMPLATES = {
     "personal": "member/update_member/personal_info.html",
+    "address": "member/update_member/address_info.html",
     "family": "member/update_member/family_info.html",
     "livestock": "member/update_member/livestock_info.html",
     "house": "member/update_member/house_info.html",
@@ -543,6 +553,7 @@ class MemberUpdateWizard(LoginRequiredMixin, RoleRequiredMixin, SessionWizardVie
         
         # Fetch related models for the member
         personal_info = get_object_or_404(PersonalInformation, member=member)
+        address_info = get_object_or_404(AddressInformation, member=member)
         family_info = get_object_or_404(FamilyInformation, member=member)
         livestock_info = get_object_or_404(LivestockInformation, member=member)
         house_info = get_object_or_404(HouseInformation, member=member)
@@ -575,6 +586,27 @@ class MemberUpdateWizard(LoginRequiredMixin, RoleRequiredMixin, SessionWizardVie
                 'registered_vdc': personal_info.registered_vdc,
                 'marriage_regd_date': personal_info.marriage_regd_date,
                 'file_no': personal_info.file_no,
+            })
+        elif step == "address":
+            initial.update({
+                'permanent_province': address_info.permanent_province,
+                'permanent_district': address_info.permanent_district,
+                'permanent_municipality': address_info.permanent_municipality,
+                'permanent_ward_no': address_info.permanent_ward_no,
+                'permanent_tole': address_info.permanent_tole,
+                'permanent_house_no': address_info.permanent_house_no,
+                'current_district': address_info.current_district,
+                'current_municipality': address_info.current_municipality,
+                'current_province': address_info.current_province,
+                'current_ward_no': address_info.current_ward_no,
+                'current_tole': address_info.current_tole,
+                'current_house_no': address_info.current_house_no,
+                'old_province': address_info.old_province,
+                'old_district': address_info.old_district,
+                'old_municipality': address_info.old_municipality,
+                'old_ward_no': address_info.old_ward_no,
+                'old_tole': address_info.old_tole,
+                'old_house_no': address_info.old_house_no,
             })
         elif step == "family":
             initial.update({
@@ -658,6 +690,30 @@ class MemberUpdateWizard(LoginRequiredMixin, RoleRequiredMixin, SessionWizardVie
                             'file_no': form_instance.file_no,
                         }
                     )
+                elif isinstance(form_instance, AddressInformation):
+                    AddressInformation.objects.update_or_create(
+                        member=member,
+                        defaults={
+                            'permanent_province': form_instance.permanent_province,
+                            'permanent_district': form_instance.permanent_district,
+                            'permanent_municipality': form_instance.permanent_municipality,
+                            'permanent_ward_no': form_instance.permanent_ward_no,
+                            'permanent_tole': form_instance.permanent_tole,
+                            'permanent_house_no': form_instance.permanent_house_no,
+                            'current_district': form_instance.current_district,
+                            'current_municipality': form_instance.current_municipality,
+                            'current_province': form_instance.current_province,
+                            'current_ward_no': form_instance.current_ward_no,
+                            'current_tole': form_instance.current_tole,
+                            'current_house_no': form_instance.current_house_no,
+                            'old_province': form_instance.old_province,
+                            'old_district': form_instance.old_district,
+                            'old_municipality': form_instance.old_municipality,
+                            'old_ward_no': form_instance.old_ward_no,
+                            'old_tole': form_instance.old_tole,
+                            'old_house_no': form_instance.old_house_no,
+                        }
+                    )
                 elif isinstance(form_instance, FamilyInformation):
                     FamilyInformation.objects.update_or_create(
                         member=member,
@@ -727,7 +783,8 @@ class MemberUpdateWizard(LoginRequiredMixin, RoleRequiredMixin, SessionWizardVie
 def member_detail_view(request, member_id):
     member = get_object_or_404(Member, id=member_id)
     personal_info = member.personalInfo
-    family_info = member.familyInfo
+    address_info = member.addressInfo
+    family_info = FamilyInformation.objects.filter(member=member).all()
     livestock_info = member.livestockInfo
     house_info = member.houseInfo
     land_info = member.landInfo
@@ -737,6 +794,7 @@ def member_detail_view(request, member_id):
     context = {
         'member': member,
         'personal_info': personal_info,
+        'address_info': address_info,
         'family_info': family_info,
         'livestock_info': livestock_info,
         'house_info': house_info,
@@ -747,6 +805,24 @@ def member_detail_view(request, member_id):
     
     return render(request, 'member/member_detail.html', context)
 
+def get_saving_accounts(request, member_id):
+    accounts = SavingsAccount.objects.filter(member_id=member_id).values('account_type', 'account_number', 'balance')
+    account_data = []
+
+    for account in accounts:
+        statements = Statement.objects.filter(account__account_number=account['account_number'])
+        total_credit = statements.get_total_cr_amount()
+        total_debit = statements.get_total_dr_amount()
+
+        account_data.append({
+            'account_type': account['account_type'],
+            'account_number': account['account_number'],
+            'balance': account['balance'],
+            'total_credit': total_credit,
+            'total_debit': total_debit,
+        })
+    return JsonResponse({'accounts': account_data})
+
 class MemberListView(ListView):
     model = Member
     template_name = 'member/member_list.html'
@@ -755,7 +831,7 @@ class MemberListView(ListView):
     # Pass the MEMBER_STATUS choices to the template
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['member_status'] = Member.MEMBER_STATUS  # Assuming MEMBER_STATUS is defined in the Member model
+        context['member_status'] = Member.MEMBER_STATUS 
         return context
 
 
@@ -783,7 +859,7 @@ def change_member_status(request):
             for account_code, account_name in INITIAL_SAVING_ACCOUNT_TYPE:
                 SavingsAccount.objects.create(
                     member=member,
-                    account_type=account_name,
+                    account_type=account_code,
                     account_number=f"{member.code}.{account_code}.1", 
                     balance=0.00 ,
                 )
