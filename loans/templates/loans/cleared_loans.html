@@ -1,0 +1,47 @@
+{% extends "base/index.html" %}
+{% load static %}
+{% block corecss %}
+    <link rel="stylesheet" href="{% static 'css/loans.css' %}">
+{% endblock corecss %}
+
+{% block title %}
+    <title>Cleared Loans</title>
+{% endblock title %}
+
+{% block content %}
+    <h1>Cleared Loans for {{ member.personalInfo.first_name }} {{ member.personalInfo.middle_name }} {{ member.personalInfo.last_name }}</h1>
+    
+    <div class="loan-container">
+        {% if loans %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Loan Type</th>
+                        <th>Amount</th>
+                        <th>Interest Rate (%)</th>
+                        <th>Duration (Months)</th>
+                        <th>Start Date</th>
+                        <th>Cleared Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for loan in loans %}
+                    <tr>
+                        <td>{{ loan.loan_type }}</td>
+                        <td>{{ loan.amount|floatformat:2 }}</td>
+                        <td>{{ loan.interest_rate|floatformat:2 }}</td>
+                        <td>{{ loan.duration_months }}</td>
+                        <td>{{ loan.start_date }}</td>
+                        <td>{{ loan.emi_payments.last.payment_date }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No cleared loans available for this member.</p>
+        {% endif %}
+    </div>
+
+    <!-- Button to go back to active loans -->
+    <a href="{% url 'member_loans' member.id %}" class="btn ">Back to Active Loans</a>
+{% endblock content %}

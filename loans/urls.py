@@ -9,4 +9,6 @@ urlpatterns = [
     path('take-loan-form/<int:member_id>', views.loan_form, name= 'loan_form'),
     # need to chanage this url for better printing options with proper css
     path('download-pdf-report/<int:member_id>', views.pdf_report, name='download_pdf_report'),
+    path('confirm-clear-loan/<int:loan_id>/', views.confirm_clear_loan, name='confirm_clear_loan'),
+    path('cleared-loans/<int:member_id>/', views.cleared_loans, name='cleared_loans'),
 ]

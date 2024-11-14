@@ -1,32 +1,12 @@
-{% extends "base/index.html" %}
-{% load static %}
-
-{% block title %}
-    <title>Member details</title>
-{% endblock title %}
-
-{% block corecss %}
-    {% comment %} <link rel="stylesheet" href="{% static 'css/vertical_nav.css' %}"> {% endcomment %}
-    <link rel="stylesheet" href="{% static 'css/member_detail.css' %}">
-{% endblock corecss%}
-
-{% block content%}
-
-{% comment %} <div class="navbar1">
-    <ul>
-        <li><a href="#home">Home</a></li>
-        <li><a href="#about">About</a></li>
-        <li><a href="#services">Services</a></li>
-        <li><a href="#contact">Contact</a></li>
-    </ul>
-</div> {% endcomment %}
-
-    <a href="{% url 'member_savings' member.id %}">Savings</a>
-    <a href="{% url 'take_loan' member.id %}"> Take loans</a>
-    <a href="{% url 'member_loans' member.id %}">View loans</a>
-    <a href="{% url 'add_fixed_deposit' member_id=member.id %}">fixed deposit</a>
-    <a href="{% url 'add_fixed_deposit' member_id=member.id %}">Recurring Deposits</a>
-    <a href="{% url 'update_member' member.id %}">update profile</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Member Detail - Microfinance</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
     <div class="container">
         <header>
             <h1>Member Details</h1>
@@ -34,14 +14,14 @@
 
         <section class="member-info">
             <div class="profile-image">
-                <img src="rupesh.jpg" alt="Profile">
+                <img src="rupesh.jpg" alt="Member Profile Image">
             </div>
             <div class="personal-info">
                 <h2>Personal Information</h2>
-                <p><strong>Name:</strong> {{personal_info.first_name}} {{personal_info.middle_name}} {{personal_info.last_name}}</p>
-                <p><strong>Account No:</strong> {{personal_info.phone_number}}</p>
-                <p><strong>Phone:</strong> {{personal_info.phone_number}}</p>
-                <p><strong>Email:</strong> email@gmail.com</p>
+                <p><strong>Name:</strong> John Doe</p>
+                <p><strong>Account No:</strong> 123456789</p>
+                <p><strong>Phone:</strong> +123456789</p>
+                <p><strong>Email:</strong> john.doe@example.com</p>
             </div>
         </section>
 
@@ -107,9 +87,6 @@
             <p><strong>Family Status:</strong> Married</p>
             <p><strong>Livestock:</strong> 2 Cows</p>
         </section>
-
-        <a href="{% url 'dashboard' %}">Go Back</a>
-        <a href="{% url 'delete_member'  member.id %}">Delete</a>
     </div>
-{% endblock %}
-
+</body>
+</html>
