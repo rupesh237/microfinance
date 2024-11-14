@@ -1,0 +1,140 @@
+{% load widget_tweaks %}
+{% load humanize %}
+
+<div class="flex flex-col-reverse md:grid md:grid-cols-4 md:gap-4"
+    id="statement-container">
+
+      <div class="row mb-2 d-flex align-items-center">
+        <div class="col-md-6">
+            <h3 class="mt-4 mb-4 prose prose-2xl text-black">
+                Account Statements
+            <h3>  
+        </div>
+        <div class="col-md-6 d-flex justify-content-end">
+           <a id="pdf-download-link" href="#" target="_blank"><i class="bi bi-file-earmark-pdf"></i></a>
+        </div>
+      </div>
+
+        <!-- 1/4 cols for the filter form-->
+    <div class="col-span-1">
+        <form hx-get="{% url 'member-statement' member_id %}"
+              hx-target="#statement-container"
+              hx-swap="outerHTML">
+          <div class="mb-2">
+            {{ filter.form.account_type|add_label_class:"label text-black"}}
+            {% render_field filter.form.account_type class="select bg-gray-50 text-gray-900" %}
+          </div>
+  
+          <div class="row mb-2 d-flex align-items-center">
+                <div class="col-md-auto">
+                    {{ filter.form.start_date|add_label_class:"label text-black" }}
+                    {% render_field filter.form.start_date class="input bg-gray-50 text-gray-900" %}
+                </div>
+                <div class="col-md-auto">
+                    {{ filter.form.end_date|add_label_class:"label text-black" }}
+                    {% render_field filter.form.end_date class="input bg-gray-50 text-gray-900" %}
+                </div>
+                <button class="btn btn-success">
+                    Filter
+                </button>
+            </div>
+  
+        </form>
+      </div>
+      
+          <table class='table'>
+              <thead class="text-xs text-black uppercase">
+                  <th class="px-6 py-3">Channel</th>
+                  <th class="px-6 py-3">Tr. Date</th>
+                  <th class="px-6 py-3">Cr</th>
+                  <th class="px-6 py-3">Dr</th>
+                  <th class="px-6 py-3">Balance</th>
+                  <th class="px-6 py-3">By</th>
+                  <th class="px-6 py-3">Voucher</th>
+                  <th class="px-6 py-3">Remarks</th>
+                  <th class="px-6 py-3">Created By</th>
+                  <th class="px-6 py-3">Action</th>
+              </thead>
+              {% if filter.qs %}
+              <tbody>
+                  {% for statement in filter.qs %}
+                    <tr>
+                        {% if statement.cash_sheet %}
+                        <td>CASH SHEET</td>
+                        {% elif statement.payment_sheet %}
+                        <td>PAYMENT SHEET</td>
+                        {% endif %}
+                        <td class="px-6 py-3">{{statement.transaction_date}}</td>
+                        <td class="px-6 py-3">{{statement.cr_amount}}</td>
+                        <td class="px-6 py-3">{{statement.dr_amount}}</td>
+                        <td class="px-6 py-3">{{statement.curr_balance}}</td>
+                        <td class="px-6 py-3">{{statement.by}}</td>
+                        <td class="px-6 py-3">{{statement.voucher.voucher_number}}</td>
+                        <td class="px-6 py-3">{{statement.remarks}}</td>
+                        <td class="px-6 py-3">{{statement.created_by}}</td>
+                        <td class="px-6 py-3">
+                            <div>
+                                <i class='bi bi-pencil-fill'></i>
+                                <i class="bi bi-trash-fill"></i>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center text-2xl text-black">
+                            No Statements found.
+                        </td>
+                    </tr>
+                {% endfor %}
+                <tr>
+                    <td><strong>Total</strong></td>
+                    <td class="px-6 py-3"></td>
+                    <td class="px-6 py-3">{{ total_credit|floatformat:2|intcomma }}</td>
+                    <td class="px-6 py-3">{{ total_debit|floatformat:2|intcomma }}</td>
+                    <td class="px-6 py-3"></td>
+                    <td class="px-6 py-3"></td>
+                    <td class="px-6 py-3"></td>
+                    <td class="px-6 py-3"></td>
+                    <td class="px-6 py-3"></td>
+                    <td class="px-6 py-3"></td>
+                  </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center text-2xl text-black">
+                            No Statements found.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+
+</div>
+
+<script>
+    // Function to update the download link with filter parameters
+    function updatePDFDownloadLink() {
+        const accountType = document.querySelector('[name="account_type"]').value;
+        const startDate = document.querySelector('[name="start_date"]').value;
+        const endDate = document.querySelector('[name="end_date"]').value;
+        const memberId = "{{ member.id }}";  // Assuming `member` is passed to the template
+
+        // Base URL for the PDF download view
+        const baseURL = "{% url 'statement_pdf' member_id=member_id %}";
+        const pdfUrl = new URL(baseURL, window.location.origin);  // Ensure it's an absolute URL
+
+        if (accountType) pdfUrl.searchParams.append("account_type", accountType);
+        if (startDate) pdfUrl.searchParams.append("start_date", startDate);
+        if (endDate) pdfUrl.searchParams.append("end_date", endDate);
+
+        // Update the href attribute of the download link
+        document.getElementById("pdf-download-link").href = pdfUrl.toString();
+    }
+
+    // Attach event listeners to update the link whenever filters change
+    document.querySelector('[name="account_type"]').addEventListener('change', updatePDFDownloadLink);
+    document.querySelector('[name="start_date"]').addEventListener('change', updatePDFDownloadLink);
+    document.querySelector('[name="end_date"]').addEventListener('change', updatePDFDownloadLink);
+
+    // Initial setup of the link on page load
+    document.addEventListener('DOMContentLoaded', updatePDFDownloadLink);
+</script>

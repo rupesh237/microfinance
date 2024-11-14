@@ -1,0 +1,79 @@
+{% load widget_tweaks %}
+{% load humanize %}
+
+<div class="flex flex-col-reverse md:grid md:grid-cols-4 md:gap-4"
+    id="voucher-container">
+
+      <div class="flex justify-between items-center mt-4 mb-6">
+        <h3 class="mt-4 mb-4 prose prose-2xl text-black">
+          Voucher List
+        <h3>     
+      </div>
+
+        <!-- 1/4 cols for the filter form-->
+    <div class="col-span-1">
+        <form hx-get="{% url 'vouchers' %}"
+              hx-target="#voucher-container"
+              hx-swap="outerHTML">
+          <div class="row mb-2 d-flex align-items-center">
+                <div class="col-md-6 text-center">
+                    <strong>{{today}}</strong>
+                </div>
+                <div class="col-md-6 ms-auto d-flex justify-content-end align-items-center">
+                    <div class="mr-2">
+                        {{ filter.form.date|add_label_class:"label text-black" }}
+                        {% render_field filter.form.date class="input bg-gray-50 text-gray-900" %}
+                    </div>
+                    <button class="btn btn-success">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+  
+        </form>
+      </div>
+      
+          <table class='table'>
+              <thead class="text-xs text-black uppercase">
+                  <th class="px-6 py-3">V. No</th>
+                  <th class="px-6 py-3">Amount</th>
+                  <th class="px-6 py-3">Type</th>
+                  <th class="px-6 py-3">Category</th>
+                  <th class="px-6 py-3">Description</th>
+                  <th class="px-6 py-3">Txn. Date</th>
+                  <th class="px-6 py-3">Created Date</th>
+                  <th class="px-6 py-3">Created By</th>
+                  <th class="px-6 py-3">Action</th>
+              </thead>
+              {% if filter.qs %}
+              <tbody>
+                  {% for voucher in filter.qs %}
+                    <tr>
+                        <td class="px-6 py-3">{{voucher.voucher_number}}</td>
+                        <td class="px-6 py-3">{{voucher.amount}}</td>
+                        <td class="px-6 py-3">{{voucher.voucher_type}}</td>
+                        <td class="px-6 py-3">{{voucher.category}}</td>
+                        <td class="px-6 py-3">{{voucher.description}}</td>
+                        <td class="px-6 py-3">{{voucher.transaction_date}}</td>
+                        <td class="px-6 py-3">{{voucher.created_at}}</td>
+                        <td class="px-6 py-3">{{voucher.created_by}}</td>
+                        <td class="px-6 py-3"><i class='bi bi-pencil-fill'></i></td>
+                    </tr>
+                  {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center text-2xl text-black">
+                            No Voucher for this day.
+                        </td>
+                    </tr>
+                  {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center text-2xl text-black">
+                            No records found.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+
+</div>

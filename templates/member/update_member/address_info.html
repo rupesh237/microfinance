@@ -1,0 +1,80 @@
+{% extends "base/index.html" %}
+
+{% block content %}
+    <h2>Address Information</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ wizard.management_form }}
+        {{ wizard.form.as_p }}
+        <button type="submit" name="wizard_goto_step" value="{{ wizard.steps.prev }}">Previous</button>
+        <button type="submit">Next</button>
+    </form>
+
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function () {
+            // Function to handle dynamic select updates for province, district, and municipality
+            function handleProvinceChange(provinceField, districtField, municipalityField) {
+                $(provinceField).change(function () {
+                    var provinceId = $(this).val();
+                    var districtUrl = "{% url 'load_districts' %}";
+
+                    if (provinceId) {
+                        $.ajax({
+                            url: districtUrl,
+                            data: { 'province': provinceId },
+                            success: function (data) {
+                                $(districtField).html(''); // Clear existing options
+                                $(districtField).append('<option value="">Select district</option>');
+                                $.each(data, function (key, value) {
+                                    $(districtField).append('<option value="' + value.id + '">' + value.name + '</option>');
+                                });
+                            }
+                        });
+                    } else {
+                        $(districtField).html('<option value="">Select district</option>'); // Reset district options
+                    }
+                    $(municipalityField).html('<option value="">Select municipality</option>'); // Reset municipality options
+                });
+            }
+
+            function handleDistrictChange(districtField, municipalityField) {
+                $(districtField).change(function () {
+                    var districtId = $(this).val();
+                    var municipalityUrl = "{% url 'load_municipalities' %}";
+
+                    if (districtId) {
+                        $.ajax({
+                            url: municipalityUrl,
+                            data: { 'district': districtId },
+                            success: function (data) {
+                                $(municipalityField).html(''); // Clear existing options
+                                $(municipalityField).append('<option value="">Select municipality</option>');
+                                $.each(data, function (key, value) {
+                                    $(municipalityField).append('<option value="' + value.id + '">' + value.name + '</option>');
+                                });
+                            }
+                        });
+                    } else {
+                        $(municipalityField).html('<option value="">Select municipality</option>'); // Reset municipality options
+                    }
+                });
+            }
+
+            // Attach handlers for each address block (permanent, current, old)
+            $(document).ready(function () {
+                // Permanent address
+                handleProvinceChange("#id_address-permanent_province", "#id_address-permanent_district", "#id_address-permanent_municipality");
+                handleDistrictChange("#id_address-permanent_district", "#id_address-permanent_municipality");
+
+                // Current address
+                handleProvinceChange("#id_address-current_province", "#id_address-current_district", "#id_address-current_municipality");
+                handleDistrictChange("#id_address-current_district", "#id_address-current_municipality");
+
+                // Old address
+                handleProvinceChange("#id_address-old_province", "#id_address-old_district", "#id_address-old_municipality");
+                handleDistrictChange("#id_address-old_district", "#id_address-old_municipality");
+            });
+        });
+    </script>
+
+{% endblock %}

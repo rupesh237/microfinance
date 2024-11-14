@@ -115,7 +115,7 @@ RELIGION_CHOICES = [
 ]
 OCCUPATION_CHOICES = [
     ('Agriculture', 'Agriculture'),
-    ('Business', 'Buddhism'),
+    ('Business', 'Business'),
     ('Housewife', 'Housewife'),
     ('Foreign Employment', 'Foreign Employment'),
 ]
@@ -163,7 +163,7 @@ class Employee(models.Model):
         ('employee', 'Employee')
     ]
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employee')
     name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=20)
@@ -264,7 +264,7 @@ class Member(models.Model):
         ('RTR', 'Ready To Register'),
         ('D', 'Dropout'),
         ('p', 'Public'),
-        ('D', 'Death'),
+        ('D', 'Death'), 
     ]
 
     member_category = models.CharField(max_length=20, choices=MEMBER_CATEGORY_CHOICES, default="General Member")
@@ -280,6 +280,7 @@ class Member(models.Model):
 
 # Member information from here on:
 class AddressInformation(models.Model):
+    member = models.OneToOneField(Member, on_delete=models.CASCADE, related_name='addressInfo')
     # permanent address
     permanent_province = models.ForeignKey(Province, on_delete=models.CASCADE, related_name="member_permanent_province", null=True)
     permanent_district = models.ForeignKey(District, on_delete=models.CASCADE, related_name="member_permanent_district", null=True)
@@ -303,6 +304,9 @@ class AddressInformation(models.Model):
     old_ward_no = models.IntegerField(default=1)
     old_tole = models.CharField(max_length=50)
     old_house_no = models.CharField(max_length=50, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.member}"
 
 class PersonalInformation(models.Model):
     member = models.OneToOneField(Member, on_delete=models.CASCADE, related_name='personalInfo')
@@ -336,7 +340,7 @@ class PersonalInformation(models.Model):
     file_no = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
-        return self.name
+        return f"{self.first_name} {self.last_name}"
 
 RELATIONSHIP_CHOICES = [
     ('Father', 'Father'),
@@ -346,7 +350,7 @@ RELATIONSHIP_CHOICES = [
     ('Daughter', 'Daughter'),
 ]
 class FamilyInformation(models.Model):
-    member = models.OneToOneField(Member, on_delete=models.CASCADE, related_name='familyInfo')
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='familyInfo')
 
     family_member_name = models.CharField(max_length=50)
     relationship = models.CharField(max_length=30, choices=RELATIONSHIP_CHOICES)

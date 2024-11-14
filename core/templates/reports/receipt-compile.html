@@ -1,0 +1,61 @@
+{% extends "base/index.html" %}
+{% load widget_tweaks %}
+{% load humanize %}
+
+{% block title %}
+    <title>Report</title>
+{% endblock title %}
+
+{% block content %}
+<div class="relative overflow-x-auto text-black" id="report-block">
+    <div class="flex flex-col-reverse md:grid md:grid-cols-4 md:gap-4"
+    id="report-container">
+
+      <div class="row mb-2 d-flex align-items-center">
+        <div class="col-md-6">
+            <h3 class="mt-4 mb-4 prose prose-2xl text-black">
+                Receipt Compile
+            <h3>  
+        </div>
+      </div>
+    
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}{% if message.tags == 'error' %} alert-danger{% endif %}">
+            {{ message }}
+        </div>        
+        {% endfor %}
+    {% endif %}
+
+        <!-- 1/4 cols for the filter form-->
+    <div class="col-span-1">
+        <form action="{% url 'generate_pdf_receipt' %}" method="GET">
+  
+          <div class="row mb-2 d-flex align-items-center">
+            <div class="col-md-auto">
+                {{ filter.form.start_date|add_label_class:"label text-black"}}
+                {% render_field filter.form.start_date class="select bg-gray-50 text-gray-900" %}
+
+            </div>
+            <div class="col-md-auto">
+                {{ filter.form.end_date|add_label_class:"label text-black"}}
+                {% render_field filter.form.end_date class="select bg-gray-50 text-gray-900" %}
+
+            </div>
+            </div>
+            <div class="mb-2">
+                {{ filter.form.staff|add_label_class:"label text-black"}}
+                {% render_field filter.form.staff class="select bg-gray-50 text-gray-900" %}
+              </div>
+            <button class="btn btn-success">
+                Run Report
+            </button>
+  
+        </form>
+      </div>
+</div>
+
+{% endblock %}
+
+
+

@@ -1,4 +1,6 @@
+{% load custom_filters %}
 {% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -34,6 +36,7 @@
                         <a href="#">Payments</a>
                         <a href="#">Receipts</a>
                         <a href="#">Withdraw</a>
+                        <a href="{% url 'vouchers' %}">Voucher</a>
                     </div>
                 </li>
                 <li class="dropdown">
@@ -46,9 +49,9 @@
                 <li class="dropdown">
                     <a href="#" class="dropbtn">Reports <i class="bi bi-chevron-down"></i></a>
                     <div class="dropdown-content">
-                        <a href="#">MIS report</a>
+                        <a href="{% url 'reports' %}">MIS report</a>
                         <a href="#">General ledger</a>
-                        <a href="#">Receipts Compile voucher report</a>
+                        <a href="{% url 'generate_pdf_receipt' %}">Receipts Compile voucher report</a>
                         <a href="#">Payments compile voucher report</a>
                         <a href="#">Daybook report</a>
                         <a href="#">statements</a>
