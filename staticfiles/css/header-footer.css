@@ -1,0 +1,128 @@
+/* General Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-left a {
+    text-decoration: none;
+    color: #fff;
+    padding: 10px;
+    display: block;
+}
+
+.nav-left a:hover {
+    background-color: #555;
+}
+
+
+/* Navbar Styles */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #716a6a;
+    padding: 20px 10px;
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    width: 100%;
+}
+.navbar p{
+    color: #fff;
+}
+
+.nav-left {
+    display: flex;
+    list-style: none;
+}
+
+.nav-left li {
+    margin-right: 15px;
+    position: relative;
+}
+
+/* Dropdown Menu */
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #333;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+    min-width: 260px;
+    top: 100%;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown-content a {
+    padding: 10px 15px;
+    color: #fff;
+}
+
+.dropdown-content a:hover {
+    background-color: #555;
+}
+
+
+/* Sticky Navbar on Scroll */
+.navbar.sticky {
+    position: fixed;
+    top: 0;
+    width: 100%;
+}
+
+.content {
+    padding: 20px;
+    margin-top: 50px;
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+p {
+    margin: 10px 0;
+}
+
+
+/* Footer Styles */
+.footer {
+    background-color: #716a6a; /* Dark background to match the navbar */
+    color: white;
+    text-align: center;
+    padding: 20px 0;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+    font-size: 16px;
+}
+
+.footer p {
+    margin: 0;
+}
+
+.footer a {
+    color: #b6e3e5; /* Link color */
+    text-decoration: none;
+    font-weight: bold;
+}
+
+
+
+
+
+
+
+

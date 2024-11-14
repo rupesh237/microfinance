@@ -133,7 +133,7 @@ class Statement(models.Model):
         ('debit', 'Debit'),
     ]
 
-    account = models.ForeignKey(SavingsAccount, on_delete=models.CASCADE, related_name='statements')
+    account = models.ForeignKey(SavingsAccount, on_delete=models.CASCADE, related_name='account_stat')
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name="member_stat")
     transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
     cr_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, blank=True, null=True)
@@ -150,7 +150,7 @@ class Statement(models.Model):
     cash_sheet = models.ForeignKey(CashSheet, on_delete=models.CASCADE, related_name='statement_cashsheet', blank=True, null=True)
     payment_sheet = models.ForeignKey(PaymentSheet, on_delete=models.CASCADE, related_name='statement_paymentsheet', blank=True, null=True)
 
-    voucher = models.ForeignKey(Voucher, on_delete=models.CASCADE, related_name='statement_voucher')
+    voucher = models.ForeignKey(Voucher, on_delete=models.CASCADE, related_name='voucher_statement')
 
     objects = StatementQuerySet.as_manager()
 

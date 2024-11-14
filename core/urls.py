@@ -5,6 +5,5 @@ urlpatterns = [
     path('vouchers/', views.voucher_list, name="vouchers"),
 
     path('reports/', views.report_list, name="reports"),
-    path('reports/receipt/<int:receipt_id>/pdf/', views.generate_pdf_receipt, name='generate_pdf_receipt'),
-    
+    path('reports/receipt/', views.receipt_compile_report, name='generate_pdf_receipt'),  
 ]

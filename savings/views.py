@@ -7,6 +7,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.views.generic import CreateView
 from django.db import transaction
+from django.utils import timezone
+from datetime import datetime
 
 from dashboard.mixins import RoleRequiredMixin
 
@@ -260,10 +262,14 @@ def statement_pdf_view(request, member_id):
     member = get_object_or_404(Member, id=member_id)
     statements = Statement.objects.filter(member=member)
 
+    today = timezone.now()
+
     # Retrieve filter parameters
     account_type = request.GET.get('account_type')
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
+
+    account = statements.filter(account=account_type).first().account
 
     # Apply filters if parameters are present
     if account_type:
@@ -278,20 +284,33 @@ def statement_pdf_view(request, member_id):
     total_debit = sum(statement.dr_amount for statement in statements)
     total_net = total_credit - total_debit
 
+     # Convert string to datetime object
+    if start_date:
+        start_date_obj = datetime.strptime(start_date, "%Y-%m-%d")
+        # Format the datetime object as Y/m/d
+        start_date = start_date_obj.strftime("%Y/%m/%d")
+    if end_date:
+        end_date_obj = datetime.strptime(end_date, "%Y-%m-%d")
+        end_date = end_date_obj.strftime("%Y/%m/%d")
+
     # Render the HTML template
     template = get_template('statement/statement-pdf.html')
     html_content = template.render({
         'member': member,
+        'account':account,
         'statements': statements,
         'total_credit': total_credit,
         'total_debit': total_debit,
         'total_net': total_net,
+        'today': today,
+        'start_date': start_date,
+        'end_date': end_date,
     })
 
     # Generate the PDF from the HTML content
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename="statement_{member_id}.pdf"'
-    HTML(string=html_content).write_pdf(response)
+    HTML(string=html_content, base_url=request.build_absolute_uri('/')).write_pdf(response)
 
     return response
 

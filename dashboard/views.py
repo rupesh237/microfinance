@@ -415,44 +415,11 @@ class MemberWizard(SessionWizardView):
                 self.request.session.pop('member_category', None)
                 self.request.session.pop('code', None)
                 self.request.session.pop('position', None)
-
+                return redirect('member_list') 
         except Exception as e:
             # Handle exception if saving fails
             messages.error(self.request, f"Error saving member: {e}")
             return redirect('member_list')
-        member_id = self.request.session.get('member_id')
-        if not member_id:
-            # Replace this with actual member creation logic if not in session
-            member = Member.objects.create()  # Assuming Member creation doesn't need extra params
-            self.request.session['member_id'] = member.id
-        else:
-            member = Member.objects.get(id=member_id)
-
-        # Save main forms
-        for form in form_list:
-            if form.is_valid():
-                instance = form.save(commit=False)
-                instance.member = member
-                instance.save()
-            else:
-                print("Form validation error:", form.errors)
-                return self.render_goto_step(self.steps.first())  # Go back if any form invalid
-
-        # Save family forms from extra_data
-        family_data_list = self.storage.extra_data.pop('family_forms_data', [])
-        for family_data in family_data_list:
-            family_member_form = FamilyInformationForm(data=family_data)
-            if family_member_form.is_valid():
-                family_member = family_member_form.save(commit=False)
-                family_member.member = member
-                family_member.save()
-            else:
-                print("Family member form validation error:", family_member_form.errors)
-                return self.render_goto_step('family')  # Return to family step if any invalid
-
-        # Final redirection after successful save of all forms
-        return redirect('member_list')
-
 
 def load_groups(request):
     center_id = request.GET.get('center')

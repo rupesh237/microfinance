@@ -1,68 +1,152 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Receipt</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
+        /* General styling */
+        body { font-family: Arial, sans-serif; font-size: 12px; margin: 0; padding: 0; }
+        .container { width: 100%; margin: 0 auto; }
+
+        /* Header styling */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            {% comment %} border-bottom: 1px solid #000; {% endcomment %}
+            padding-bottom: 10px;
+            margin-bottom: 10px;
         }
-        .header, .footer {
+
+        /* Logo styling */
+        .company-logo {
+            {% comment %} width: 60px;
+            height: 60px;
+            background-image: url("{% static 'images/logo.png' %}");
+            background-size: cover;
+            background-position: center; {% endcomment %}
+            flex: 1;
+            display: flex;
+            justify-content: left;
+        }
+        
+
+        /* Centered company information styling */
+        .center-info {
             text-align: center;
+            flex: 2;
         }
-        .content {
-            margin-top: 20px;
+        .center-info h1 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            
         }
-        .table {
-            width: 100%;
-            border-collapse: collapse;
+        .center-info p {
+            margin: 2px 0;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 8px;
         }
-        .table, .table th, .table td {
-            border: 1px solid black;
+        .company-info {
+            font-weight: bold;
+            font-size: 22px;
+            margin-bottom: 8px;
         }
-        .table th, .table td {
-            padding: 8px;
-            text-align: left;
+
+        /* Right-aligned date and period covered styling */
+        .right-info {
+            text-align: right;
+            font-size: 10px;
+            flex: 1;
         }
+        .right-info p {
+            margin: 2px 0;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        /* Table styling */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #000; padding: 5px; text-align: center; font-size: 10px; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+
+        /* Footer styling */
+        .footer { text-align: center; margin-top: 20px; font-size: 10px; }
+
+        /* Additional information styling */
+        .info-section { margin-top: 10px; }
+        .info-section p { margin: 0; font-size: 10px; margin-bottom: 5px;}
+        .account-interest { margin: 0; font-size: 10px;  text-align: right;}
     </style>
 </head>
 <body>
-    <div class="header">
-        <h2>Receipt #{{ receipt.id }}</h2>
-        <p>Date: {{ receipt.date }}</p>
-    </div>
-    <div class="content">
-        <h4>Customer Information</h4>
-        <p>Name: {{ receipt.customer_name }}</p>
-        <p>Email: {{ receipt.customer_email }}</p>
+    <div class="container">
+        <!-- Header Section with Flexbox Layout -->
+        <div class="header">
+            <div class="company-logo">
+                <img src="{{ request.build_absolute_uri }}{% static 'images/logo.png' %}" alt="Company Logo" style="width: 60px; height: 60px;">
+            </div>
+            
+            <div class="center-info">
+                <div class="company-info">M & MB Soft Tech Pvt. Ltd.</div>
+                <p>Branch Office: Lahachok</p>
+                <h1>Receipt Compile</h1>
+            </div>
+            
+            <div class="right-info">
+                <p>Printed On: {{ today|date:"Y/m/d H:i" }}</p>
+                <p>Period Covered: 
+                    {% if start_date %}{{ start_date }}{% else %}{{ today|date:"Y/m/d" }}{% endif %}
+                    to 
+                    {% if end_date %}{{ end_date }}{% else %}{{ today|date:"Y/m/d" }}{% endif %}
+                </p>
+            </div>
+        </div>
 
-        <h4>Items</h4>
-        <table class="table">
+        <table>
             <thead>
                 <tr>
-                    <th>Item</th>
-                    <th>Quantity</th>
-                    <th>Price</th>
-                    <th>Total</th>
+                    <th  class="px-6 py-3">SN</th>
+                    <th  class="px-6 py-3">Particluar</th>
+                    <th  class="px-6 py-3">Amount</th>
                 </tr>
             </thead>
             <tbody>
-                {% for item in receipt.items.all %}
+                {% for account_type, details in saving_receipts.items %}
                 <tr>
-                    <td>{{ item.name }}</td>
-                    <td>{{ item.quantity }}</td>
-                    <td>{{ item.price }}</td>
-                    <td>{{ item.total_price }}</td>
+                    <td colspan="3"><strong>{{ account_type }}</strong></td>
+                </tr>
+                <tr>
+                    <td  class="px-6 py-3">{{ forloop.counter }}</td>
+                    <td  class="px-6 py-3">{{ details.center }}</td>
+                    <td  class="px-6 py-3">{{ details.amount|floatformat:2 }}</td>
                 </tr>
                 {% endfor %}
+                <tr>
+                    <td><strong>Total</strong></td>
+                    <td colspan="1"></td>
+                    <td>{{ total_savings|floatformat:2 }}</td>
+                </tr>
             </tbody>
         </table>
 
-        <h4>Total Amount: {{ receipt.total_amount }}</h4>
+        <!-- Summary Information -->
+        {% comment %} <div class="info-section">
+            <p><strong>Total Credit:</strong> {{ total_credit }}</p>
+            <p><strong>Total Debit:</strong> {{ total_debit }}</p>
+        </div> {% endcomment %}
+
+        <!-- Footer Section -->
+        <div class="footer">
+            <p>Page 1 of 1</p>
+        </div>
     </div>
-    <div class="footer">
-        <p>Thank you for your business!</p>
-    </div>
+
 </body>
 </html>
+

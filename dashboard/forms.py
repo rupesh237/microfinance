@@ -283,7 +283,7 @@ class AddressInformationForm(forms.ModelForm):
     class Meta:
         model = AddressInformation
         fields = ['permanent_province', 'permanent_district', 'permanent_municipality', 'permanent_ward_no', 'permanent_tole', 'permanent_house_no',
-                'current_district', 'current_municipality', 'current_province', 'current_ward_no', 'current_tole', 'current_house_no',
+                'current_province', 'current_district', 'current_municipality', 'current_ward_no', 'current_tole', 'current_house_no',
                 'old_province', 'old_district', 'old_municipality', 'old_ward_no', 'old_tole', 'old_house_no',]
 
 class PersonalInformationForm(forms.ModelForm):

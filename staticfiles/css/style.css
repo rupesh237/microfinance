@@ -1,0 +1,64 @@
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    margin-right: 20px;
+    margin-left: 20px;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #ccc;
+    text-align: left;
+}
+
+th {
+    background-color: #f4f4f4;
+}
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    max-width: 1000px;
+    width: 100%;
+    padding: 20px;
+}
+
+.grid-item {
+    background-color: #627062;
+    color: white;
+    padding: 20px;
+    text-align: center;
+    font-size: 1.2em;
+    border-radius: 8px;
+}
+
+/* Highlight the selected row */
+.highlighted {
+    background-color: #a3a5a7; /* Light blue background for the selected row */
+}
+
+.error {
+    color: red; /* Change to the desired error message color */
+    font-weight: bold; /* Optionally make it bold */
+}
+
+.disabled {
+    pointer-events: none;  /* Prevents clicking */
+    opacity: 0.5;          /* Visual cue for disabled state */
+}
+
+.breadcrumb {
+    padding: 0.5rem 1rem; /* Adjust padding if necessary */
+}
+
+.breadcrumb-item {
+    display: inline-block; /* Ensure items are displayed inline */
+    margin-right: 0.5rem; /* Add space between items */
+}
+
+.breadcrumb-item a {
+    text-decoration: none; /* Remove underline from links */
+    color: #007bff; /* Default link color */
+}
