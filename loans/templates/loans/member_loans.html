@@ -2,128 +2,132 @@
 {% load static %}
 {% load custom_filters %}
 
-{% block corecss%}
+{% block corecss %}
     <link rel="stylesheet" href="{% static 'css/loans.css' %}">
-{% endblock corecss%}
+{% endblock corecss %}
 {% block title %}
     <title>Member Loans</title>
 {% endblock title %}
 
 {% block content %}
     <h1>Loans for {{ member.personalInfo.first_name }} {{ member.personalInfo.middle_name }} {{ member.personalInfo.last_name }}</h1>
-
+    <h3><a href="{% url 'cleared_loans' member.id %}">Loan History</a></h3>
     <ul>
         {% for loan in loans %}
         <li class="loan-item">
             <strong>{{ loan.loan_type }}</strong> - {{ loan.amount }} - {{ loan.interest_rate }}% - {{ loan.duration_months }} months
-            {% if loan.loan_type == 'flat' %}
-            - Monthly Repayment: {{ loan.calculate_flat_interest|floatformat:2 }}
-            {% elif loan.loan_type == 'declining' %}
-            - Monthly Repayment: {{ loan.calculate_declining_interest|floatformat:2 }}
+            - Monthly Repayment: {{ loan.calculate_emi|floatformat:2 }}
+
+            <!-- Check if the loan is cleared -->
+            {% if loan.is_cleared %}
+                <p><em>Loan Cleared</em></p>
+            {% else %}
+                <!-- EMI Payment Form -->
+                <h3>Pay EMI</h3>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="loan" value="{{ loan.id }}">
+                    <label for="amount_paid">Amount to Pay:</label>
+                    <input type="number" id="amount_{{ loan.id }}" name="amount_paid" step="0.01" required oninput="checkEMIAmount({{ loan.id }}, {{ loan.calculate_emi|floatformat:2 }})">
+                    <button type="submit" id="pay_button_{{ loan.id }}" disabled>Pay EMI</button>
+                </form>
+
+                <!-- Link for clearing the loan -->
+                <a href="{% url 'confirm_clear_loan' loan.id %}">Clear Loan</a>
             {% endif %}
-            
-            <!-- Link to view EMI schedule, passing loan.id as a query parameter -->
-            <a href="?loan_id={{ loan.id }}">View EMI Schedule</a>
 
-            <!-- EMI Payment Form -->
-            <h3>Pay EMI</h3>
-            <form method="post">
-                {% csrf_token %}
-                <input type="hidden" name="loan" value="{{ loan.id }}">
-                <label for="amount_paid">Amount to Pay:</label>
-                <input type="number" name="amount_paid" step="0.01" required>
-                <button type="submit">Pay EMI</button>
-            </form>
+            <script>
+                function checkEMIAmount(loanId, exactEMI) {
+                    const amountInput = document.getElementById('amount_' + loanId);
+                    const payButton = document.getElementById('pay_button_' + loanId);
+                    
+                    // Parse the amount entered and compare it to the exact EMI amount
+                    const enteredAmount = parseFloat(amountInput.value);
+                    
+                    // Enable or disable the pay button based on whether the entered amount equals the EMI
+                    if (!isNaN(enteredAmount) && enteredAmount === exactEMI) {
+                        payButton.disabled = false;  // Enable button
+                    } else {
+                        payButton.disabled = true;   // Disable button
+                    }
+                }
+            </script>
 
-            <!-- Container to hold Payment History and EMI Schedule side by side -->
-            <div class="loan-container">
-                <!-- EMI Payment History -->
-                <div>
-                    <h4>EMI Payment History</h4>
-                    <li>Opening Balance: {{ loan.amount }}</li>
-                    <li>With Interest: {{loan.interest_rate}}%</li>
-                    <li>For {{loan.duration_months}} EMIs</li>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>EMI Paid</th>
-                                <th>Dr</th>
-                                <th>Cr</th>
-                                <th>Interest</th>
-                                <th>Principal</th>
-                                <th>Closing Balance</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>{{ loan.start_date }}</td>
-                                <td>-</td>
-                                <td>{{ loan.amount }}</td>
-                                <td>-</td>
-                                <td>-</td>
-                                <td>-</td>
-                                <td>-{{ loan.amount|floatformat:2 }}</td>
-                            </tr>
-                            {% for payment in payment_history|get_item:loan.id %}
-                            <tr>
-                                <td>{{ payment.payment_date }}</td>
-                                <td>{{ payment.amount_paid|floatformat:2 }}</td>
-                                <td>-</td>
-                                <td>{{ payment.dr|floatformat:2 }}</td>
-                                <td>{{ payment.interest_paid|floatformat:2 }}</td>
-                                <td>{{ payment.principal_paid|floatformat:2 }}</td>
-                                <td>- {{ payment.closing_balance|floatformat:2 }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="7">No payments made yet.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Conditional EMI Schedule -->
-                {% if loan.id|stringformat:"s" == request.GET.loan_id %}
-                <div class="loan-container">
-                    <h4>EMI Schedule</h4>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Month</th>
-                                <th>EMI Amount</th>
-                                <th>Principal Component</th>
-                                <th>Interest Component</th>
-                                <th>Remaining Principal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for emi in emi_schedule %}
-                            <tr>
-                                <td>{{ emi.month }}</td>
-                                <td>{{ emi.emi_amount|floatformat:2 }}</td>
-                                <td>{{ emi.principal_component|floatformat:2 }}</td>
-                                <td>{{ emi.interest_component|floatformat:2 }}</td>
-                                <td>{{ emi.remaining_principal|floatformat:2 }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% endif %}
-                <a href="{% url 'download_pdf_report' member.id %}">PDF Report</a>
+            <!-- EMI Payment History -->
+            <div>
+                <h4>EMI Payment History</h4>
+                <li>Opening Balance: {{ loan.amount }}</li>
+                <li>With Interest: {{ loan.interest_rate }}%</li>
+                <li>For {{ loan.duration_months }} EMIs</li>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>EMI Paid</th>
+                            <th>Dr</th>
+                            <th>Cr</th>
+                            <th>Interest</th>
+                            <th>Principal</th>
+                            <th>Closing Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{{ loan.start_date }}</td>
+                            <td>-</td>
+                            <td>{{ loan.amount }}</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-{{ loan.amount|floatformat:2 }}</td>
+                        </tr>
+                        {% for payment in payment_history|get_item:loan.id %}
+                        <tr>
+                            <td>{{ payment.payment_date }}</td>
+                            <td>{{ payment.amount_paid|floatformat:2 }}</td>
+                            <td>-</td>
+                            <td>{{ payment.dr|floatformat:2 }}</td>
+                            <td>{{ payment.interest_paid|floatformat:2 }}</td>
+                            <td>{{ payment.principal_paid|floatformat:2 }}</td>
+                            <td>- {{ payment.closing_balance|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7">No payments made yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
+
+            <!-- EMI Schedule -->
+            <div class="loan-container">
+                <h4>EMI Schedule</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>EMI Amount</th>
+                            <th>Principal Component</th>
+                            <th>Interest Component</th>
+                            <th>Remaining Principal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for emi in emi_schedules|get_item:loan.id %}
+                        <tr>
+                            <td>{{ emi.month }}</td>
+                            <td>{{ emi.emi_amount|floatformat:2 }}</td>
+                            <td>{{ emi.principal_component|floatformat:2 }}</td>
+                            <td>{{ emi.interest_component|floatformat:2 }}</td>
+                            <td>{{ emi.remaining_principal|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
         </li>
         {% endfor %}
     </ul>
-
-    <!-- Loan Application Form -->
-    {% comment %} <h2>Take a New Loan</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Submit</button>
-    </form> {% endcomment %}
-
 {% endblock %}

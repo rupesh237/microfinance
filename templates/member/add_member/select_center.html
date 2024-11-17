@@ -1,5 +1,12 @@
 {% extends "base/index.html" %}
+{% load static %}
 
+{% block corecss %}
+    <link rel="stylesheet" href="{% static 'css/branch.css' %}">
+{% endblock corecss %}
+{% block title %}
+    <title>Select center and group!</title>
+{% endblock title %}
 {% block content %}
 <h3>You are adding member to following center and group!!!</h3>
 {% if messages %}
@@ -18,7 +25,17 @@
         </div>
     {% endif %}
     
-    {{ form.as_p }}
+    <div class="container">
+        {% for field in form %}
+                <div class="grid-item">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% for error in field.errors %}
+                        <div class="error">{{ error }}</div>
+                    {% endfor %}
+                </div>
+        {% endfor %}
+    </div>
     <button type="submit">Next</button>
 </form>
 <script type="text/javascript">

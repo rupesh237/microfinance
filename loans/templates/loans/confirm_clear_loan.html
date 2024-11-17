@@ -1,0 +1,20 @@
+{% extends "base/index.html" %}
+{% load static %}
+{% block title %}
+    <title>Confirm Loan Clearance</title>
+{% endblock %}
+
+{% block content %}
+    <h2>Confirm Clearance of Loan: {{ loan.loan_type }}</h2>
+    <p>Outstanding Principal Amount: {{ remaining_principal|floatformat:2 }}</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <label for="amount_paid">Enter Amount to Pay:</label>
+        <input type="number" id="amount_paid" name="amount_paid" step="0.01" required>
+
+        <button type="submit">Confirm Payment and Clear Loan</button>
+    </form>
+
+    <a href="{% url 'member_loans' loan.member.id %}">Back to Member Loans</a>
+{% endblock %}

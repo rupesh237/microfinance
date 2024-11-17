@@ -11,14 +11,18 @@ from django.contrib import messages
 from django.template.loader import get_template
 from django.http import HttpResponse
 from xhtml2pdf import pisa
+from django.utils import timezone
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 
 from formtools.wizard.views import SessionWizardView
 
 @login_required
 def member_loans(request, member_id):
     member = get_object_or_404(Member, id=member_id)
-    loans = member.loans.all()
-    emi_schedule = []
+    # Fetch only non-cleared loans
+    loans = member.loans.filter(status='active', is_cleared=False)
+    emi_schedules = {loan.id: loan.calculate_emi_breakdown() for loan in loans}
     payment_form = None
 
     if request.method == 'POST':
@@ -26,15 +30,18 @@ def member_loans(request, member_id):
         if payment_form.is_valid():
             payment = payment_form.save(commit=False)
             loan = payment.loan
-
-            # Calculate EMI schedule and fetch the corresponding EMI info for the current month
             emi_schedule = loan.calculate_emi_breakdown()
-            current_month = len(loan.emi_payments.all()) + 1  # Increment for the next payment month
+            current_month = len(loan.emi_payments.all()) + 1
             emi_info = emi_schedule[current_month - 1]
 
             payment.principal_paid = emi_info['principal_component']
             payment.interest_paid = emi_info['interest_component']
             payment.save()
+
+            # Mark loan as cleared if balance is zero after this payment
+            if payment.closing_balance == 0:
+                loan.is_cleared = True
+                loan.save()
 
             return redirect('member_loans', member_id=member.id)
 
@@ -42,18 +49,13 @@ def member_loans(request, member_id):
         form = LoanForm(initial={'member': member})
         payment_form = EMIPaymentForm()
 
-    loan_id = request.GET.get('loan_id')
-    if loan_id:
-        loan = get_object_or_404(Loan, id=loan_id)
-        emi_schedule = loan.calculate_emi_breakdown()
-
     payment_history = {loan.id: loan.emi_payments.all() for loan in loans}
 
     return render(request, 'loans/member_loans.html', {
         'member': member,
         'loans': loans,
         'form': form,
-        'emi_schedule': emi_schedule,
+        'emi_schedules': emi_schedules,
         'payment_form': payment_form,
         'payment_history': payment_history,
     })
@@ -348,4 +350,87 @@ def loan_form(request, member_id):
     return render (request, 'loans/loan_form.html', {
         'form': form,
         'member':member
+    })
+
+from decimal import Decimal
+from django.utils import timezone
+
+@login_required
+def confirm_clear_loan(request, loan_id):
+    loan = get_object_or_404(Loan, id=loan_id)
+
+    # Calculate the total principal paid so far
+    total_principal_paid = sum(payment.principal_paid for payment in loan.emi_payments.all())
+    remaining_principal = loan.amount - total_principal_paid
+
+    # Check if the loan is already cleared
+    if loan.is_cleared:
+        messages.info(request, f'Loan "{loan.loan_type}" is already cleared.')
+        return HttpResponseRedirect(reverse('member_loans', args=[loan.member.id]))
+
+    # Get the last payment date or use the start date of the loan
+    last_payment = EMIPayment.get_last_payment(loan)
+    last_payment_date = last_payment.payment_date if last_payment else loan.start_date
+
+    # Calculate the number of days between the last payment and today
+    today = timezone.now().date()
+    days_since_last_payment = (today - last_payment_date).days
+
+    # Calculate the pro-rata interest for the remaining principal over those days
+    if days_since_last_payment > 0:
+        daily_interest_rate = loan.interest_rate / 365 / 100  # Annual interest divided by 365 days
+        accrued_interest = round(remaining_principal * daily_interest_rate * days_since_last_payment, 2)
+    else:
+        accrued_interest = Decimal(0)
+
+    # Total amount due is the remaining principal plus accrued interest
+    total_due = remaining_principal + accrued_interest
+
+    if request.method == 'GET':
+        context = {
+            'loan': loan,
+            'remaining_principal': remaining_principal,
+            'accrued_interest': accrued_interest,
+            'total_due': total_due,
+            'days_since_last_payment': days_since_last_payment,
+        }
+        return render(request, 'loans/confirm_clear_loan.html', context)
+
+    # Process the payment when the form is submitted
+    if request.method == 'POST':
+        amount_paid = Decimal(request.POST.get('amount_paid'))
+
+        if amount_paid == total_due:
+            # Create a final payment record to clear the loan
+            EMIPayment.objects.create(
+                loan=loan,
+                payment_date=today,
+                amount_paid=amount_paid,
+                principal_paid=remaining_principal,
+                interest_paid=accrued_interest,
+            )
+
+            # Mark the loan as cleared
+            loan.is_cleared = True
+            loan.status = 'closed'
+            loan.save()
+
+            messages.success(request, f'Loan "{loan.loan_type}" has been successfully cleared.')
+            return HttpResponseRedirect(reverse('member_loans', args=[loan.member.id]))
+        else:
+            messages.error(request, 'The amount entered does not match the outstanding total due.')
+
+    return HttpResponseRedirect(reverse('confirm_clear_loan', args=[loan.id]))
+
+@login_required
+def cleared_loans(request, member_id):
+    member = get_object_or_404(Member, id=member_id)
+    # Fetch only cleared loans
+    loans = member.loans.filter(is_cleared=True)
+    payment_history = {loan.id: loan.emi_payments.all() for loan in loans}
+    
+    return render(request, 'loans/cleared_loans.html', {
+        'member': member,
+        'loans': loans,
+        'payment_history': payment_history,
     })
