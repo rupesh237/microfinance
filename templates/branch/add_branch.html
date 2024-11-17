@@ -1,14 +1,27 @@
 {% extends "base/index.html" %}
+{% load static %}
 
 {% block title %}
     <title>Add branch</title>
 {% endblock title %}
-
+{% block corecss %}
+    <link rel="stylesheet" href="{% static 'css/branch.css' %}">
+{% endblock corecss %}
 {% block content %}
     <h1>Add Branch</h1>
     <form method="post">
         {% csrf_token %}
-        {{ form.as_p }}
+        <div class="container">
+            {% for field in form %}
+                    <div class="grid-item">
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% for error in field.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+            {% endfor %}
+        </div>
         <button type="submit">Save</button>
     </form>
 

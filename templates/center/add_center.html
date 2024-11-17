@@ -4,6 +4,9 @@
 {% block title %}
     <title>Add Center</title>
 {% endblock title %}
+{% block corecss %}
+    <link rel="stylesheet" href="{% static 'css/center-style.css' %}">
+{% endblock corecss %}
 
 {% block content %}
     <title>Add Center</title>
@@ -12,14 +15,34 @@
     <h2>Add Center</h2>
     <form method="post" action="{% url 'add_center' %}">
         {% csrf_token %}
-        {{ form.as_p }}
-
-         <!-- Display form errors -->
-         {% for field in form %}
-            {% for error in field.errors %}
-                <div class="error">{{ error }}</div>
+        
+        <div class="grid-container">
+            {% for field in form %}
+                {% if forloop.counter <= 21 %}
+                    <div class="grid-item">
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% for error in field.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
             {% endfor %}
-         {% endfor %}
+        </div>
+
+        <div class="remaining-inputs">
+            {% for field in form %}
+                {% if forloop.counter > 21 %}
+                    <div class="input-item">
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% for error in field.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
 
         <p>Do you want to create groups automatically?</p>
         <div class="form-check form-check-inline">

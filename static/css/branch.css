@@ -1,0 +1,40 @@
+form {
+    width: 80%;
+    margin: 10px auto;
+    padding: 20px;
+    background-color: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+.grid-item {
+    margin-bottom: 15px;
+    padding: 5px;
+}
+.error {
+    color: red;
+    font-size: 0.9em;
+}
+button{
+    margin-bottom: 5px;
+    padding: 5px 5px;
+    color: white;
+    background-color: red;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+button:hover{
+    background-color: rgb(234, 27, 27);
+}
+
+button[type="submit"] {   
+    margin-left: 150px;
+    background-color: green;
+    color: white;
+    border-radius: 5px;
+    padding: 5px;
+}
+
+button[type="submit"]:hover {
+    background-color: rgb(42, 135, 42);
+}

@@ -1,13 +1,28 @@
 {% extends "base/index.html" %}
+{% load static %}
 {% block title %}
     <title>Update Branch</title>
 {% endblock title %}
+
+{% block corecss %}
+    <link rel="stylesheet" href="{% static 'css/branch.css' %}">
+{% endblock corecss %}
 
 {% block content %}
     <h3>Update Branch:</h3>
     <form method="post" action="{% url 'update_branch' branch.id %}">
         {% csrf_token %}
-        {{form.as_p}}
+        <div class="container">
+            {% for field in form %}
+                    <div class="grid-item">
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% for error in field.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+            {% endfor %}
+        </div>
         <button type="submit">Update</button>
         <button href="{% url 'branch_list' %}">Cancel</button>
     </form>

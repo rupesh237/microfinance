@@ -4,6 +4,10 @@
 {% block title %}
     <title>Edit center</title>
 {% endblock title %}
+{% block corecss %}
+    <link rel="stylesheet" href="{% static 'css/center-style.css' %}">
+{% endblock corecss %}
+
 
 {% block content %}
     <title>Edit Center</title>
@@ -13,7 +17,34 @@
     <h2>Edit Center</h2>
     <form method="post" action="{% url 'edit_center' center.id %}">
         {% csrf_token %}
-        {{ form.as_p }}
+        <div class="grid-container">
+            {% for field in form %}
+                {% if forloop.counter <= 21 %}
+                    <div class="grid-item">
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% for error in field.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="remaining-inputs">
+            {% for field in form %}
+                {% if forloop.counter > 21 %}
+                    <div class="input-item">
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% for error in field.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
         <button type="submit">Update</button>
     </form>
 
