@@ -2,6 +2,12 @@
 
 {% block title %}
     <title>Reports</title>
+    <style>
+        /* Basic styling for search bar and list */
+        .report-list { list-style-type: none; padding: 0; }
+        .report-list li { margin: 5px 0; }
+        .search-input { width: 30%; height: 15px; padding: 10px; margin-bottom: 10px; }
+    </style>
 {% endblock title %}
 
 {% block content %}
@@ -12,6 +18,31 @@
         <h3>     
     </div>
 
+      <!-- Search bar -->
+      <input type="text" class="search-input" placeholder="Search reports..." onkeyup="filterReports()" />
+
+      <!-- Report list -->
+      <ul class="report-list" id="reportList">
+          {% for report in reports %}
+              <li data-name="{{ report.name|lower }}">
+                  <a href="{{ report.url }}">{{ report.name }}</a>
+              </li>
+          {% endfor %}
+      </ul>
 </div>
+<!-- JavaScript to handle filtering -->
+<script>
+    function filterReports() {
+        // Get the search input and list of reports
+        const searchInput = document.querySelector('.search-input').value.toLowerCase();
+        const reportItems = document.querySelectorAll('#reportList li');
+        
+        // Filter each report based on the input
+        reportItems.forEach(item => {
+            const reportName = item.getAttribute('data-name');
+            item.style.display = reportName.includes(searchInput) ? '' : 'none';
+        });
+    }
+</script>
 
 {% endblock %}

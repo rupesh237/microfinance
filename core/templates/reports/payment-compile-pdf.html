@@ -4,7 +4,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Receipt</title>
+    <title>Payment</title>
     <style>
         /* General styling */
         body { font-family: Arial, sans-serif; font-size: 12px; margin: 0; padding: 0; }
@@ -106,7 +106,7 @@
             <div class="center-info">
                 <div class="company-info">M & MB Soft Tech Pvt. Ltd.</div>
                 <p>Branch Office: Lahachok</p>
-                <h1>Receipt Compile</h1>
+                <h1>Payment Compile</h1>
             </div>
             
             <div class="right-info">
@@ -128,7 +128,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for account_type, centers in saving_receipts.items %}
+                {% for account_type, centers in saving_payments.items %}
                 <tr>
                     <td colspan="3"><strong>{{ account_type }}</strong></td>
                 </tr>
@@ -155,13 +155,6 @@
                 </tr>
             </tbody>
         </table>
-
-        <!-- Summary Information -->
-        {% comment %} <div class="info-section">
-            <p><strong>Total Credit:</strong> {{ total_credit }}</p>
-            <p><strong>Total Debit:</strong> {{ total_debit }}</p>
-        </div> {% endcomment %}
-
     </div>
 
 </body>

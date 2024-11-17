@@ -18,7 +18,7 @@ class VoucherFilter(django_filters.FilterSet):
         model = Voucher
         fields = ('date',)
 
-class ReceiptFilter(django_filters.FilterSet):
+class ReportFilter(django_filters.FilterSet):
     start_date = django_filters.DateFilter(
         field_name="created_at__date",
         lookup_expr="gte",

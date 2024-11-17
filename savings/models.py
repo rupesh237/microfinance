@@ -99,7 +99,7 @@ class CashSheet(models.Model):
         return voucher
 
     def __str__(self):
-        return f"{self.member.code}: {self.account}"
+        return f"{self.member.code}: Cash Sheet for {self.account}"
     
 class PaymentSheet(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name="paymentsheet")
@@ -125,7 +125,7 @@ class PaymentSheet(models.Model):
         return voucher
 
     def __str__(self):
-        return f"{self.member.code}: {self.account}"
+        return f"{self.member.code}: Payment Sheet for {self.account}"
     
 class Statement(models.Model):
     TRANSACTION_TYPES = [

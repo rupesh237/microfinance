@@ -1,0 +1,14 @@
+{% extends "base/index.html" %}
+{% block title %}
+    <title>Delete !</title>
+{% endblock title %}
+
+{% block content %}
+    <h2>Delete Cash Sheet</h2>
+    <form action="{% url 'delete_cash_sheet' member_id=cash_sheet.member.id pk=cash_sheet.id %}" method="post">
+        {% csrf_token %}
+        <p>Are you sure you want to delete "{{ cash_sheet }}"?</p>
+        <input type="submit" class="btn btn-danger" value='Confirm'>
+        <button> <a href="{% url 'member-statement' cash_sheet.member.id %}">Cancel</a></button>
+    </form>
+{% endblock %}

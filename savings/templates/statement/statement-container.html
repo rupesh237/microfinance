@@ -15,7 +15,7 @@
         </div>
       </div>
 
-        <!-- 1/4 cols for the filter form-->
+    <!-- 1/4 cols for the filter form-->
     <div class="col-span-1">
         <form hx-get="{% url 'member-statement' member_id %}"
               hx-target="#statement-container"
@@ -41,6 +41,14 @@
   
         </form>
       </div>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}{% if message.tags == 'error' %} alert-danger{% endif %}">
+                {{ message }}
+            </div>        
+            {% endfor %}
+        {% endif %}
       
           <table class='table'>
               <thead class="text-xs text-black uppercase">
@@ -74,8 +82,12 @@
                         <td class="px-6 py-3">{{statement.created_by}}</td>
                         <td class="px-6 py-3">
                             <div>
-                                <i class='bi bi-pencil-fill'></i>
-                                <i class="bi bi-trash-fill"></i>
+                                <i class='bi bi-pencil-fill mr-2'></i>
+                                {% if statement.cash_sheet %}
+                                <a href="{% url 'delete_cash_sheet' member_id=statement.member.id pk=statement.cash_sheet.pk %}"><i class="bi bi-trash-fill"></i></a>
+                                {% elif statement.payment_sheet %}
+                                <a href="{% url 'delete_payment_sheet' member_id=statement.member.id pk=statement.payment_sheet.pk  %}"><i class="bi bi-trash-fill"></i></a>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>

@@ -1,11 +1,12 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponseRedirect, HttpResponse
-from django.urls import reverse_lazy
+from django.contrib import messages
+from django.urls import reverse_lazy, reverse
 from django.template.loader import get_template
 from weasyprint import HTML
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
-from django.views.generic import CreateView
+from django.views.generic import CreateView, DeleteView
 from django.db import transaction
 from django.utils import timezone
 from datetime import datetime
@@ -15,6 +16,8 @@ from dashboard.mixins import RoleRequiredMixin
 from .models import SavingsAccount, FixedDeposit, RecurringDeposit, CashSheet, PaymentSheet, CURRENT_ACCOUNT_TYPE, Statement
 from .forms import SavingsAccountForm, FixedDepositForm, RecurringDepositForm, CashSheetForm, PaymentSheetForm
 from dashboard.models import Member
+
+from core.models import Voucher
 
 from .filters import StatementFilter
 
@@ -148,6 +151,30 @@ class CashSheetCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
         # Redirect to a URL that displays the cash sheets for the member
         return reverse_lazy('create_cash_sheet', kwargs={'member_id': member_id})
 
+def delete_cash_sheet(request, member_id, pk ):
+    cash_sheet = get_object_or_404(CashSheet, pk=pk)
+
+    if request.method == 'POST':
+        # update account balance before deleteing the cash sheet
+        account = cash_sheet.account
+        print(f"Account: {account}")
+        account.balance -= cash_sheet.amount
+        account.save()
+        # If the CashSheet has an associated Voucher, delete it
+        voucher = Voucher.objects.filter(voucher_statement__cash_sheet=cash_sheet).first()
+        print(f"Voucher: {voucher}")
+        if voucher:
+            voucher.delete()
+
+        # Delete the CashSheet instance
+        cash_sheet.delete()
+        messages.success(request, 'Cash Sheet and associated Voucher have been deleted successfully.')
+
+        # Redirect to the success URL
+        return redirect(reverse('member-statement', kwargs={'member_id': member_id}))
+    
+    return render(request, 'transactions/delete_cash_sheet.html', {'cash_sheet': cash_sheet})
+
 
 class PaymentSheetCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
     model = PaymentSheet
@@ -177,50 +204,54 @@ class PaymentSheetCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
 
         accounts = SavingsAccount.objects.filter(member=self.kwargs['member_id'])
         current_accounts = [account for account in accounts if account.account_type in current_account_codes]
-        print(current_accounts)
+      
         for account in current_accounts:
             amount_field_name = f'amount_{account.id}'
             amount = form.cleaned_data.get(amount_field_name)
         
             if amount is not None and amount > 0:
-                print(f"Processing account {account.id} with amount {amount}")
-                try:
-                        payment_sheet = PaymentSheet(
-                            account=account,
-                            member=member,
-                            created_by=self.request.user,
-                            amount=amount,
-                            remarks=remarks,
-                            withdrawn_by=withdrawn_by,
-                            cheque_no=cheque_no,
-                        )
-                        payment_sheet.save()
-                        voucher = payment_sheet.create_voucher()
-                        print(f"Creating Payment Sheet with account_id: {payment_sheet.account_id}")
+                if amount > account.balance:
+                    messages.error(self.request, f"Insufficient balance in account {account.account_number}.")
+                    return self.form_invalid(form)
+                else:
+                    print(f"Processing account {account.id} with amount {amount}")
+                    try:
+                            payment_sheet = PaymentSheet(
+                                account=account,
+                                member=member,
+                                created_by=self.request.user,
+                                amount=amount,
+                                remarks=remarks,
+                                withdrawn_by=withdrawn_by,
+                                cheque_no=cheque_no,
+                            )
+                            payment_sheet.save()
+                            voucher = payment_sheet.create_voucher()
+                            print(f"Creating Payment Sheet with account_id: {payment_sheet.account_id}")
 
-                        # Update account balance
-                        prev_balance = account.balance
-                        account.balance -= amount
-                        account.save()
+                            # Update account balance
+                            prev_balance = account.balance
+                            account.balance -= amount
+                            account.save()
 
-                        # Automatically create a Statement
-                        Statement.objects.create(
-                            account=account,
-                            member=member,
-                            payment_sheet=payment_sheet,
-                            transaction_type='debit',
-                            dr_amount=amount,
-                            prev_balance=prev_balance,
-                            curr_balance=account.balance,
-                            remarks=payment_sheet.remarks,
-                            by=payment_sheet.withdrawn_by,
-                            transaction_date=payment_sheet.transaction_date,
-                            created_by=self.request.user,
-                            voucher=voucher,
-                        )
-                        print(f"Created Payment Sheet: {payment_sheet}")
-                except Exception as e:
-                    print(f"Error creating Payment Sheet: {e}")
+                            # Automatically create a Statement
+                            Statement.objects.create(
+                                account=account,
+                                member=member,
+                                payment_sheet=payment_sheet,
+                                transaction_type='debit',
+                                dr_amount=amount,
+                                prev_balance=prev_balance,
+                                curr_balance=account.balance,
+                                remarks=payment_sheet.remarks,
+                                by=payment_sheet.withdrawn_by,
+                                transaction_date=payment_sheet.transaction_date,
+                                created_by=self.request.user,
+                                voucher=voucher,
+                            )
+                            print(f"Created Payment Sheet: {payment_sheet}")
+                    except Exception as e:
+                        print(f"Error creating Payment Sheet: {e}")
 
         return HttpResponseRedirect(reverse_lazy('create_payment_sheet', kwargs={'member_id': member_id}))
 
@@ -234,6 +265,31 @@ class PaymentSheetCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
         member_id = self.kwargs.get('member_id')
         # Redirect to a URL that displays the payment sheets for the member
         return reverse_lazy('create_payment_sheet', kwargs={'member_id': member_id})
+    
+def delete_payment_sheet(request, member_id, pk ):
+    payment_sheet = get_object_or_404(PaymentSheet, pk=pk)
+
+    if request.method == 'POST':
+        # update account balance before deleteing the cash sheet
+        account = payment_sheet.account
+        print(f"Account: {account}")
+        account.balance += payment_sheet.amount
+        account.save()
+        # If the CashSheet has an associated Voucher, delete it
+        voucher = Voucher.objects.filter(voucher_statement__payment_sheet=payment_sheet).first()
+        print(f"Voucher: {voucher}")
+        if voucher:
+            voucher.delete()
+
+        # Delete the CashSheet instance
+        payment_sheet.delete()
+        messages.success(request, 'Payment Sheet and associated Voucher have been deleted successfully.')
+
+        # Redirect to the success URL
+        return redirect(reverse('member-statement', kwargs={'member_id': member_id}))
+    
+    return render(request, 'transactions/delete_payment_sheet.html', {'payment_sheet': payment_sheet})
+
 
 @login_required
 def statement_list(request, member_id):
