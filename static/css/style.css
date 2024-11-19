@@ -1,5 +1,5 @@
 table {
-    width: 100%;
+    width: 98%;
     border-collapse: collapse;
     margin-top: 20px;
     margin-bottom: 20px;
@@ -12,10 +12,25 @@ th, td {
     border: 1px solid #ccc;
     text-align: left;
 }
-
-th {
-    background-color: #f4f4f4;
+table th {
+    background-color: #007bff;
+    color: #ffffff;
+    font-weight: bold;
+    text-transform: uppercase;
 }
+.memberStatusaddIcons{
+    padding-right: 100px;
+}
+table input[type="text"] {
+    width: 100%;
+    padding: 4px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-top: 5px;
+}
+
+
 .grid-container {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -61,4 +76,36 @@ th {
 .breadcrumb-item a {
     text-decoration: none; /* Remove underline from links */
     color: #007bff; /* Default link color */
+}
+
+/* Styling for address sections */
+.address-section {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background-color: #f9f9f9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+.address-section h3 {
+    margin-bottom: 15px;
+    color: #333;
+}
+.address-section label {
+    font-weight: bold;
+}
+input[type="checkbox"] {
+    margin-right: 8px;
+}
+button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+    margin-top: 15px;
+}
+button:hover {
+    background-color: #0056b3;
 }

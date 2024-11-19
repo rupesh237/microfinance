@@ -1,14 +1,13 @@
 {% extends "base/index.html" %}
-
 {% block title %}
     <title>Member list</title>
 {% endblock title %}
 
 {% block content %}
-    <div class="container">
+    <div class="container1">
         <h1>Member List</h1>
 
-        <div class="d-flex justify-content-end">
+        <div class="d-flex justify-content-end memberStatusaddIcons">
             <div class="member-navbar mr-3"><!-- Add margin-right -->
                 <a href="{% url 'select_center' %}"><i class="bi bi-plus-square-fill"></i></a>
             </div>
@@ -21,12 +20,30 @@
         <table>
             <thead>
                 <tr>
-                    <th>Code</th>
-                    <th>Name</th>
-                    <th>Center</th>
-                    <th>Phone Number</th>
-                    <th>Current Address</th>
-                    <th>Category</th>
+                    <th>
+                        Code<br>
+                        <input type="text" id="searchCode" placeholder="Search Code">
+                    </th>
+                    <th>
+                        Name<br>
+                        <input type="text" id="searchName" placeholder="Search Name">
+                    </th>
+                    <th>
+                        Center<br>
+                        <input type="text" id="searchCenter" placeholder="Search Center">
+                    </th>
+                    <th>
+                        Phone Number<br>
+                        <input type="text" id="searchPhone" placeholder="Search Phone">
+                    </th>
+                    <th>
+                        Current Address<br>
+                        <input type="text" id="searchAddress" placeholder="Search Address">
+                    </th>
+                    <th>
+                        Category<br>
+                        <input type="text" id="searchCategory" placeholder="Search Category">
+                    </th>
                     <th>
                         <!-- Filter Form -->
                         <form method="GET" action="">
@@ -315,6 +332,25 @@
                 });
             });
         });
+        document.addEventListener('DOMContentLoaded', function () {
+            const inputFields = document.querySelectorAll('thead input[type="text"]');
+            const tableRows = document.querySelectorAll('tbody tr');
+        
+            inputFields.forEach((input) => {
+                input.addEventListener('input', function () {
+                    const fieldId = this.id.replace('search', '').toLowerCase();
+                    const filterValue = this.value.toLowerCase();
+        
+                    tableRows.forEach((row) => {
+                        const cell = row.querySelector(`td:nth-child(${Array.from(inputFields).indexOf(this) + 1})`);
+                        if (cell) {
+                            const cellText = cell.textContent.toLowerCase();
+                            row.style.display = cellText.includes(filterValue) ? '' : 'none';
+                        }
+                    });
+                });
+            });
+        });        
         
     </script>
 

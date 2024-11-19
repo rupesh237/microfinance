@@ -1,13 +1,73 @@
 {% extends 'base/index.html' %}
-
+{% load static %}
+{% block corecss %}
+    {% comment %} <link rel="stylesheet" href="{% static 'css/loans.css' %}"> {% endcomment %}
+    <link rel="stylesheet" href="{% static 'css/dashboard.css'%}">
+{% endblock corecss %}
 {% block content %}
-    <div class="grid-container text-center">
-        <div class="grid-item"><i class="bi bi-bank"></i> Branches 2</div>
-        <div class="grid-item">Center</div>
-        <div class="grid-item">Group</div>
-        <div class="grid-item"><i class="bi bi-people-fill"></i> Members 5</div>
+    <div class="summary-container">
+        <!-- First Row of Divs -->
+        <div class="summary-row">
+            <div class="summary-box">
+                <h3>Member Summary</h3>
+                <ul>
+                    <li><span class="label">Total active member:</span> <span class="value">Value</span></li>
+                    <li><span class="label">Total drop out member:</span> <span class="value">Value</span></li>
+                    <li><span class="label">Total center:</span> <span class="value">Value</span></li>
+                    <li><span class="label">Total loanee member:</span> <span class="value">Value</span></li>
+                    <li><span class="label">Member per center:</span> <span class="value">Value</span></li>
+                </ul>
+            </div>
+            <div class="summary-box">
+                <h3>Deposit/Loan Summary</h3>
+                <ul>
+                    <li><span class="label">Cummulative deposit:</span> <span class="value">Value</span></li>
+                    <li><span class="label">Cummulative withdraw:</span> <span class="value">Value</span></li>
+                    <li><span class="label">Total Saving:</span> <span class="value">Value</span></li>
+                    <li><span class="label">Total disbursement:</span> <span class="value">Value</span></li>
+                    <li><span class="label">Cummulative Recovery:</span> <span class="value">Value</span></li>
+                    <li><span class="label">Total out standing:</span> <span class="value">Value</span></li>
+                    <li><span class="label">Overdue Principal:</span> <span class="value">Value</span></li>
+                </ul>
+            </div>
+            <div class="summary-box">
+                <h3>Financial Summary</h3>
+                <ul>
+                    <li><span class="label">Income:</span> <span class="value">Value</span></li>
+                    <li><span class="label">Expenses:</span> <span class="value">Value</span></li>
+                    <li><span class="label">Net profit:</span> <span class="value">Value</span></li>
+                    <li><span class="label">Financial expenses:</span> <span class="value">Value</span></li>
+                    <li><span class="label">Operating expenses:</span> <span class="value">Value</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Second Row of Divs -->
+        <div class="summary-row">
+            <div class="summary-box">
+                <h3>Active vs Dropout Member</h3>
+                <ul>
+                    <li><span class="label">Data 7:</span> <span class="value">Value</span></li>
+                    <li><span class="label">Data 8:</span> <span class="value">Value</span></li>
+                </ul>
+            </div>
+            <div class="summary-box">
+                <h3>Saving Balances</h3>
+                <ul>
+                    <li><span class="label">Data 9:</span> <span class="value">Value</span></li>
+                    <li><span class="label">Data 10:</span> <span class="value">Value</span></li>
+                </ul>
+            </div>
+            <div class="summary-box">
+                <h3>Loans Outstanding </h3>
+                <ul>
+                    <li><span class="label">Data 11:</span> <span class="value">Value</span></li>
+                    <li><span class="label">Data 12:</span> <span class="value">Value</span></li>
+                </ul>
+            </div>
+        </div>
     </div>
-    <div class="container">
+    <div class="container1">
         <h1>Member List</h1>
         <table>
             <thead>

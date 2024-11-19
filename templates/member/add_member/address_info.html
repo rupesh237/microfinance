@@ -5,7 +5,46 @@
     <form method="post">
         {% csrf_token %}
         {{ wizard.management_form }}
-        {{ wizard.form.as_p }}
+
+        <!-- Permanent Address Section -->
+        <div class="address-section" id="permanent-address">
+            <h3>Permanent Address</h3>
+            {{ wizard.form.permanent_province.as_p }}
+            {{ wizard.form.permanent_district.as_p }}
+            {{ wizard.form.permanent_municipality.as_p }}
+            {{ wizard.form.permanent_ward_no.as_p }}
+            {{ wizard.form.permanent_tole.as_p }}
+            {{ wizard.form.permanent_house_no.as_p }}
+        </div>
+
+        <!-- Current Address Section -->
+        <div class="address-section" id="current-address">
+            <h3>Current Address</h3>
+            <label>
+                <input type="checkbox" id="same-as-permanent-current" /> Same as Permanent
+            </label>
+            {{ wizard.form.current_province.as_p }}
+            {{ wizard.form.current_district.as_p }}
+            {{ wizard.form.current_municipality.as_p }}
+            {{ wizard.form.current_ward_no.as_p }}
+            {{ wizard.form.current_tole.as_p }}
+            {{ wizard.form.current_house_no.as_p }}
+        </div>
+
+        <!-- Old Address Section -->
+        <div class="address-section" id="old-address">
+            <h3>Old Address</h3>
+            <label>
+                <input type="checkbox" id="same-as-permanent-old" /> Same as Permanent
+            </label>
+            {{ wizard.form.old_province.as_p }}
+            {{ wizard.form.old_district.as_p }}
+            {{ wizard.form.old_municipality.as_p }}
+            {{ wizard.form.old_ward_no.as_p }}
+            {{ wizard.form.old_tole.as_p }}
+            {{ wizard.form.old_house_no.as_p }}
+        </div>
+
         <button type="submit" name="wizard_goto_step" value="{{ wizard.steps.prev }}">Previous</button>
         <button type="submit">Next</button>
     </form>
@@ -73,6 +112,34 @@
                 // Old address
                 handleProvinceChange("#id_address-old_province", "#id_address-old_district", "#id_address-old_municipality");
                 handleDistrictChange("#id_address-old_district", "#id_address-old_municipality");
+            });
+        });
+        document.addEventListener("DOMContentLoaded", function () {
+            function copyAddressData(sourcePrefix, targetPrefix) {
+                const fields = ['province', 'district', 'municipality', 'ward_no', 'tole', 'house_no'];
+                fields.forEach(field => {
+                    // Copy the value from the source field to the target field
+                    const sourceField = document.getElementById(`id_${sourcePrefix}_${field}`);
+                    const targetField = document.getElementById(`id_${targetPrefix}_${field}`);
+
+                    if (sourceField && targetField) {
+                        targetField.value = sourceField.value;
+                    }
+                });
+            }
+
+            // Handle checkbox for current address
+            document.getElementById("same-as-permanent-current").addEventListener("change", function () {
+                if (this.checked) {
+                    copyAddressData('permanent', 'current');
+                }
+            });
+
+            // Handle checkbox for old address
+            document.getElementById("same-as-permanent-old").addEventListener("change", function () {
+                if (this.checked) {
+                    copyAddressData('permanent', 'old');
+                }
             });
         });
     </script>
