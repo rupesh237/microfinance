@@ -1,7 +1,11 @@
 {% extends "base/index.html" %}
+{% load static %}
 {% block title %}
     <title>Member list</title>
 {% endblock title %}
+{% block corecss %}
+    <link rel="stylesheet" href="{% static 'css/member_list.css' %}">
+{% endblock %}
 
 {% block content %}
     <div class="container1">
