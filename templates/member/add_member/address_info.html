@@ -5,7 +5,52 @@
     <form method="post">
         {% csrf_token %}
         {{ wizard.management_form }}
-        {{ wizard.form.as_p }}
+        
+        <!-- Permanent Address Section -->
+        <div class="address-section" id="permanent-address">
+            <h3>Permanent Address</h3>
+            <div class="form-group">
+                {{ wizard.form.permanent_province }}
+                {{ wizard.form.permanent_district }}
+                {{ wizard.form.permanent_municipality }}
+                {{ wizard.form.permanent_ward_no }}
+                {{ wizard.form.permanent_tole }}
+                {{ wizard.form.permanent_house_no }}
+            </div>
+        </div>
+
+        <!-- Current Address Section -->
+        <div class="address-section" id="current-address">
+            <h3>Current Address</h3>
+            <div class="form-group">
+                {{ wizard.form.current_province }}
+                {{ wizard.form.current_district }}
+                {{ wizard.form.current_municipality }}
+                {{ wizard.form.current_ward_no }}
+                {{ wizard.form.current_tole }}
+                {{ wizard.form.current_house_no }}
+                <label>
+                    <input type="checkbox" id="same-as-permanent" /> Same as Permanent Address
+                </label>
+            </div>
+        </div>
+
+        <!-- Old Address Section -->
+        <div class="address-section" id="old-address">
+            <h3>Old Address</h3>
+            <div class="form-group">
+                {{ wizard.form.old_province }}
+                {{ wizard.form.old_district }}
+                {{ wizard.form.old_municipality }}
+                {{ wizard.form.old_ward_no }}
+                {{ wizard.form.old_tole }}
+                {{ wizard.form.old_house_no }}
+                <label>
+                    <input type="checkbox" id="same-as-permanent-old" /> Same as Permanent Address
+                </label>
+            </div>
+        </div>
+
         <button type="submit" name="wizard_goto_step" value="{{ wizard.steps.prev }}">Previous</button>
         <button type="submit">Next</button>
     </form>
@@ -73,6 +118,29 @@
                 // Old address
                 handleProvinceChange("#id_address-old_province", "#id_address-old_district", "#id_address-old_municipality");
                 handleDistrictChange("#id_address-old_district", "#id_address-old_municipality");
+
+                // Check the "Same as Permanent" checkbox for current and old addresses
+                $("#same-as-permanent").change(function () {
+                    if ($(this).is(":checked")) {
+                        $("#id_address-current_province").val($("#id_address-permanent_province").val()).trigger('change');
+                        $("#id_address-current_district").val($("#id_address-permanent_district").val()).trigger('change');
+                        $("#id_address-current_municipality").val($("#id_address-permanent_municipality").val());
+                        $("#id_address-current_ward_no").val($("#id_address-permanent_ward_no").val());
+                        $("#id_address-current_tole").val($("#id_address-permanent_tole").val());
+                        $("#id_address-current_house_no").val($("#id_address-permanent_house_no").val());
+                    }
+                });
+
+                $("#same-as-permanent-old").change(function () {
+                    if ($(this).is(":checked")) {
+                        $("#id_address-old_province").val($("#id_address-permanent_province").val()).trigger('change');
+                        $("#id_address-old_district").val($("#id_address-permanent_district").val()).trigger('change');
+                        $("#id_address-old_municipality").val($("#id_address-permanent_municipality").val());
+                        $("#id_address-old_ward_no").val($("#id_address-permanent_ward_no").val());
+                        $("#id_address-old_tole").val($("#id_address-permanent_tole").val());
+                        $("#id_address-old_house_no").val($("#id_address-permanent_house_no").val());
+                    }
+                });
             });
         });
     </script>

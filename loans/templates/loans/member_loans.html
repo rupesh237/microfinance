@@ -37,20 +37,28 @@
             {% endif %}
 
             <script>
-                function checkEMIAmount(loanId, exactEMI) {
+                function checkEMIAmount(loanId) {
                     const amountInput = document.getElementById('amount_' + loanId);
                     const payButton = document.getElementById('pay_button_' + loanId);
                     
-                    // Parse the amount entered and compare it to the exact EMI amount
+                    // Get all rows for this loan's EMI schedule
+                    const emiRows = document.querySelectorAll(`#emi_schedule_${loanId} tbody tr`);
+                    
+                    // Parse the entered amount
                     const enteredAmount = parseFloat(amountInput.value);
                     
-                    // Enable or disable the pay button based on whether the entered amount equals the EMI
-                    if (!isNaN(enteredAmount) && enteredAmount === exactEMI) {
-                        payButton.disabled = false;  // Enable button
-                    } else {
-                        payButton.disabled = true;   // Disable button
-                    }
-                }
+                    // Check if the entered amount matches any EMI amount in the schedule
+                    let isMatch = false;
+                    emiRows.forEach(row => {
+                        const emiAmount = parseFloat(row.querySelector('.emi-amount').textContent);
+                        if (!isNaN(emiAmount) && enteredAmount === emiAmount) {
+                            isMatch = true;
+                        }
+                    });
+                
+                    // Enable or disable the pay button based on the match
+                    payButton.disabled = !isMatch;
+                }                                                                
             </script>
 
             <!-- EMI Payment History -->
@@ -117,7 +125,7 @@
                         {% for emi in emi_schedules|get_item:loan.id %}
                         <tr>
                             <td>{{ emi.month }}</td>
-                            <td>{{ emi.emi_amount|floatformat:2 }}</td>
+                            <td class="emi-amount">{{ emi.emi_amount|floatformat:2 }}</td>
                             <td>{{ emi.principal_component|floatformat:2 }}</td>
                             <td>{{ emi.interest_component|floatformat:2 }}</td>
                             <td>{{ emi.remaining_principal|floatformat:2 }}</td>
