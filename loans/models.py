@@ -11,19 +11,40 @@ class Loan(models.Model):
         ('interest_only', 'Interest Only'),
     ]
 
+    LOAN_PURPOSE_CHOICES = [
+        ('Crop and Crop Services', 'Crop and Crop Services'),
+        ('Wholesale and Retail Business', 'Wholesale and Retail Business'),
+        ('Hotel and Restaurants', 'Hotel and Restaurants'),
+        ('Fruits and Flowers', 'Fruits and Flowers'),
+        ('Animal Husbandary', 'Animal Husbandary'),
+        ('Poultry', 'Poultry'),
+        ('Other Agricultural and Agro Services', 'Other Agricultural and Agro Services'),
+        ('Other Services', 'Other Services'),
+    ]
+
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='loans')
     loan_type = models.CharField(max_length=20, choices=LOAN_TYPE_CHOICES)
+    loan_purpose = models.CharField(max_length=50, choices=LOAN_PURPOSE_CHOICES)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    payments = models.ManyToManyField('EMIPayment', related_name='loans', blank=True)
-    interest_rate = models.DecimalField(max_digits=5, decimal_places=2)
-    duration_months = models.IntegerField()
-    start_date = models.DateField()
-    end_date = models.DateField()
-    status = models.CharField(max_length=100, choices=[('applied', 'Applied'), ('active', 'Active'), ('closed', 'Closed')], default='applied')
+    loan_demand_date = models.DateField()
+    loan_disburse_date = models.DateField()
+
+    status = models.CharField(max_length=100, choices=[( 'applied', 'Applied'), ('analysis', 'Analysis'), ('disburse', 'Disburse'), ('approved', 'Approved'),('active', 'Active'), ('closed', 'Closed')], default='applied')
     is_cleared = models.BooleanField(default=False)
 
+    #Analysis
+    loan_analysis_date = models.DateField(null=True, blank=True)
+    loan_analysis_amount =  models.DecimalField(default=0.0,max_digits=10, decimal_places=2)
+    approved_date = models.DateField(null=True, blank=True)
+
+    # Disburse
+    interest_rate = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    duration_months = models.IntegerField(default=0, null=True, blank=True)
+    payments = models.ManyToManyField('EMIPayment', related_name='loans', blank=True)
+
+
     def __str__(self):
-        return f"{self.loan_type} - {self.member.personalInfo.name}"
+        return f"{self.loan_type} - {self.member.personalInfo.first_name} {self.member.personalInfo.last_name}"
 
     def calculate_emi(self):
         """

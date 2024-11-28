@@ -14,6 +14,7 @@ class Voucher(models.Model):
     VOUCHER_CATEGORY_CHOICES = [
         ('Cash Sheet', 'Cash Sheet'),
         ('Payment Sheet', 'Payment Sheet'),
+        ('Loan', 'Loan'),
         ('Cash and Bank', 'Cash and Bank'),
         ('Manual', 'Manual'),
     ]

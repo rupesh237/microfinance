@@ -384,13 +384,25 @@ class LandInformation(models.Model):
 
 class IncomeInformation(models.Model):
     member = models.OneToOneField(Member, on_delete=models.CASCADE, related_name='incomeInfo')
-    earning = models.FloatField(default=0.0)
-    farming_income = models.FloatField(default=0.0)
-    cattle_income = models.FloatField(default=0.0)
+    agriculture_income = models.FloatField(default=0.0)
+    animal_farming_income = models.FloatField(default=0.0)
+    business_income = models.FloatField(default=0.0)
+    abroad_employment_income = models.FloatField(default=0.0)
+    wages_income = models.FloatField(default=0.0)
+    personal_job_income = models.FloatField(default=0.0)
+    government_post = models.FloatField(default=0.0)
+    pension = models.FloatField(default=0.0)
+    other = models.FloatField(default=0.0)
+    
 
 class ExpensesInformation(models.Model):
     member = models.OneToOneField(Member, on_delete=models.CASCADE, related_name='expensesInfo')
-    house_rent = models.FloatField(default=0.0)
-    food_expense = models.FloatField(default=0.0)
-    health_expense = models.FloatField(default=0.0)
+    house_expenses = models.FloatField(default=0.0)
+    education_expenses = models.FloatField(default=0.0)
+    health_expenses = models.FloatField(default=0.0)
+    festival_expenses = models.FloatField(default=0.0)
+    clothes_expenses = models.FloatField(default=0.0)
+    communication_expenses = models.FloatField(default=0.0)
+    fuel_expenses = models.FloatField(default=0.0)
+    entertaiment_expenses = models.FloatField(default=0.0)
     other_expenses = models.FloatField(default=0.0)

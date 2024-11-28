@@ -1,0 +1,44 @@
+{% extends 'loans/partials/loan_home.html' %}
+
+{% block loan_table %}
+<table>
+    <thead>
+        <tr>
+            <th>Loan D.D.</th>
+            <th>Expe. Dis.D.</th>
+            <th>Loan Type</th>
+            <th>Demand Amt</th>
+            <th>Loan purpose</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% if loan %}
+        <tr class="{% if loan.status != 'applied' %}highlight-loan-row{% endif %}">
+            <td>{{ loan.loan_demand_date }}</td>
+            <td>{{ loan.loan_disburse_date }}</td>
+            <td>{{ loan.loan_type }}</td>
+            <td>{{ loan.amount }}</td>
+            <td>{{ loan.loan_purpose }}</td>
+            <td>
+                <div class="tooltip-container">
+                    <a href="{% url 'loan_analysis_form' loan.id %}">
+                    <i class="bi bi-caret-right-square-fill"></i>
+                    <span class="custom-tooltip">Accept & Process Loan Analysis</span>
+                    </a>
+                </div>
+                
+                <i class="bi bi-trash-fill"></i>
+            </td>
+        </tr>
+        {% else %}
+            <tr>
+                <td colspan="5" class="text-center text-2xl text-black">
+                    No records found.
+                </td>
+            </tr>
+        {% endif %}
+    </tbody>
+</table>   
+{% endblock loan_table %}
+               

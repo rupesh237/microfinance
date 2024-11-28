@@ -66,7 +66,8 @@
         <div id="transactions-navbar" class="mt-4" class="disabled">
             <a id="memberCashSheet" href="#" class="mr-3">CASHSHEET</a>
             <a id="memberPaymentSheet" href="#" class="mr-3">PAYMENTSHEET</a>
-            <a id="memberStatement" href="#">STATEMENT</a>
+            <a id="memberStatement" href="#" class="mr-3">STATEMENT</a>
+            <a id="memberLoan" href="#">LOAN</a>
         </div>
 
         <!-- Placeholder for selected member's saving accounts -->
@@ -190,6 +191,8 @@
                      memberPaymentSheet.href = `{% url 'create_payment_sheet' 0 %}`.replace(/0/, memberId);
                      const memberStatement = document.getElementById('memberStatement');
                      memberStatement.href = `{% url 'member-statement' 0 %}`.replace(/0/, memberId);
+                     const memberLoan = document.getElementById('memberLoan');
+                     memberLoan.href = `{% url 'loan_demand_list' 0 %}`.replace(/0/, memberId);
 
                     // Fetch saving accounts data for the selected member
                     fetch(`/get_saving_accounts/${memberId}/`)

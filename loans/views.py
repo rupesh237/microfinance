@@ -1,19 +1,23 @@
 # loans/views.py
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Loan, EMIPayment
-from .forms import LoanForm, EMIPaymentForm  # Create EMIPaymentForm as needed
-from dashboard.models import Member, PersonalInformation, FamilyInformation, LivestockInformation, HouseInformation, LandInformation, IncomeInformation, ExpensesInformation
-from dashboard.forms import PersonalInformationForm, FamilyInformationForm, LivestockInformationForm, HouseInformationForm, LandInformationForm, IncomeInformationForm, ExpensesInformationForm
+from django.urls import reverse
+from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.contrib.auth.mixins import LoginRequiredMixin
 from dashboard.mixins import RoleRequiredMixin
 from django.contrib import messages
 from django.template.loader import get_template
-from django.http import HttpResponse
+
+from .models import Loan, EMIPayment
+from .forms import LoanDemandForm, LoanAnalysisForm, LoanDisburseForm, EMIPaymentForm  # Create EMIPaymentForm as needed
+from dashboard.models import Member, PersonalInformation, AddressInformation, FamilyInformation, LivestockInformation, HouseInformation, LandInformation, IncomeInformation, ExpensesInformation
+from dashboard.forms import PersonalInformationForm, AddressInformationForm, FamilyInformationForm, LivestockInformationForm, HouseInformationForm, LandInformationForm, IncomeInformationForm, ExpensesInformationForm
+from core.models import  Voucher
+
 from xhtml2pdf import pisa
 from django.utils import timezone
-from django.http import HttpResponseRedirect
-from django.urls import reverse
+from django.db import transaction
 
 from formtools.wizard.views import SessionWizardView
 
@@ -38,15 +42,26 @@ def member_loans(request, member_id):
             payment.interest_paid = emi_info['interest_component']
             payment.save()
 
+            # Create voucher for payment
+            Voucher.objects.create(
+                voucher_type='Receipt',
+                category='Loan',
+                amount=loan.loan_analysis_amount,
+                description=f'Loan Receipt of {loan.member.personalInfo.first_name} {loan.member.personalInfo.middle_name} {loan.member.personalInfo.last_name}: {loan.amount}',
+                transaction_date=timezone.now().date(),
+                created_by=request.user,
+            )
+
             # Mark loan as cleared if balance is zero after this payment
             if payment.closing_balance == 0:
                 loan.is_cleared = True
                 loan.save()
 
+            messages.success(request, f"EMI payment has been received successfully!")
             return redirect('member_loans', member_id=member.id)
 
     else:
-        form = LoanForm(initial={'member': member})
+        form = LoanDemandForm(initial={'member': member})
         payment_form = EMIPaymentForm()
 
     payment_history = {loan.id: loan.emi_payments.all() for loan in loans}
@@ -84,7 +99,7 @@ def pdf_report(request, member_id):
             return redirect('member_loans', member_id=member.id)
 
     else:
-        form = LoanForm(initial={'member': member})
+        form = LoanDemandForm(initial={'member': member})
         payment_form = EMIPaymentForm()
 
     loan_id = request.GET.get('loan_id')
@@ -111,9 +126,9 @@ def pdf_report(request, member_id):
         return HttpResponse('We had some errors <pre>' + html + '</pre>')
     return response
 
-from django.db import transaction
 FORMSS = [
     ("personal", PersonalInformationForm),
+    ("address", AddressInformationForm),
     ("family", FamilyInformationForm),
     ("livestock", LivestockInformationForm),
     ("house", HouseInformationForm),
@@ -124,6 +139,7 @@ FORMSS = [
 
 TEMPLATES = {
     "personal": "member/update_member/personal_info.html",
+    "address": "member/update_member/address_info.html",
     "family": "member/update_member/family_info.html",
     "livestock": "member/update_member/livestock_info.html",
     "house": "member/update_member/house_info.html",
@@ -142,6 +158,7 @@ class UpdateMemberInfoforLoan(LoginRequiredMixin, RoleRequiredMixin, SessionWiza
         
         # Fetch related models for the member
         personal_info = get_object_or_404(PersonalInformation, member=member)
+        address_info = get_object_or_404(AddressInformation, member=member)
         family_info = get_object_or_404(FamilyInformation, member=member)
         livestock_info = get_object_or_404(LivestockInformation, member=member)
         house_info = get_object_or_404(HouseInformation, member=member)
@@ -174,6 +191,27 @@ class UpdateMemberInfoforLoan(LoginRequiredMixin, RoleRequiredMixin, SessionWiza
                 'registered_vdc': personal_info.registered_vdc,
                 'marriage_regd_date': personal_info.marriage_regd_date,
                 'file_no': personal_info.file_no,
+            })
+        elif step == "address":
+            initial.update({
+                'permanent_province': address_info.permanent_province,
+                'permanent_district': address_info.permanent_district,
+                'permanent_municipality': address_info.permanent_municipality,
+                'permanent_ward_no': address_info.permanent_ward_no,
+                'permanent_tole': address_info.permanent_tole,
+                'permanent_house_no': address_info.permanent_house_no,
+                'current_province': address_info.current_province,
+                'current_district': address_info.current_district,
+                'current_municipality': address_info.current_municipality,
+                'current_ward_no': address_info.current_ward_no,
+                'current_tole': address_info.current_tole,
+                'current_house_no': address_info.current_house_no,
+                'old_province': address_info.old_province,
+                'old_district': address_info.old_district,
+                'old_municipality': address_info.old_municipality,
+                'old_ward_no': address_info.old_ward_no,
+                'old_tole': address_info.old_tole,
+                'old_house_no': address_info.old_house_no,
             })
         elif step == "family":
             initial.update({
@@ -208,17 +246,29 @@ class UpdateMemberInfoforLoan(LoginRequiredMixin, RoleRequiredMixin, SessionWiza
             })
         elif step == "income":
             initial.update({
-                'earning': income_info.earning,
-                'farming_income': income_info.farming_income,
-                'cattle_income': income_info.cattle_income,
+                'agriculture_income': income_info.agriculture_income,
+                'animal_farming_income': income_info.animal_farming_income,
+                'business_income': income_info.business_income,
+                'abroad_employment_income': income_info.abroad_employment_income,
+                'wages_income': income_info.wages_income,
+                'personal_job_income': income_info.personal_job_income,
+                'government_post': income_info.government_post,
+                'pension': income_info.pension,
+                'other': income_info.other,
             })
         elif step == "expenses":
             initial.update({
-                'house_rent': expenses_info.house_rent,
-                'food_expense': expenses_info.food_expense,
-                'health_expense': expenses_info.health_expense,
+                'house_expenses': expenses_info.house_expenses,
+                'education_expenses': expenses_info.education_expenses,
+                'health_expenses': expenses_info.health_expenses,
+                'festival_expenses': expenses_info.festival_expenses,
+                'clothes_expenses': expenses_info.clothes_expenses,
+                'communication_expenses': expenses_info.communication_expenses,
+                'fuel_expenses': expenses_info.fuel_expenses,
+                'entertaiment_expenses': expenses_info.entertaiment_expenses,
                 'other_expenses': expenses_info.other_expenses,
             })
+
 
         return initial
 
@@ -255,6 +305,30 @@ class UpdateMemberInfoforLoan(LoginRequiredMixin, RoleRequiredMixin, SessionWiza
                             'registered_vdc': form_instance.registered_vdc,
                             'marriage_regd_date': form_instance.marriage_regd_date,
                             'file_no': form_instance.file_no,
+                        }
+                    )
+                elif isinstance(form_instance, AddressInformation):
+                    AddressInformation.objects.update_or_create(
+                        member=member,
+                        defaults={
+                            'permanent_province': form_instance.permanent_province,
+                            'permanent_district': form_instance.permanent_district,
+                            'permanent_municipality': form_instance.permanent_municipality,
+                            'permanent_ward_no': form_instance.permanent_ward_no,
+                            'permanent_tole': form_instance.permanent_tole,
+                            'permanent_house_no': form_instance.permanent_house_no,
+                            'current_district': form_instance.current_district,
+                            'current_municipality': form_instance.current_municipality,
+                            'current_province': form_instance.current_province,
+                            'current_ward_no': form_instance.current_ward_no,
+                            'current_tole': form_instance.current_tole,
+                            'current_house_no': form_instance.current_house_no,
+                            'old_province': form_instance.old_province,
+                            'old_district': form_instance.old_district,
+                            'old_municipality': form_instance.old_municipality,
+                            'old_ward_no': form_instance.old_ward_no,
+                            'old_tole': form_instance.old_tole,
+                            'old_house_no': form_instance.old_house_no,
                         }
                     )
                 elif isinstance(form_instance, FamilyInformation):
@@ -304,25 +378,34 @@ class UpdateMemberInfoforLoan(LoginRequiredMixin, RoleRequiredMixin, SessionWiza
                     IncomeInformation.objects.update_or_create(
                         member=member,
                         defaults={
-                            'earning': form_instance.earning,
-                            'farming_income': form_instance.farming_income,
-                            'cattle_income': form_instance.cattle_income,
+                            'agriculture_income': form_instance.agriculture_income,
+                            'animal_farming_income': form_instance.animal_farming_income,
+                            'business_income': form_instance.business_income,
+                            'abroad_employment_income': form_instance.abroad_employment_income,
+                            'wages_income': form_instance.wages_income,
+                            'personal_job_income': form_instance.personal_job_income,
+                            'government_post': form_instance.government_post,
+                            'pension': form_instance.pension,
+                            'other': form_instance.other,
                         }
                     )
                 elif isinstance(form_instance, ExpensesInformation):
                     ExpensesInformation.objects.update_or_create(
                         member=member,
                         defaults={
-                            'house_rent': form_instance.house_rent,
-                            'food_expense': form_instance.food_expense,
-                            'health_expense': form_instance.health_expense,
+                            'house_expenses': form_instance.house_expenses,
+                            'education_expenses': form_instance.education_expenses,
+                            'health_expenses': form_instance.health_expenses,
+                            'festival_expenses': form_instance.festival_expenses,
+                            'clothes_expenses': form_instance.clothes_expenses,
+                            'communication_expenses': form_instance.communication_expenses,
+                            'fuel_expenses': form_instance.fuel_expenses,
+                            'entertaiment_expenses': form_instance.entertaiment_expenses,
                             'other_expenses': form_instance.other_expenses,
                         }
                     )
-
-        return redirect('loan_form', member_id=member.id)
-
-    
+                    
+        return redirect('loan_demand_form', member_id=member.id)
 
 def take_loan(request, member_id):
     member = get_object_or_404(Member, id =member_id)
@@ -332,25 +415,232 @@ def take_loan(request, member_id):
         'loans': loans
     })
 
-def loan_form(request, member_id):
+## LOAN DEMAND ##
+def loan_demand_form(request, member_id):
     member = get_object_or_404(Member, id =member_id)
-    form = LoanForm()
+    form = LoanDemandForm()
     if request.method == 'POST':
-        form = LoanForm(request.POST)
+        form = LoanDemandForm(request.POST)
         if form.is_valid():
             loan = form.save(commit=False)
             loan.member = member
             loan.save()
-            return redirect('member_loans', member_id=member.id)
+            return redirect('loan_demand_list', member_id=member.id)
     else:
-        form = LoanForm(initial={'member': member})
-        return render (request, 'loans/loan_form.html',{
+        form = LoanDemandForm(initial={'member': member})
+        return render (request, 'loans/forms/loan_demand_form.html',{
             'form': form
         })
-    return render (request, 'loans/loan_form.html', {
+    return render (request, 'loans/forms/loan_demand_form.html', {
         'form': form,
         'member':member
     })
+
+def loan_demand_list(request, member_id):
+    member = get_object_or_404(Member, id =member_id)
+    loan = Loan.objects.filter(member=member).first()
+    return render (request, 'loans/views/loan_demand_list.html', {
+       'loan': loan,
+       'member': member
+    })
+
+## LOAN ANALYSIS ##
+def loan_analysis_list(request, member_id):
+    member = get_object_or_404(Member, id =member_id)
+    loan = Loan.objects.filter(member=member).first()
+    if loan is not None:
+        if loan.status == 'analysis' or loan.status != 'applied':
+            loan = loan
+        else:
+            loan = None
+    return render (request, 'loans/views/loan_analysis_list.html', {
+       'loan': loan,
+       'member': member
+    })
+
+def loan_analysis_form(request,loan_id):
+    loan_instance = get_object_or_404(Loan, id=loan_id) 
+    member = get_object_or_404(Member, pk=loan_instance.member.id)
+
+    # Fetch the existing IncomeInformation for the member or create one if none exists
+    income_info = IncomeInformation.objects.get(member=member)
+    expenses_info = ExpensesInformation.objects.get(member=member)
+
+    if request.method == 'POST':
+        income_form = IncomeInformationForm(request.POST, instance=income_info, prefix='income')
+        expenses_form = ExpensesInformationForm(request.POST,  instance=expenses_info, prefix='expenses')
+        loan_analysis_form = LoanAnalysisForm(request.POST, instance=loan_instance, prefix='loan_analysis')
+        
+        if income_form.is_valid() and expenses_form.is_valid():
+            income_form.save()  # Save updates to the existing instance
+            expenses_form.save()
+
+            loan_info = loan_analysis_form.save(commit=False)
+            loan_info.status = "analysis"
+            loan_info.save() 
+            return redirect('loan_demand_list', member_id=member.id)
+    else:
+        income_form = IncomeInformationForm(instance=income_info, prefix='income')
+        expenses_form = ExpensesInformationForm(instance=expenses_info, prefix='expenses')
+        loan_analysis_form = LoanAnalysisForm(prefix='loan_analysis', loan_instance=loan_instance)
+
+    context = {
+        'income_form': income_form,
+        'expenses_form': expenses_form,
+        'loan_analysis_form': loan_analysis_form,
+    }
+    return render(request, 'loans/forms/loan_analysis_form.html', context)
+
+## LOAN DISBURSE ##
+def loan_disburse_list(request, member_id):
+    """
+    This view renders the list of loans which are ready for disbursement.
+    """
+    member = get_object_or_404(Member, id =member_id)
+    # Fetch the latest loan of the member which is ready for disbursement
+    loan = Loan.objects.filter(member=member).first()
+    if loan is not None:
+        # If the loan is in disburse or active status, show it to the user
+        if loan.status == 'disburse' or loan.status == 'approved' or loan.status == 'active':
+            loan = loan
+        else:
+            # If the loan is in any other status, don't show it to the user
+            loan = None
+    return render (request, 'loans/views/loan_disburse_list.html', {
+       'loan': loan,
+       'member': member
+    })
+
+@csrf_exempt
+def preview_schedule(request):
+    if request.method == "POST":
+        try:
+            amount = Decimal(request.POST.get("amount", "0"))
+            interest_rate = Decimal(request.POST.get("interest_rate", "0"))
+            duration_months = int(request.POST.get("duration_months", "0"))
+            loan_type = request.POST.get("loan_type", "flat")
+
+            # Simulate Loan object for EMI calculation
+            loan = Loan(
+                amount=amount,
+                interest_rate=interest_rate,
+                duration_months=duration_months,
+                loan_type=loan_type
+            )
+            schedule = loan.calculate_emi_breakdown()
+
+            return JsonResponse({
+                "success": True,
+                "schedule": [
+                    {
+                        "month": row["month"],
+                        "emi_amount": float(row["emi_amount"]),  # Ensure it's a float
+                        "principal_component": float(row["principal_component"]),
+                        "interest_component": float(row["interest_component"]),
+                        "remaining_principal": float(row["remaining_principal"]),
+                    } for row in schedule
+                ],
+            })
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+    return JsonResponse({"success": False, "error": "Invalid request"})
+
+
+def loan_disburse_form(request, loan_id):
+    loan_instance = get_object_or_404(Loan, id=loan_id) 
+    member = get_object_or_404(Member, pk=loan_instance.member.id)
+
+    if request.method == 'POST':
+        form = LoanDisburseForm(request.POST, instance=loan_instance)
+        
+        if form.is_valid():
+            loan_info = form.save(commit=False)
+            loan_info.status = "disburse"
+            loan_info.save() 
+            return redirect('loan_analysis_list', member_id=member.id)
+        
+    else:
+        form = LoanDisburseForm(loan_instance=loan_instance)
+
+    context = {
+        'form': form,
+    }
+    return render(request, 'loans/forms/loan_disburse_form.html', context)
+
+
+## LOAN PAYMNET ##
+def loan_payment_list(request, member_id):
+    member = get_object_or_404(Member, id =member_id)
+    loan = Loan.objects.filter(member=member).first()
+    if loan is not None:
+        if loan.status == 'active':
+            loan = loan
+        else:
+            loan = None
+    return render (request, 'loans/views/loan_payment_list.html', {
+       'loan': loan,
+       'member': member
+    })
+
+def approve_loan(request, loan_id):
+    # Approve the loan (your logic here)
+    loan = Loan.objects.get(id=loan_id)
+    emi_schedules = loan.calculate_emi_breakdown()
+    installment_amount = emi_schedules[0]['emi_amount']
+
+    if request.method == "POST":
+        loan = get_object_or_404(Loan, id=loan_id)
+        # Update the loan status
+        loan.status = "approved"
+        loan.save()
+        messages.success(request, f"Loan has been approved successfully!")
+        return redirect('loan_disburse_list', member_id=loan.member.id)
+
+    # Pass a flag to the template to show the modal
+    return render(request, 'loans/views/loan_approve.html', 
+                  {'loan': loan,
+                   'installment_amount': installment_amount,
+                   'emi_schedules':emi_schedules
+                   })
+
+def loan_payment(request, loan_id):
+    loan = get_object_or_404(Loan, id=loan_id)
+    emi_schedules = loan.calculate_emi_breakdown()
+    installment_amount = emi_schedules[0]['emi_amount']
+
+    if request.method == "POST":
+        if not request.POST.get('cash_payment'):
+            messages.error(request, "Payment method is required.")
+            return redirect('loan_payment', loan_id=loan.id)
+        
+        if loan.status == "active":
+            messages.warning(request, "This loan is already active.")
+            return redirect('loan_disburse_list', member_id=loan.member.id)
+        
+        if request.POST.get('cash_payment') == 'yes':
+            # Create voucher for payment
+            Voucher.objects.create(
+                voucher_type='Payment',
+                category='Loan',
+                amount=loan.loan_analysis_amount,
+                description=f'Loan Payment of {loan.member.personalInfo.first_name} {loan.member.personalInfo.middle_name} {loan.member.personalInfo.last_name}: {loan.amount}',
+                transaction_date=timezone.now().date(),
+                created_by=request.user,
+            )
+            # Update the loan status
+            loan.status = "active"
+            loan.save()  
+            messages.success(request, "Loan payment made successfully!")
+            return redirect('loan_disburse_list', member_id=loan.member.id)
+
+    # Render payment form
+    context = {
+        'loan': loan,
+        'installment_amount': installment_amount,
+        'emi_schedules': emi_schedules,
+    }
+    return render(request, 'loans/forms/loan_payment.html', context)
+
 
 from decimal import Decimal
 from django.utils import timezone

@@ -381,9 +381,9 @@ class LandInformationForm(forms.ModelForm):
 class IncomeInformationForm(forms.ModelForm):
     class Meta:
         model = IncomeInformation
-        fields = ['earning', 'farming_income', 'cattle_income']
+        fields = ['agriculture_income', 'animal_farming_income', 'business_income', 'abroad_employment_income', 'wages_income', 'personal_job_income', 'government_post', 'pension', 'other']
 
 class ExpensesInformationForm(forms.ModelForm):
     class Meta:
         model = ExpensesInformation
-        fields = ['house_rent', 'food_expense', 'health_expense', 'other_expenses']
+        fields = ['house_expenses', 'education_expenses', 'health_expenses', 'festival_expenses', 'clothes_expenses', 'communication_expenses', 'fuel_expenses', 'entertaiment_expenses', 'other_expenses']

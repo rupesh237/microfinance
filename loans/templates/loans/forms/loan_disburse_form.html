@@ -1,0 +1,85 @@
+{% extends "base/index.html" %}
+{% block content %}
+    <h2>Loan Disburse</h2>
+    <form id="loan-form" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        
+        <!-- EMI Schedule -->
+        <div class="loan-container">
+            <table class="table table-bordered table-hover table-striped" id="emi-schedule-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th>EMI Amount</th>
+                        <th>Principal Component</th>
+                        <th>Interest Component</th>
+                        <th>Remaining Principal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dynamic Content -->
+                </tbody>
+            </table>
+        </div>
+
+        <button id="preview-schedule" type="button">Preview Schedule</button>
+        <button id="save-button" type="submit">Save</button>
+    </form>
+
+    <script>
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const amountField = document.getElementById('id_amount');
+            const loanTypeField = document.getElementById('id_loan_type');
+        
+            if (amountField) {
+                amountField.readOnly = true;
+            }
+            if (loanTypeField) {
+                loanTypeField.readOnly = true;
+            }
+        });
+        
+        document.getElementById("preview-schedule").addEventListener("click", function(event) {
+            event.preventDefault();
+        
+            const form = document.getElementById("loan-form");
+            const formData = new FormData(form);
+        
+            fetch("{% url 'loan_preview_schedule' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                },
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                const table = document.getElementById("emi-schedule-table");
+                const tbody = table.querySelector("tbody");
+                tbody.innerHTML = "";
+        
+                if (data.success) {
+                    data.schedule.forEach(row => {
+                        const tr = document.createElement("tr");
+                        tr.innerHTML = `
+                            <td>${row.month}</td>
+                            <td>${row.emi_amount.toFixed(2)}</td>
+                            <td>${row.principal_component.toFixed(2)}</td>
+                            <td>${row.interest_component.toFixed(2)}</td>
+                            <td>${row.remaining_principal.toFixed(2)}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                    table.style.display = "table";
+                } else {
+                    alert(data.error);
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        });
+        </script>
+        
+{% endblock content %}
+

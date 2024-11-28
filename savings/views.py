@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.generic import CreateView, DeleteView
 from django.db import transaction
 from django.utils import timezone
-from datetime import datetime
+from datetime import datetime, date
 
 from dashboard.mixins import RoleRequiredMixin
 
@@ -293,6 +293,7 @@ def delete_payment_sheet(request, member_id, pk ):
 
 @login_required
 def statement_list(request, member_id):
+    today_date = date.today()
      # Filter statements for the specific member
     statements = Statement.objects.filter(member_id=member_id).all()
     # Check if there are any GET parameters (filters applied)
@@ -309,6 +310,7 @@ def statement_list(request, member_id):
                'total_credit': total_credit,
                'total_debit': total_debit,
                'net_income': total_credit - total_debit,
+               'today_date': today_date,
                }
     if request.htmx:
         return render(request, 'statement/statement-container.html', context)
@@ -365,7 +367,7 @@ def statement_pdf_view(request, member_id):
 
     # Generate the PDF from the HTML content
     response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'inline; filename="statement_{member_id}.pdf"'
+    response['Content-Disposition'] = f'inline; filename="statement_{account.account_number}.pdf"'
     HTML(string=html_content, base_url=request.build_absolute_uri('/')).write_pdf(response)
 
     return response

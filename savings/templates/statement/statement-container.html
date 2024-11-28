@@ -84,16 +84,28 @@
                             <div>
                                 <i class='bi bi-pencil-fill mr-2'></i>
                                 {% if statement.cash_sheet %}
-                                <a href="{% url 'delete_cash_sheet' member_id=statement.member.id pk=statement.cash_sheet.pk %}"><i class="bi bi-trash-fill"></i></a>
+                                    {% if statement.transaction_date.date >= today_date %}
+                                        <a href="{% url 'delete_cash_sheet' member_id=statement.member.id pk=statement.cash_sheet.pk %}">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </a>
+                                    {% else %}
+                                        <i class="bi bi-trash-fill text-muted" title="Action not allowed for past transactions"></i>
+                                    {% endif %}
                                 {% elif statement.payment_sheet %}
-                                <a href="{% url 'delete_payment_sheet' member_id=statement.member.id pk=statement.payment_sheet.pk  %}"><i class="bi bi-trash-fill"></i></a>
+                                    {% if statement.transaction_date.date >= today_date %}
+                                        <a href="{% url 'delete_payment_sheet' member_id=statement.member.id pk=statement.payment_sheet.pk %}">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </a>
+                                    {% else %}
+                                        <i class="bi bi-trash-fill text-muted" title="Action not allowed for past transactions"></i>
+                                    {% endif %}
                                 {% endif %}
-                            </div>
+                            </div>                            
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="9" class="text-center text-2xl text-black">
+                        <td colspan="10" class="text-center text-2xl text-black">
                             No Statements found.
                         </td>
                     </tr>
@@ -112,7 +124,7 @@
                   </tr>
                 {% else %}
                     <tr>
-                        <td colspan="9" class="text-center text-2xl text-black">
+                        <td colspan="10" class="text-center text-2xl text-black">
                             No Statements found.
                         </td>
                     </tr>

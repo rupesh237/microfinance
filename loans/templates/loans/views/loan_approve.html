@@ -1,0 +1,88 @@
+{% extends "base/index.html" %}
+{% load static %}
+{% load savings_filters %}
+
+{% block corecss %}
+    <link rel="stylesheet" href="{% static 'css/savings.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% comment %} <!-- Include Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Include Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script> {% endcomment %}
+
+{% endblock corecss %}
+{% block title %}
+    <title>Approve Loan</title>
+{% endblock title %}
+
+{% block content %}
+<div class="container" style="margin-top: 16px;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h4 style="margin: 0;">Loan Payment</h4>
+        <a href="{% url 'loan_disburse_list' loan.member.id %}"><i class="bi bi-x-square-fill"></i></a>
+    </div>
+        <div class="container" style="border: 1px solid #ddd; border-radius: 8px; padding: 16px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); align-items: center; margin-top:8px; margin-bottom:10px;">
+                <div class="row" id="loan-detail">
+                    <div class="col-md-6">
+                        <p><strong>M.Code:</strong> {{ loan.member.code }}</p>
+                        <p><strong>Name:</strong> {{ loan.member.personalInfo.first_name }} {{ loan.member.personalInfo.middle_name }} {{ loan.member.personalInfo.last_name }}</p>
+                        <p><strong>Loan Name:</strong> {{ loan.loan_type }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Loan Purpose:</strong> {{ loan.loan_purpose }}</p>
+                        <p><strong>Loan Demand Amount:</strong> {{ loan.amount|floatformat:2 }}</p>
+                        <p><strong>Loan Analysis Amount:</strong> {{ loan.loan_analysis_amount|floatformat:2 }}</p>
+                    </div>
+                </div>
+                <hr>
+
+                <div class="row" id="loan-payment-detail"  style="border: 1px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); align-items: center; width: 70%; margin-top:8px; margin-bottom:8px; margin-left:10px;">
+                    <div class="col-md-6">
+                        <p><strong>Interest:</strong> {{ loan.interest_rate }}</p>
+                        <p><strong>Installment Amount:</strong> {{ installment_amount }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Loan Amount:</strong> {{ loan.amount|floatformat:2 }}</p>
+                        <p><strong>Installment No:</strong> {{ loan.duration_months }}</p>
+                    </div>
+                </div>
+                <hr>
+    
+    
+                <div class="loan-container" style="border: 1px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); align-items: center; margin-top:8px; margin-bottom:8px; overflow-x: auto;">
+                    <h5>Repayment Schedule</h5>
+                    <table class="table table-bordered table-hover table-striped" id="emi-schedule-table"> 
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>EMI Amount</th>
+                                <th>Principal Component</th>
+                                <th>Interest Component</th>
+                                <th>Remaining Principal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for emi in emi_schedules %}
+                            <tr>
+                                <td>{{ emi.month }}</td>
+                                <td>{{ emi.emi_amount|floatformat:2 }}</td>
+                                <td>{{ emi.principal_component|floatformat:2 }}</td>
+                                <td>{{ emi.interest_component|floatformat:2 }}</td>
+                                <td>{{ emi.remaining_principal|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div> 
+        </div>
+
+        <form method="post" action="{% url 'approve_loan' loan.id %}" style="margin-left: 10px;">
+            {% csrf_token %}
+            <button class="btn btn-primary">Approve</button>
+        </form>
+    </div>
+
+        
+    {% endblock content %}

@@ -54,12 +54,12 @@
             </script>
 
             <!-- EMI Payment History -->
-            <div>
+            <div> 
                 <h4>EMI Payment History</h4>
                 <li>Opening Balance: {{ loan.amount }}</li>
                 <li>With Interest: {{ loan.interest_rate }}%</li>
                 <li>For {{ loan.duration_months }} EMIs</li>
-                <table>
+                <table class="table table-bordered table-hover table-striped" id="emi-schedule-table">
                     <thead>
                         <tr>
                             <th>Date</th>
@@ -101,9 +101,9 @@
             </div>
 
             <!-- EMI Schedule -->
-            <div class="loan-container">
-                <h4>EMI Schedule</h4>
-                <table>
+            <h5>EMI Schedule</h5>
+            <div class="loan-container" style="border: 1px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); align-items: center; margin-top:8px; margin-bottom:8px; overflow-x: auto;">
+                <table class="table table-bordered table-hover table-striped" id="emi-schedule-table"> 
                     <thead>
                         <tr>
                             <th>Month</th>
@@ -125,7 +125,7 @@
                         {% endfor %}
                     </tbody>
                 </table>
-            </div>
+            </div> 
 
         </li>
         {% endfor %}

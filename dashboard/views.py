@@ -8,6 +8,8 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import User
 
+from django.db import transaction
+
 from django.views.generic import (
     CreateView, ListView, UpdateView, DeleteView )
 
@@ -484,8 +486,6 @@ class MemberDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
     success_url = reverse_lazy('member_list')
     template_name = 'member/delete_member.html'
     
-
-from django.db import transaction
 FORMSS = [
     ("personal", PersonalInformationForm),
     ("address", AddressInformationForm),
@@ -562,9 +562,9 @@ class MemberUpdateWizard(LoginRequiredMixin, RoleRequiredMixin, SessionWizardVie
                 'permanent_ward_no': address_info.permanent_ward_no,
                 'permanent_tole': address_info.permanent_tole,
                 'permanent_house_no': address_info.permanent_house_no,
+                'current_province': address_info.current_province,
                 'current_district': address_info.current_district,
                 'current_municipality': address_info.current_municipality,
-                'current_province': address_info.current_province,
                 'current_ward_no': address_info.current_ward_no,
                 'current_tole': address_info.current_tole,
                 'current_house_no': address_info.current_house_no,
@@ -608,15 +608,26 @@ class MemberUpdateWizard(LoginRequiredMixin, RoleRequiredMixin, SessionWizardVie
             })
         elif step == "income":
             initial.update({
-                'earning': income_info.earning,
-                'farming_income': income_info.farming_income,
-                'cattle_income': income_info.cattle_income,
+                'agriculture_income': income_info.agriculture_income,
+                'animal_farming_income': income_info.animal_farming_income,
+                'business_income': income_info.business_income,
+                'abroad_employment_income': income_info.abroad_employment_income,
+                'wages_income': income_info.wages_income,
+                'personal_job_income': income_info.personal_job_income,
+                'government_post': income_info.government_post,
+                'pension': income_info.pension,
+                'other': income_info.other,
             })
         elif step == "expenses":
             initial.update({
-                'house_rent': expenses_info.house_rent,
-                'food_expense': expenses_info.food_expense,
-                'health_expense': expenses_info.health_expense,
+                'house_expenses': expenses_info.house_expenses,
+                'education_expenses': expenses_info.education_expenses,
+                'health_expenses': expenses_info.health_expenses,
+                'festival_expenses': expenses_info.festival_expenses,
+                'clothes_expenses': expenses_info.clothes_expenses,
+                'communication_expenses': expenses_info.communication_expenses,
+                'fuel_expenses': expenses_info.fuel_expenses,
+                'entertaiment_expenses': expenses_info.entertaiment_expenses,
                 'other_expenses': expenses_info.other_expenses,
             })
 
@@ -728,18 +739,29 @@ class MemberUpdateWizard(LoginRequiredMixin, RoleRequiredMixin, SessionWizardVie
                     IncomeInformation.objects.update_or_create(
                         member=member,
                         defaults={
-                            'earning': form_instance.earning,
-                            'farming_income': form_instance.farming_income,
-                            'cattle_income': form_instance.cattle_income,
+                            'agriculture_income': form_instance.agriculture_income,
+                            'animal_farming_income': form_instance.animal_farming_income,
+                            'business_income': form_instance.business_income,
+                            'abroad_employment_income': form_instance.abroad_employment_income,
+                            'wages_income': form_instance.wages_income,
+                            'personal_job_income': form_instance.personal_job_income,
+                            'government_post': form_instance.government_post,
+                            'pension': form_instance.pension,
+                            'other': form_instance.other,
                         }
                     )
                 elif isinstance(form_instance, ExpensesInformation):
                     ExpensesInformation.objects.update_or_create(
                         member=member,
                         defaults={
-                            'house_rent': form_instance.house_rent,
-                            'food_expense': form_instance.food_expense,
-                            'health_expense': form_instance.health_expense,
+                            'house_expenses': form_instance.house_expenses,
+                            'education_expenses': form_instance.education_expenses,
+                            'health_expenses': form_instance.health_expenses,
+                            'festival_expenses': form_instance.festival_expenses,
+                            'clothes_expenses': form_instance.clothes_expenses,
+                            'communication_expenses': form_instance.communication_expenses,
+                            'fuel_expenses': form_instance.fuel_expenses,
+                            'entertaiment_expenses': form_instance.entertaiment_expenses,
                             'other_expenses': form_instance.other_expenses,
                         }
                     )
@@ -757,6 +779,8 @@ def member_detail_view(request, member_id):
     land_info = member.landInfo
     income_info = member.incomeInfo
     expenses_info = member.expensesInfo
+    savings_accounts = SavingsAccount.objects.filter(member=member).all()
+    loans = member.loans.all()
     
     context = {
         'member': member,
@@ -768,6 +792,8 @@ def member_detail_view(request, member_id):
         'land_info': land_info,
         'income_info': income_info,
         'expenses_info': expenses_info,
+        'savings_accounts': savings_accounts,
+        'loans': loans,
     }
     
     return render(request, 'member/member_detail.html', context)

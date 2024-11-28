@@ -1,0 +1,61 @@
+{% extends 'loans/partials/loan_home.html' %}
+
+{% block loan_radio %}
+<div class="d-flex">
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="loan_demand">
+        <label class="form-check-label" for="inlineRadio1">Loan Demand</label>
+    </div>
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" value="loan_analysis">
+        <label class="form-check-label" for="inlineRadio2">Loan Analysis</label>
+    </div>
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio3" value="loan_disburse">
+        <label class="form-check-label" for="inlineRadio3">Loan Disburse</label>
+    </div>
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio4" value="loan_payment" checked>
+        <label class="form-check-label" for="inlineRadio4">Loan Payment</label>
+    </div>
+</div>
+</div>
+{% endblock loan_radio %}
+
+{% block loan_table %}
+<table>
+    <thead>
+        <tr>
+            <th>Paid Date</th>
+            <th>Loan Dis.D.</th>
+            <th>Loan Type</th>
+            <th>Disbursed Amt</th>
+            <th>Paid Amt</th>
+            <th>Loan purpose</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% if loan %}
+        <tr>
+            <td>{{ loan.loan_demand_date }}</td>
+            <td>{{ loan.loan_disburse_date }}</td>
+            <td>{{ loan.loan_type }}</td>
+            <td>{{ loan.amount }}</td>
+            <td>{{ loan.loan_analysis_amount }}</td>
+            <td>{{ loan.loan_purpose }}</td>
+            <td>
+                <i class="bi bi-trash-fill"></i>
+            </td>
+        </tr>
+        {% else %}
+            <tr>
+                <td colspan="5" class="text-center text-2xl text-black">
+                    No records found.
+                </td>
+            </tr>
+        {% endif %}
+    </tbody>
+</table>   
+{% endblock loan_table %}
+               

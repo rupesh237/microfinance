@@ -22,7 +22,7 @@
             <tr>
                 <td>{{ branch.id }}</td>
                 <td>{{ branch.name }}</td>
-                <td>{{ branch.location }}</td>
+                <td>{{ branch.municipality }}-{{ branch.wardNo }}, {{ branch.district }}</td>
                 <td>{{ branch.manager }}</td>
                 <td>
                     <a href="{% url "update_branch" branch.id %}"><i class='bi bi-pencil-fill'></i></a>

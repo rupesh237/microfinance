@@ -64,10 +64,15 @@
             </div>
         </nav>
         {% endblock navbar %}
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}{% if message.tags == 'error' %} alert-danger{% endif %}">
+            {{ message }}
+        </div>        
+        {% endfor %}
+    {% endif %}
     
-
-
-
     {% block content %}
     {% endblock %}
 

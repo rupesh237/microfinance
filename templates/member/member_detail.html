@@ -57,18 +57,20 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {% if savings_accounts %}
+                    {% for account in savings_accounts %}
                     <tr>
-                        <td>SV123456</td>
-                        <td>Regular Savings</td>
-                        <td>$1500</td>
-                        <td>01/01/2020</td>
+                        <td>{{ account.account_number }}</td>
+                        <td>{{ account.account_type_display }}</td>
+                        <td>{{ account.balance }}</td>
+                        <td>{{ account.created_on|date:"Y/m/d"  }}</td>
                     </tr>
+                    {% endfor %}
+                    {% else %}
                     <tr>
-                        <td>SV789101</td>
-                        <td>Fixed Deposit</td>
-                        <td>$5000</td>
-                        <td>05/15/2023</td>
+                        <td colspan="4">No record found.</td>
                     </tr>
+                    {% endif %}
                 </tbody>
             </table>
         </section>
@@ -85,18 +87,18 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {% for loan in loans %}
                     <tr>
-                        <td>LN98765</td>
-                        <td>Personal Loan</td>
-                        <td>$3000</td>
-                        <td>Approved</td>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{loan.loan_type}}</td>
+                        <td>{{loan.amount}}</td>
+                        <td>{{loan.status}}</td>
                     </tr>
+                    {% empty %}
                     <tr>
-                        <td>LN54321</td>
-                        <td>Home Loan</td>
-                        <td>$15000</td>
-                        <td>Pending</td>
+                        <td colspan="4" style="text-align: center;">No records found</td>
                     </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </section>

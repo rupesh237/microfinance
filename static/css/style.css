@@ -62,3 +62,36 @@ th {
     text-decoration: none; /* Remove underline from links */
     color: #007bff; /* Default link color */
 }
+
+.tooltip-container {
+    position: relative;
+    display: inline-block;
+}
+
+.custom-tooltip {
+    visibility: hidden;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    padding: 5px;
+    border-radius: 5px;
+
+    /* Positioning */
+    position: absolute;
+    bottom: 125%; /* Adjust based on icon position */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1;
+
+    /* Tooltip Arrow */
+    width: max-content;
+}
+
+.tooltip-container:hover .custom-tooltip {
+    visibility: visible;
+}
+
+.highlight-loan-row {
+    background-color: #4ebb66;
+    color: #0d3d18; /* Optional: Adjust text color for better contrast */
+}

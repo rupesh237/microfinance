@@ -33,7 +33,7 @@ CURRENT_ACCOUNT_TYPE = [
 
 
 class SavingsAccount(models.Model):
-    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name="SavingsAccount")
     account_type = models.CharField(max_length=50, choices=SAVING_ACCOUNT_TYPE, default='CS')
     account_number = models.CharField(max_length=20, unique=True)
     interest_rate = models.DecimalField(max_digits=4, decimal_places=2, default=5.00)
