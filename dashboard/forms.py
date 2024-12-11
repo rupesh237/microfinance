@@ -376,7 +376,11 @@ class HouseInformationForm(forms.ModelForm):
 class LandInformationForm(forms.ModelForm):
     class Meta:
         model = LandInformation
-        fields = ['farming_land', 'other_land']
+        fields = [ 'farming_land','other_land']
+        widgets = {
+            'farming_land': forms.TextInput(attrs={'placeholder': 'Farming Land (Dhur)'}),
+            'other_land': forms.TextInput(attrs={'placeholder': 'Other Land (Dhur)'})
+        }
 
 class IncomeInformationForm(forms.ModelForm):
     class Meta:
