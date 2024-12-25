@@ -7,26 +7,14 @@
     <h2>Livestock Information</h2>
     <form method="post">
         {% csrf_token %}
-        {{ wizard.management_form }}
-        {{ wizard.form.as_p }}
-        <div class="form-actions">
-            <!-- Previous button (only shown if not the first step) -->
-            {% if wizard.steps.prev %}
-                <button type="submit" name="wizard_goto_step" value="{{ wizard.steps.prev }}">Previous</button>
-            {% endif %}
-    
-            <!-- Cancel button -->
-            <button type="submit" name="wizard_cancel">Cancel</button>
-    
-            <!-- Next button -->
-            <button type="submit">
-                {% if wizard.steps.next %}
-                    Next
-                {% else %}
-                    Finish
-                {% endif %}
-            </button>
-        </div>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div>
+                <button class="secondary" type="button" onclick="window.history.back()">Back</button>
+                <button type="submit">Next</button>
+            </div>
+        </form>
     </form>
 </body>
 </html>

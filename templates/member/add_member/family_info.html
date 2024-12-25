@@ -6,73 +6,50 @@
 {% endblock title %}
 
 {% block content %}
-    <h2>Family Information</h2>
-    <form method="post" id="family-info-form">
-        {% csrf_token %}
-        {{ wizard.management_form }}
-        <input type="hidden" name="form_count" value="{{ form_count|default:0 }}">
-
-        <div id="form-container">
-            {% for form in family_forms %}
+<h2>Family Information</h2>
+<form method="post">
+    {% csrf_token %}
+    <div id="form-container">
+        <!-- Render the predefined relationship forms -->
+        {% for form in forms %}
             <div class="family-member-form">
-                <h4>{{ form.initial.relationship }}'s Information</h4>
-                {% for field in form %}
-                    {{ field.label_tag }} {{ field }}
-                    {% if field.errors %}
-                        <div class="error">{{ field.errors }}</div>
-                    {% endif %}
-                {% endfor %}
+                {{ form.as_p }}
             </div>
-            {% endfor %}
-        </div>
+        {% endfor %}
+    </div>
 
-        <!-- Button to add a new family member -->
-        <a href="#" id="add-family-member"><i class="bi bi-plus-square-fill"></i> Add another family member</a>
-        <button type="submit" name="wizard_goto_step" value="{{ wizard.steps.prev }}">Previous</button>
-        <button type="submit" name="wizard_goto_step" value="{{ wizard.steps.next }}">Next</button>
-    </form>
-{% endblock content %}
+    <div>
+        <button type="button" id="add-family-member">Add Family Member</button>
+        <button type="submit">Next</button>
+    </div>
+</form>
 
-    <script>
-        document.getElementById('add-family-member').addEventListener('click', function(event) {
-            event.preventDefault();
+<script>
+    document.getElementById('add-family-member').addEventListener('click', function() {
+        let formCount = document.querySelectorAll('.family-member-form').length;
+        let container = document.getElementById('form-container');
 
-            let formCount = document.querySelectorAll('.family-member-form').length;
-            let newForm = document.querySelector('.family-member-form').cloneNode(true);
-
-            newForm.querySelectorAll('input, select, textarea').forEach(function(input) {
-                let nameAttr = input.getAttribute('name');
-                if (nameAttr) {
-                    input.setAttribute('name', nameAttr.replace(/form-\d+/, `form-${formCount}`));
-                }
-                let idAttr = input.getAttribute('id');
-                if (idAttr) {
-                    input.setAttribute('id', idAttr.replace(/form-\d+/, `form-${formCount}`));
-                }
-                input.value = ''; 
-            });
-
-            let removeLink = document.createElement('a');
-            removeLink.href = '#';
-            removeLink.className = 'remove-family-member';
-            removeLink.textContent = 'Remove';
-            newForm.appendChild(removeLink);
-
-            document.getElementById('form-container').appendChild(newForm);
-            document.querySelector('input[name="form_count"]').value = formCount + 1;
-        });
-
-        document.getElementById('form-container').addEventListener('click', function(e) {
-            if (e.target.classList.contains('remove-family-member')) {
-                e.preventDefault();
-                const formToRemove = e.target.closest('.family-member-form');
-                if (formToRemove) {
-                    formToRemove.remove();
-                    let formCount = document.querySelectorAll('.family-member-form').length;
-                    document.querySelector('input[name="form_count"]').value = formCount;
-                }
+        // Clone the first form and clear input values
+        let newForm = document.querySelector('.family-member-form').cloneNode(true);
+        newForm.querySelectorAll('input, select').forEach(input => {
+            let name = input.getAttribute('name');
+            if (name) {
+                input.setAttribute('name', name.replace(/form-\d+/, `form-${formCount}`));
+                input.value = ''; // Clear previous value
             }
         });
-    </script>
-</body>
-</html>
+
+        // Add "Remove" link to the new form
+        let removeLink = document.createElement('a');
+        removeLink.href = '#';
+        removeLink.textContent = 'Remove';
+        removeLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            newForm.remove();
+        });
+        newForm.appendChild(removeLink);
+
+        container.appendChild(newForm);
+    });
+</script>
+{% endblock content %}

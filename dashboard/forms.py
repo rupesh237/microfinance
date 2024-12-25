@@ -6,7 +6,7 @@ from . models import Branch, Employee, District, Municipality, Center, Member
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from .models import AddressInformation, PersonalInformation, FamilyInformation, LivestockInformation, LandInformation, HouseInformation, IncomeInformation, ExpensesInformation, GRoup
-
+from .models import Province, District, Municipality
 class BranchForm(forms.ModelForm):
     class Meta:
         model = Branch
@@ -280,11 +280,91 @@ class CenterSelectionForm(forms.ModelForm):
 
 
 class AddressInformationForm(forms.ModelForm):
+    # Fields for current address
+    current_province = forms.ModelChoiceField(queryset=Province.objects.all(), label="Current Province")
+    current_district = forms.ModelChoiceField(queryset=District.objects.none(), label="Current District")
+    current_municipality = forms.ModelChoiceField(queryset=Municipality.objects.none(), label="Current Municipality")
+    current_ward_no = forms.IntegerField(label="Current Ward No")
+    current_tole = forms.CharField(label="Current Tole")
+    current_house_no = forms.CharField(label="Current House No", required=False)
+
+    # Fields for permanent address
+    same_as_current_permanent = forms.BooleanField(
+        label="Same as Current Address (Permanent)", required=False
+    )
+    permanent_province = forms.ModelChoiceField(queryset=Province.objects.all(), label="Permanent Province")
+    permanent_district = forms.ModelChoiceField(queryset=District.objects.none(), label="Permanent District")
+    permanent_municipality = forms.ModelChoiceField(queryset=Municipality.objects.none(), label="Permanent Municipality")
+    permanent_ward_no = forms.IntegerField(label="Permanent Ward No")
+    permanent_tole = forms.CharField(label="Permanent Tole")
+    permanent_house_no = forms.CharField(label="Permanent House No", required=False)
+
+    # Fields for old address
+    same_as_current_old = forms.BooleanField(
+        label="Same as Current Address (Old)", required=False
+    )
+    old_province = forms.ModelChoiceField(queryset=Province.objects.all(), label="Old Province", required=False)
+    old_district = forms.ModelChoiceField(queryset=District.objects.none(), label="Old District", required=False)
+    old_municipality = forms.ModelChoiceField(queryset=Municipality.objects.none(), label="Old Municipality", required=False)
+    old_ward_no = forms.IntegerField(label="Old Ward No", required=False)
+    old_tole = forms.CharField(label="Old Tole", required=False)
+    old_house_no = forms.CharField(label="Old House No", required=False)
+
     class Meta:
         model = AddressInformation
-        fields = ['permanent_province', 'permanent_district', 'permanent_municipality', 'permanent_ward_no', 'permanent_tole', 'permanent_house_no',
-                'current_province', 'current_district', 'current_municipality', 'current_ward_no', 'current_tole', 'current_house_no',
-                'old_province', 'old_district', 'old_municipality', 'old_ward_no', 'old_tole', 'old_house_no',]
+        fields = []  # All fields are handled manually.
+
+    def __init__(self, *args, **kwargs):
+        super(AddressInformationForm, self).__init__(*args, **kwargs)
+
+        # Dynamically set queryset for district and municipality fields
+        for address_type in ['current', 'permanent', 'old']:
+            province_field = f"{address_type}_province"
+            district_field = f"{address_type}_district"
+            municipality_field = f"{address_type}_municipality"
+
+            if province_field in self.data:
+                try:
+                    province_id = int(self.data.get(province_field))
+                    self.fields[district_field].queryset = District.objects.filter(province_id=province_id)
+                except (ValueError, TypeError):
+                    self.fields[district_field].queryset = District.objects.none()
+
+            if district_field in self.data:
+                try:
+                    district_id = int(self.data.get(district_field))
+                    self.fields[municipality_field].queryset = Municipality.objects.filter(district_id=district_id)
+                except (ValueError, TypeError):
+                    self.fields[municipality_field].queryset = Municipality.objects.none()
+
+            elif self.instance and self.instance.pk:
+                # Pre-fill districts and municipalities if editing an instance
+                for address_type in ['current', 'permanent', 'old']:
+                    province_field = f"{address_type}_province"
+                    district_field = f"{address_type}_district"
+                    municipality_field = f"{address_type}_municipality"
+
+                    if getattr(self.instance, province_field):
+                        province = getattr(self.instance, province_field)
+                        self.fields[district_field].queryset = District.objects.filter(province=province)
+
+                    if getattr(self.instance, district_field):
+                        district = getattr(self.instance, district_field)
+                        self.fields[municipality_field].queryset = Municipality.objects.filter(district=district)
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        # Handle "Same as Current Address" for permanent and old addresses
+        if cleaned_data.get('same_as_current_permanent'):
+            for field in ['province', 'district', 'municipality', 'ward_no', 'tole', 'house_no']:
+                cleaned_data[f"permanent_{field}"] = cleaned_data.get(f"current_{field}")
+
+        if cleaned_data.get('same_as_current_old'):
+            for field in ['province', 'district', 'municipality', 'ward_no', 'tole', 'house_no']:
+                cleaned_data[f"old_{field}"] = cleaned_data.get(f"current_{field}")
+
+        return cleaned_data
 
 class PersonalInformationForm(forms.ModelForm):
     class Meta:
@@ -293,16 +373,6 @@ class PersonalInformationForm(forms.ModelForm):
                    'occupation', 'family_member_no', 'date_of_birth', 'voter_id', 'voter_id_issued_on', 'citizenship_no', 'issued_from', 'issued_date', 'marriage_reg_no',
                    'registered_vdc', 'marriage_regd_date', 'registered_by', 'file_no',
          ]
-        widgets = {
-            'date_of_birth': DateInput(attrs={'type': 'date'}),
-            'issued_date': DateInput(attrs={'type': 'date'}),
-            'marriage_regd_date': DateInput(attrs={'type': 'date'}),
-        }
-
-    def clean(self):
-        cleaned_data = super().clean()
-        # print("Cleaned data:", cleaned_data)
-        return cleaned_data
 
 
 class FamilyInformationForm(forms.ModelForm):
@@ -314,51 +384,26 @@ class FamilyInformationForm(forms.ModelForm):
             'education', 'occupation', 'monthly_income', 'phone_number'
         ]
         widgets = {
-            'date_of_birth': DateInput(attrs={'type': 'date'}),
-            'issued_date': DateInput(attrs={'type': 'date'}),
+            'date_of_birth': forms.DateInput(attrs={'type': 'date'}),
+            'issued_date': forms.DateInput(attrs={'type': 'date'}),
         }
 
     def __init__(self, *args, **kwargs):
-        # Capture predefined relationships if passed
-        self.relationships = kwargs.pop('relationships', None)
+        relationships = kwargs.pop('relationships', [])
         super().__init__(*args, **kwargs)
 
-        # Set up choices for relationship field if relationships are provided
-        if self.relationships:
-            self.fields['relationship'] = forms.ChoiceField(choices=[(rel, rel) for rel in self.relationships])
-
-            # Disable relationship field for predefined relationships (first three)
-            if self.initial.get('relationship') in self.relationships[:3]:
-                self.fields['relationship'].widget.attrs['readonly'] = True
-                self.fields['relationship'].widget.attrs['disabled'] = True
-            else:
-                # Ensure it's enabled for dynamically added family members
-                self.fields['relationship'].widget.attrs.pop('disabled', None)
-                self.fields['relationship'].widget.attrs.pop('readonly', None)
+        if 'relationship' in self.initial and self.initial['relationship'] in relationships:
+            self.fields['relationship'].widget.attrs.update({
+                'readonly': 'readonly',
+                'disabled': 'disabled',
+            })
 
     def clean_relationship(self):
         relationship = self.cleaned_data.get('relationship')
-        
-        # Return initial if field is disabled for predefined relationships
         if self.fields['relationship'].widget.attrs.get('disabled'):
-            return self.initial.get('relationship')  # Preset relationship remains
-
-        if not relationship:
-            raise forms.ValidationError("This field is required.")
+            return self.initial.get('relationship')  # Return the preset relationship
         return relationship
 
-    def clean(self):
-        cleaned_data = super().clean()
-        relationship = cleaned_data.get('relationship')
-        
-        # Require specific fields if relationship is 'Husband'
-        if relationship == 'Husband':
-            required_fields = ['citizenship_no', 'issued_from', 'issued_date']
-            for field in required_fields:
-                if not cleaned_data.get(field):
-                    self.add_error(field, f"{field.replace('_', ' ').capitalize()} is required for Husband.")
-                    
-        return cleaned_data
 
 
 

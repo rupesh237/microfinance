@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.http import JsonResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -7,13 +7,13 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import User
-
+import nepali_datetime
 from django.db import transaction
 
 from django.views.generic import (
     CreateView, ListView, UpdateView, DeleteView )
 
-from dashboard.models import Employee, District, Municipality, Branch, GRoup, Member, Center,AddressInformation, PersonalInformation, FamilyInformation, LivestockInformation, HouseInformation, LandInformation, IncomeInformation, ExpensesInformation
+from dashboard.models import Employee, Province, District, Municipality, Branch, GRoup, Member, Center,AddressInformation, PersonalInformation, FamilyInformation, LivestockInformation, HouseInformation, LandInformation, IncomeInformation, ExpensesInformation
 from savings.models import SavingsAccount, INITIAL_SAVING_ACCOUNT_TYPE, Statement
 
 from dashboard.forms import BranchForm, EmployeeForm, CenterForm, GroupForm
@@ -65,6 +65,9 @@ def dashboard(request):
 @login_required
 def admin_dashboard(request):
     members =Member.objects.all().select_related('personalInfo')
+    for member in members:
+        address_info = member.address_info.filter(address_type='current').first()
+
     groups = GRoup.objects.all()
     centers = Center.objects.all()
     employees = Employee.objects.all()
@@ -73,7 +76,8 @@ def admin_dashboard(request):
         'groups': groups,
         'centers': centers,
         'employees': employees,
-        'members': members
+        'members': members,
+        'address_info': address_info,
     })
 
 @login_required
@@ -286,7 +290,49 @@ class GroupDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
     success_url = reverse_lazy('group_list')
     template_name = 'group/delete_group.html'
 
+from .forms import CenterSelectionForm
+class SelectCenterView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
+    model = Member
+    form_class = CenterSelectionForm
+    template_name = 'dashboard/select_center.html'
+    template_name = 'member/add_member/select_center.html'
+    success_url = reverse_lazy('address_info') 
 
+    def form_valid(self, form):
+        # Store center and group information in the session instead of saving the Member
+        center_id = form.cleaned_data['center'].id
+        group_id = form.cleaned_data['group'].id
+        member_code = form.cleaned_data['member_code']
+        member_category = form.cleaned_data['member_category']
+        code = form.cleaned_data['code']
+        position = form.cleaned_data['position']
+        print(f"{center_id} {group_id} {member_code} {member_category} {code} {position}")
+        
+        # Store these details in the session
+        self.request.session['center_id'] = center_id
+        self.request.session['group_id'] = group_id
+        self.request.session['member_code'] = member_code
+        self.request.session['member_category'] = member_category
+        self.request.session['code'] = code
+        self.request.session['position'] = position
+
+        return redirect(self.success_url)
+
+    def form_invalid(self, form):
+        # Re-populate `group` queryset and `member_code` choices if form is invalid
+        center_id = self.request.POST.get('center')
+        if center_id:
+            form.fields['group'].queryset = GRoup.objects.filter(center_id=center_id)
+            try:
+                center = Center.objects.get(id=center_id)
+                max_member_code = center.no_of_group * center.no_of_members
+                form.fields['member_code'].choices = [(i, i) for i in range(1, max_member_code + 1)]
+            except Center.DoesNotExist:
+                form.fields['member_code'].choices = []
+        return super().form_invalid(form)
+
+from django.views.generic.edit import FormView
+import json
 
 from .forms import (
     CenterSelectionForm, AddressInformationForm, PersonalInformationForm, FamilyInformationForm, 
@@ -294,7 +340,513 @@ from .forms import (
     IncomeInformationForm, ExpensesInformationForm
 )
 from formtools.wizard.views import SessionWizardView
-from django.shortcuts import redirect
+
+class AddressInfoView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
+    model = AddressInformation
+    form_class = AddressInformationForm
+    template_name = 'member/add_member/address_info.html'
+    success_url = reverse_lazy('personal_info')
+
+    def form_valid(self, form):
+        # Extract data for all address types
+        address_types = ['current', 'permanent', 'old']
+        session_data = {}
+
+        for address_type in address_types:
+            province = form.cleaned_data.get(f"{address_type}_province").id
+            district = form.cleaned_data.get(f"{address_type}_district").id
+            municipality = form.cleaned_data.get(f"{address_type}_municipality").id
+            ward_no = form.cleaned_data.get(f"{address_type}_ward_no")
+            tole = form.cleaned_data.get(f"{address_type}_tole")
+            house_no = form.cleaned_data.get(f"{address_type}_house_no")
+
+            # Store data for this address type in session
+            session_data[address_type] = {
+                'province': province,
+                'district': district,
+                'municipality': municipality,
+                'ward_no': ward_no,
+                'tole': tole,
+                'house_no': house_no,
+            }
+
+            # Print debug information
+            print(f"{address_type.capitalize()} Address - Province: {province}, District: {district}, Municipality: {municipality}, Ward: {ward_no}, Tole: {tole}, House: {house_no}")
+
+        # Save all address data into session
+        self.request.session['address_info'] = session_data
+
+        # After saving data to session, proceed to the next URL
+        return redirect(self.success_url)
+
+    def form_invalid(self, form):
+        # Re-populate `district` and `municipality` queryset for all address types if the form is invalid
+        address_types = ['current', 'permanent', 'old']
+
+        for address_type in address_types:
+            province_id = self.request.POST.get(f"{address_type}_province")
+            district_id = self.request.POST.get(f"{address_type}_district")
+
+            if province_id:
+                form.fields[f"{address_type}_district"].queryset = District.objects.filter(province_id=province_id)
+            else:
+                form.fields[f"{address_type}_district"].queryset = District.objects.none()
+
+            if district_id:
+                form.fields[f"{address_type}_municipality"].queryset = Municipality.objects.filter(district_id=district_id)
+            else:
+                form.fields[f"{address_type}_municipality"].queryset = Municipality.objects.none()
+
+        return super().form_invalid(form)
+
+class PersonalInfoView(FormView):
+    form_class = PersonalInformationForm
+    template_name = 'member/add_member/personal_info.html'
+
+    def get_initial(self):
+        """Populate initial data for the form from session."""
+        initial_data = self.request.session.get('personal_info', {})
+
+        if 'date_of_birth' in initial_data:
+            try:
+                # Case 1: If already a `nepali_datetime.date`, leave it as is
+                if isinstance(initial_data['date_of_birth'], nepali_datetime.date):
+                    pass
+                # Case 2: If it's an ISO string, convert it
+                elif isinstance(initial_data['date_of_birth'], str):
+                    # Parse ISO format string (YYYY-MM-DD)
+                    parsed_date = datetime.date.fromisoformat(initial_data['date_of_birth'])
+                    # Convert to Nepali date
+                    initial_data['date_of_birth'] = nepali_datetime.date.from_datetime_date(parsed_date)
+                else:
+                    raise ValueError("Unsupported date format.")
+            except Exception as e:
+                print(f"Error parsing date_of_birth: {e}")
+                initial_data['date_of_birth'] = None  # Reset invalid date
+
+        return initial_data
+
+    def form_valid(self, form):
+        personal_info = form.cleaned_data
+
+        # Debugging: Print cleaned data
+        print("Cleaned data from form:", personal_info)
+
+        # Serialize only the specific fields
+        try:
+            # Handle date_of_birth (Nepali date)
+            if isinstance(personal_info.get('date_of_birth'), nepali_datetime.date):
+                personal_info['date_of_birth'] = personal_info['date_of_birth'].isoformat()
+            if isinstance(personal_info.get('issued_date'), nepali_datetime.date):
+                personal_info['issued_date'] = personal_info['issued_date'].isoformat()
+
+            # Handle registered_by (ForeignKey) -> Ensure always serialized from form
+            registered_by = personal_info.get('registered_by', self.request.user)
+            if registered_by and hasattr(registered_by, 'pk'):
+                personal_info['registered_by'] = registered_by.pk
+            else:
+                raise ValueError("Registered user is invalid")
+
+        except Exception as e:
+            print(f"Serialization error: {e}")
+            form.add_error(None, "An error occurred while saving personal information.")
+            return self.form_invalid(form)
+
+        # Save the cleaned data to session
+        self.request.session['personal_info'] = personal_info
+        self.request.session.modified = True
+
+        # Debugging: Check session data
+        print("Session data saved:", self.request.session['personal_info'])
+
+        return redirect('family_info')  # Redirect to the next step
+
+    def form_invalid(self, form):
+        """Handle invalid forms."""
+        return self.render_to_response(self.get_context_data(form=form))
+
+
+def family_info_view(request):
+    if 'personal_info' not in request.session or 'address_info' not in request.session:
+        return redirect('address_info')
+
+    request.session['current_step'] = 3
+    predefined_relationships = ['Father', 'Husband', 'Father-In-Law']
+
+    # Only create forms for predefined relationships
+    forms = [
+        FamilyInformationForm(initial={'relationship': rel}, prefix=f'form-{i}')
+        for i, rel in enumerate(predefined_relationships)
+    ]
+
+    if request.method == 'POST':
+        valid = True
+        forms = []
+
+        # Validate predefined forms
+        for i in range(len(predefined_relationships)):
+            form = FamilyInformationForm(request.POST, prefix=f'form-{i}')
+            forms.append(form)
+            if not form.is_valid():
+                valid = False
+
+        # Validate additional forms added dynamically
+        i = len(predefined_relationships)
+        while f'form-{i}-family_member_name' in request.POST:
+            form = FamilyInformationForm(request.POST, prefix=f'form-{i}')
+            forms.append(form)
+            if not form.is_valid():
+                valid = False
+            i += 1
+
+        if valid:
+            family_info_list = []
+            for form in forms:
+                form_data = form.cleaned_data.copy()
+                for key, value in form_data.items():
+                    # Check if the value is a date instance
+                    if isinstance(value, date):
+                        form_data[key] = value.isoformat()  # Convert to string for JSON compatibility
+                family_info_list.append(form_data)
+
+            # Save the serialized data to the session
+            request.session['family_info'] = family_info_list
+            request.session.modified = True
+            return redirect('livestock_info')
+
+    return render(request, 'member/add_member/family_info.html', {'forms': forms})
+
+
+
+
+def livestock_info_view(request):
+    if 'address_info' not in request.session or 'personal_info' not in request.session or 'family_info' not in request.session:
+        return redirect('address_info')
+
+    request.session['current_step'] = 4
+    form = LivestockInformationForm(request.POST or None)
+
+    if request.method == 'POST' and form.is_valid():
+        livestock_info = form.cleaned_data
+        request.session['livestock_info'] = livestock_info
+        return redirect('house_info')
+
+    return render(request, 'member/add_member/livestock_info.html', {'form': form})
+
+def house_info_view(request):
+    if 'address_info' not in request.session or 'personal_info' not in request.session or 'family_info' not in request.session or 'livestock_info' not in request.session:
+        return redirect('address_info')
+
+    request.session['current_step'] = 5
+    form = HouseInformationForm(request.POST or None)
+
+    if request.method == 'POST' and form.is_valid():
+        house_info = form.cleaned_data
+        request.session['house_info'] = house_info
+        return redirect('land_info')
+
+    return render(request, 'member/add_member/house_info.html', {'form': form})
+
+def land_info_view(request):
+    if 'address_info' not in request.session or 'personal_info' not in request.session or 'family_info' not in request.session or 'livestock_info' not in request.session or 'house_info' not in request.session:
+        return redirect('address_info')
+
+    request.session['current_step'] = 6
+    form = LandInformationForm(request.POST or None)
+
+    if request.method == 'POST' and form.is_valid():
+        land_info = form.cleaned_data
+        request.session['land_info'] = land_info
+        return redirect('income_info')
+
+    return render(request, 'member/add_member/land_info.html', {'form': form})
+
+def income_info_view(request):
+    if 'address_info' not in request.session or 'personal_info' not in request.session or 'family_info' not in request.session or 'livestock_info' not in request.session or 'house_info' not in request.session or 'land_info' not in request.session:
+        return redirect('address_info')
+
+    request.session['current_step'] = 7
+    form = IncomeInformationForm(request.POST or None)
+
+    if request.method == 'POST' and form.is_valid():
+        income_info = form.cleaned_data
+        request.session['income_info'] = income_info
+        return redirect('expenses_info')
+
+    return render(request, 'member/add_member/income_info.html', {'form': form})
+
+
+def expenses_info_view(request):
+    required_sessions = [
+        'address_info', 'personal_info', 'family_info',
+        'livestock_info', 'house_info', 'land_info',
+        'income_info', 'expenses_info'
+    ]
+
+    if not all(key in request.session for key in required_sessions[:-1]):  # Exclude 'expenses_info'
+        return redirect('address_info')
+
+    request.session['current_step'] = 8
+    initial_data = request.session.get('expenses_info', {})
+    form = ExpensesInformationForm(request.POST or None, initial=initial_data)
+
+    if request.method == 'POST' and form.is_valid():
+        expenses_info = form.cleaned_data
+        request.session['expenses_info'] = expenses_info
+
+        # Retrieve all session data
+        address_info = request.session.get('address_info')
+        personal_info = request.session.get('personal_info')
+        family_info = request.session.get('family_info')
+        livestock_info = request.session.get('livestock_info')
+        house_info = request.session.get('house_info')
+        land_info = request.session.get('land_info')
+        income_info = request.session.get('income_info')
+
+        try:
+            with transaction.atomic():
+                # Retrieve additional information
+                center_id = request.session.get('center_id')
+                group_id = request.session.get('group_id')
+                member_code = request.session.get('member_code')
+                member_category = request.session.get('member_category')
+                code = request.session.get('code')
+                position = request.session.get('position')
+
+                # Ensure registered_by is valid
+                registered_by_id = personal_info.get('registered_by')  # Ensure you're getting the ID
+                try:
+                    registered_by = User.objects.get(pk=registered_by_id)
+                    print(registered_by)
+                except User.DoesNotExist:
+                    raise ValueError("Invalid registered user ID.")
+
+                print(f'Center_id: {center_id}, Group_id: {group_id}, Member_code: {member_code}, '
+                      f'Member_category: {member_category}, Code: {code}, Position: {position}')
+
+                # Create the Member object
+                member = Member.objects.create(
+                    center_id=center_id,
+                    group_id=group_id,
+                    member_code=member_code,
+                    member_category=member_category,
+                    code=code,
+                    position=position,
+                )
+
+                # Create AddressInformation objects for each type
+                for address_type, address_data in zip(['current', 'permanent', 'old'],
+                                                       [address_info.get('current', {}),
+                                                        address_info.get('permanent', {}),
+                                                        address_info.get('old', {})]):
+                    AddressInformation.objects.create(
+                        member=member,
+                        province=Province.objects.get(id=address_data['province']),
+                        district=District.objects.get(id=address_data['district']),
+                        municipality=Municipality.objects.get(id=address_data['municipality']),
+                        ward_no=address_data['ward_no'],
+                        tole=address_data['tole'],
+                        house_no=address_data['house_no'],
+                        address_type=address_type
+                    )
+
+                # Create related objects
+                personal_info['registered_by'] = registered_by.id  # Ensure it's the User object, not ID
+                PersonalInformation.objects.create(member=member, **personal_info)
+                FamilyInformation.objects.create(member=member, **family_info)
+                LivestockInformation.objects.create(member=member, **livestock_info)
+                HouseInformation.objects.create(member=member, **house_info)
+                LandInformation.objects.create(member=member, **land_info)
+                IncomeInformation.objects.create(member=member, **income_info)
+                ExpensesInformation.objects.create(member=member, **expenses_info)
+
+                # Clear session data
+                for key in required_sessions:
+                    del request.session[key]
+
+            return redirect('member_list')
+
+        except Exception as e:
+            print(f"Error creating member: {e}")
+            form.add_error(None, "An error occurred while creating the member. Please try again.")
+
+    return render(request, 'member/add_member/expenses_info.html', {'form': form})
+
+
+# Helper function to get member
+def get_member(member_id):
+    return get_object_or_404(Member, id=member_id)
+
+# Step 1: Address Information Update
+def update_address_info(request, member_id):
+    member = get_object_or_404(Member, id=member_id)
+    address_info = AddressInformation.objects.filter(member=member)
+
+    if request.method == "POST":
+        form = AddressInformationForm(request.POST, instance=address_info.first())
+        if form.is_valid():
+            # Save current address
+            current_address, _ = AddressInformation.objects.update_or_create(
+                member=member,
+                address_type="current",
+                defaults={
+                    "province": form.cleaned_data["current_province"],
+                    "district": form.cleaned_data["current_district"],
+                    "municipality": form.cleaned_data["current_municipality"],
+                    "ward_no": form.cleaned_data["current_ward_no"],
+                    "tole": form.cleaned_data["current_tole"],
+                    "house_no": form.cleaned_data["current_house_no"],
+                },
+            )
+
+            # Save permanent address
+            permanent_address, _ = AddressInformation.objects.update_or_create(
+                member=member,
+                address_type="permanent",
+                defaults={
+                    "province": form.cleaned_data["permanent_province"],
+                    "district": form.cleaned_data["permanent_district"],
+                    "municipality": form.cleaned_data["permanent_municipality"],
+                    "ward_no": form.cleaned_data["permanent_ward_no"],
+                    "tole": form.cleaned_data["permanent_tole"],
+                    "house_no": form.cleaned_data["permanent_house_no"],
+                },
+            )
+
+            # Save old address (if provided)
+            if form.cleaned_data["old_province"]:
+                old_address, _ = AddressInformation.objects.update_or_create(
+                    member=member,
+                    address_type="old",
+                    defaults={
+                        "province": form.cleaned_data["old_province"],
+                        "district": form.cleaned_data["old_district"],
+                        "municipality": form.cleaned_data["old_municipality"],
+                        "ward_no": form.cleaned_data["old_ward_no"],
+                        "tole": form.cleaned_data["old_tole"],
+                        "house_no": form.cleaned_data["old_house_no"],
+                    },
+                )
+
+            messages.success(request, "Address information updated successfully!")
+            return redirect("update_personal_info", member_id=member.id)
+
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        initial_data = {}
+        for address_type in ["current", "permanent", "old"]:
+            address_instance = address_info.filter(address_type=address_type).first()
+            if address_instance:
+                initial_data.update({
+                    f"{address_type}_province": address_instance.province,
+                    f"{address_type}_district": address_instance.district,
+                    f"{address_type}_municipality": address_instance.municipality,
+                    f"{address_type}_ward_no": address_instance.ward_no,
+                    f"{address_type}_tole": address_instance.tole,
+                    f"{address_type}_house_no": address_instance.house_no,
+                })
+
+        form = AddressInformationForm(initial=initial_data)
+
+    return render(request, "member/update_address_info.html", {
+        "form": form,
+        "member": member,
+    })
+
+# Step 2: Personal Information Update
+class UpdatePersonalInfoView(UpdateView):
+    model = PersonalInformation
+    form_class = PersonalInformationForm
+    template_name = 'member/update_personal_info.html'
+
+    def get_object(self):
+        """Retrieve the PersonalInformation object for the given member."""
+        member_id = self.kwargs.get('member_id')
+        return get_object_or_404(PersonalInformation, member_id=member_id)
+
+    def form_valid(self, form):
+        # Update the registered_by and registered_date fields
+        personal_info = form.save(commit=False)
+        personal_info.registered_by = self.request.user
+        personal_info.registered_date = nepali_datetime.date.today()  # Assuming Nepali date is needed
+        personal_info.save()
+
+        # Redirect to the member detail view with the correct URL argument
+        return redirect(reverse('member_detail', kwargs={'member_id': personal_info.member.id}))
+
+    def form_invalid(self, form):
+        """Handle invalid forms."""
+        return self.render_to_response(self.get_context_data(form=form))
+
+
+def update_income_info(request, member_id):
+    member = get_member(member_id)
+
+    if request.method == 'POST':
+        form = IncomeInformationForm(request.POST)
+        if form.is_valid():
+            request.session['income_info'] = form.cleaned_data
+            return redirect('update_expenses_info', member_id=member.id)
+    else:
+        form = IncomeInformationForm()
+
+    return render(request, 'update_income_info.html', {'form': form, 'member': member})
+
+# Step 4: Expenses Information Update
+def update_expenses_info(request, member_id):
+    member = get_member(member_id)
+
+    if request.method == 'POST':
+        form = ExpensesInformationForm(request.POST)
+        if form.is_valid():
+            request.session['expenses_info'] = form.cleaned_data
+            return redirect('final_update', member_id=member.id)
+    else:
+        form = ExpensesInformationForm()
+
+    return render(request, 'update_expenses_info.html', {'form': form, 'member': member})
+
+# Final Step: Save all information atomically
+def final_update(request, member_id):
+    member = get_member(member_id)
+
+    # Retrieve all session data
+    address_info = request.session.get('address_info')
+    personal_info = request.session.get('personal_info')
+    income_info = request.session.get('income_info')
+    expenses_info = request.session.get('expenses_info')
+
+    # If any data is missing, redirect back to the first step
+    if not address_info or not personal_info or not income_info or not expenses_info:
+        messages.error(request, "Please complete all steps first.")
+        return redirect('update_address_info', member_id=member.id)
+
+    # Start a transaction block
+    try:
+        with transaction.atomic():
+            # Save address information
+            AddressInformation.objects.update_or_create(member=member, defaults=address_info)
+
+            # Save personal information
+            PersonalInformation.objects.update_or_create(member=member, defaults=personal_info)
+
+            # Save income information
+            IncomeInformation.objects.update_or_create(member=member, defaults=income_info)
+
+            # Save expenses information
+            ExpensesInformation.objects.update_or_create(member=member, defaults=expenses_info)
+
+        # Clear session data
+        request.session['address_info'] = request.session['personal_info'] = request.session['income_info'] = request.session['expenses_info'] = None
+
+        # Show success message
+        messages.success(request, "All member information updated successfully.")
+        return redirect('member_detail', member_id=member.id)
+
+    except Exception as e:
+        messages.error(request, f"An error occurred: {e}")
+        return redirect('update_address_info', member_id=member.id)
 
 FORMS = [
     ("address", AddressInformationForm),
@@ -439,46 +991,6 @@ def load_member_codes(request):
     
     return JsonResponse(member_codes, safe=False)
 
-class SelectCenterView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
-    model = Member
-    form_class = CenterSelectionForm
-    template_name = 'dashboard/select_center.html'
-    success_url = reverse_lazy('add_member')
-    template_name = 'member/add_member/select_center.html'
-    success_url = reverse_lazy('add_member') 
-
-    def form_valid(self, form):
-        # Store center and group information in the session instead of saving the Member
-        center_id = form.cleaned_data['center'].id
-        group_id = form.cleaned_data['group'].id
-        member_code = form.cleaned_data['member_code']
-        member_category = form.cleaned_data['member_category']
-        code = form.cleaned_data['code']
-        position = form.cleaned_data['position']
-        print(f"{center_id} {group_id} {member_code} {member_category} {code} {position}")
-        
-        # Store these details in the session
-        self.request.session['center_id'] = center_id
-        self.request.session['group_id'] = group_id
-        self.request.session['member_code'] = member_code
-        self.request.session['member_category'] = member_category
-        self.request.session['code'] = code
-        self.request.session['position'] = position
-
-        return redirect(self.success_url)
-
-    def form_invalid(self, form):
-        # Re-populate `group` queryset and `member_code` choices if form is invalid
-        center_id = self.request.POST.get('center')
-        if center_id:
-            form.fields['group'].queryset = GRoup.objects.filter(center_id=center_id)
-            try:
-                center = Center.objects.get(id=center_id)
-                max_member_code = center.no_of_group * center.no_of_members
-                form.fields['member_code'].choices = [(i, i) for i in range(1, max_member_code + 1)]
-            except Center.DoesNotExist:
-                form.fields['member_code'].choices = []
-        return super().form_invalid(form)
 
    
 class MemberDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
@@ -772,7 +1284,8 @@ class MemberUpdateWizard(LoginRequiredMixin, RoleRequiredMixin, SessionWizardVie
 def member_detail_view(request, member_id):
     member = get_object_or_404(Member, id=member_id)
     personal_info = member.personalInfo
-    address_info = member.addressInfo
+    address_info = member.address_info.filter(address_type='current').first()
+    print(address_info)
     family_info = FamilyInformation.objects.filter(member=member).all()
     livestock_info = member.livestockInfo
     house_info = member.houseInfo
@@ -816,6 +1329,7 @@ def get_saving_accounts(request, member_id):
         })
     return JsonResponse({'accounts': account_data})
 
+from django.db.models import Prefetch
 class MemberListView(ListView):
     model = Member
     template_name = 'member/member_list.html'
@@ -829,7 +1343,13 @@ class MemberListView(ListView):
 
 
     def get_queryset(self):
-        queryset = Member.objects.all().select_related('personalInfo').filter(status='A')
+        # Prefetch only current addresses
+        current_address_prefetch = Prefetch(
+            'address_info', 
+            queryset=AddressInformation.objects.filter(address_type='current'),
+            to_attr='current_address'
+        )
+        queryset = Member.objects.all().select_related('personalInfo').prefetch_related(current_address_prefetch).filter(status='A')
         status_filter = self.request.GET.get('status')
         # Ensure the filter value is one of the valid status codes
         valid_status_codes = [code for code, label in Member.MEMBER_STATUS]

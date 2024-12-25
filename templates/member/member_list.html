@@ -66,22 +66,31 @@
             </thead>
             <tbody>
                 {% for member in members %}
-                <tr class="selectable-row" data-member-id="{{ member.id }}">
-                    <td>{{ member.code }}</td>
-                    <td>{{ member.personalInfo.first_name }} {{ member.personalInfo.middle_name }} {{ member.personalInfo.last_name }}</td>
-                    <td>{{ member.center }}</td>
-                    <td>{{ member.personalInfo.phone_number }}</td>
-                    <td>{{ member.addressInfo.current_tole }}, {{ member.addressInfo.current_municipality }}-{{ member.addressInfo.current_ward_no }} </td>
-                    <td>{{ member.member_category }}</td>
-                    <td>{{ member.status }}</td>
-                    <td><a href="{% url 'member_detail' member.id %}"><i class="bi bi-file-person"></i></a></td>
-                    <td><a href="#"><i class="bi bi-journal-text"></i></a></td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="9">No record found.</td>
-                </tr>
+                    <tr class="selectable-row" data-member-id="{{ member.id }}">
+                        <td>{{ member.code }}</td>
+                        <td>{{ member.personalInfo.first_name }} {{ member.personalInfo.middle_name }} {{ member.personalInfo.last_name }}</td>
+                        <td>{{ member.center }}</td>
+                        <td>{{ member.personalInfo.phone_number }}</td>
+                        <td>
+                            {% if member.current_address %}
+                                {% for address in member.current_address %}
+                                    {{ address.tole }}, {{ address.municipality }}-{{ address.ward_no }}
+                                {% endfor %}
+                            {% else %}
+                                Not available
+                            {% endif %}
+                        </td>
+                        <td>{{ member.member_category }}</td>
+                        <td>{{ member.get_status_display }}</td>
+                        <td><a href="{% url 'member_detail' member.id %}"><i class="bi bi-file-person"></i></a></td>
+                        <td><a href="#"><i class="bi bi-journal-text"></i></a></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9">No record found.</td>
+                    </tr>
                 {% endfor %}
+
             </tbody>
         </table>
         <div id="transactions-navbar" class="mt-4" class="disabled">

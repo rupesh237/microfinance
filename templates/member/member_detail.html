@@ -104,7 +104,9 @@
         </section>
         <section class="other-details">
             <h2>Other Details</h2>
-            <p><strong>Address:</strong> {{ member.addressInfo.current_tole }}, {{ member.addressInfo.current_municipality }}-{{ member.addressInfo.current_ward_no }}</p>
+            <p><strong>Citizenship No. </strong> {{ member.personalInfo.citizenship_no }} </p>
+            <p><strong>Date Of Birth: </strong> {{ member.personalInfo.date_of_birth }} </p>
+            <p><strong>Address:</strong> {{ address_info.tole }}, {{ address_info.municipality }}-{{ address_info.ward_no }}</p>
             <p><strong>Marital Status:</strong> {{ member.personalInfo.marital_status }}</p>
             <p><strong>Income: </strong> {{ member.incomeInfo.agriculture_income}} Agriculture (Yearly), {{ member.incomeInfo.animal_farming_income }} Livestock (yearly), {{ member.incomeInfo.business_income }} Business Income, {{ member.incomeInfo.abroad_employment_income}} Foreign Employement, {{ member.incomeInfo.wages_income}} Wages (daily), {{ member.incomeInfo.personal_job_income}} Job (monthly), {{ member.incomeInfo.pension }} Pension. (All prices are in Nepali Rupees) </p>
             <p><strong>Livestock:</strong> {{ member.livestockInfo.cows}} cows, {{ member.livestockInfo.buffalo}} Buffalo, {{ member.livestockInfo.goat}} Goat and {{ member.livestockInfo.sheep}} Sheep </p>
