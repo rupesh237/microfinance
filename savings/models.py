@@ -5,7 +5,7 @@ from dashboard.models import Member, Branch
 
 from core.models import Voucher
 
-from savings.managers import StatementQuerySet
+from savings.managers import StatementQuerySet, SavingsAccountManager
 
 from django.utils import timezone
 
@@ -47,6 +47,8 @@ class SavingsAccount(models.Model):
     ]
 
     status = models.CharField(max_length=25, choices=ACCOUNT_STATUS, default='A')
+
+    objects = SavingsAccountManager()
     
 
     def __str__(self):
@@ -55,6 +57,7 @@ class SavingsAccount(models.Model):
     @property
     def account_type_display(self):
         return self.get_account_type_display()
+
 
 class FixedDeposit(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='fixed_deposits')
@@ -133,9 +136,18 @@ class Statement(models.Model):
         ('debit', 'Debit'),
     ]
 
+    SAVINGS_CATEGORY_CHOICES = [
+        ('Cash Sheet', 'Cash Sheet'),
+        ('Payment Sheet', 'Payment Sheet'),
+        ('Loan', 'Loan'),
+        ('Charge', 'Charge'),
+        ('Collection', 'Collection'),
+    ]
+
     account = models.ForeignKey(SavingsAccount, on_delete=models.CASCADE, related_name='account_stat')
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name="member_stat")
     transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
+    category = models.CharField(max_length=50, choices=SAVINGS_CATEGORY_CHOICES)
     cr_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, blank=True, null=True)
     dr_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, blank=True, null=True)
     date = models.DateTimeField(auto_now_add=True)
@@ -153,6 +165,7 @@ class Statement(models.Model):
     voucher = models.ForeignKey(Voucher, on_delete=models.CASCADE, related_name='voucher_statement')
 
     objects = StatementQuerySet.as_manager()
+
 
     def __str__(self):
         return f"{self.account} - {self.transaction_type}"

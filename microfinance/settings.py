@@ -55,7 +55,7 @@ INSTALLED_APPS = [
     "django_htmx",
     # 3rd parties apps
     'compressor',
-    'nepali_datetime_field',
+    # 'nepali_datetime_field',
 ]
 
 MIDDLEWARE = [
@@ -125,11 +125,12 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+# TIME_ZONE = 'UTC'
+USE_TZ = True
+TIME_ZONE = 'Asia/Kathmandu'  # Set your local timezone
 
 USE_I18N = True
 
-USE_TZ = True
 LOGIN_URL = 'login'
 
 

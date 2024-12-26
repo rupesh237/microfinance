@@ -1,0 +1,303 @@
+{% load core_filters %}
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Collection Sheet</title>
+    <style>
+        /* General styling */
+        @page {
+            size: A3 landscape; /* Adjust to 'A4', 'A3', 'letter', etc., and 'landscape' or 'portrait' */
+            margin: 10mm;       /* Set custom margins */
+        }
+        
+        body { font-family: Arial, sans-serif; font-size: 12px; margin: 0; padding: 0; }
+        .container { width: 100%; margin: 0 auto; }
+
+        /* Common container styling */
+        .content-wrapper {
+            width: 90%; /* Set common width for the header and table */
+            margin: 0 auto; /* Center the content */
+        }
+
+        /* Header styling */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #000; /* Add border for header */
+            border-bottom: none; /* Remove bottom border to connect with the table */
+            padding: 5px 10px;
+            box-sizing: border-box; /* Include padding and border in width calculation */
+        }
+
+        .left-info {
+            display: flex;
+            flex-direction: row; 
+            justify-content: space-between;
+            font-size: 10px;
+            flex: 1;
+        }
+
+        /* Logo styling */
+        .company-logo {
+            display: flex;
+            justify-content: left;
+        }
+
+        .meeting-info {
+            margin-left: 15px;
+            flex: 1;
+        }
+
+        .meeting-info p {
+            margin: 0px;
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+    
+        /* Centered company information styling */
+        .center-info {
+            text-align: center;
+            flex: 2;
+        }
+        .center-info h1 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            
+        }
+        .center-info p {
+            margin: 2px 0;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .company-info {
+            font-weight: bold;
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+
+    
+        /* Right-aligned date and period covered styling */
+        .right-info {
+            text-align: right;
+            font-size: 10px;
+            flex: 1;
+        }
+        .right-info p {
+            margin: 2px 0;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        /* Table styling */
+        table { width: 100%; border-collapse: collapse; margin-top: 0px; page-break-inside: avoid; /* Prevent table from breaking */}
+        thead, tr {
+            page-break-inside: avoid;
+        }
+        th, td { border: 1px solid #000; padding: 5px; text-align: center; font-size: 10px; page-break-inside: avoid; /* Avoid breaking rows or header */}
+        th { background-color: #f2f2f2; font-weight: bold; page-break-inside: avoid; /* Avoid breaking rows or header */}
+
+        /* Footer container styling */
+        .footer-container {
+            display: flex;
+            justify-content: space-between; /* Spread items across the footer */
+            margin-top: 60px;
+            padding-top: 10px;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        /* Individual signature box */
+        .signature-box {
+            flex: 1; /* Equal width for each box */
+            align-items: center;
+            flex-direction: column; /* Stack children vertically */
+        }
+
+        .signature-box p {
+            margin: 10px 0; /* Small spacing */
+        }
+
+        .line {
+            border-top: 1px solid black;
+            width: 50%; /* Line width */
+            margin-bottom: 5px;
+            margin: 5px auto; /* Centers the element horizontally */
+        }
+
+        .name {
+            align-items: left;
+            width: 60%; /* Line width */
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="content-wrapper">
+        <!-- Header Section with Flexbox Layout -->
+        <div class="header">
+            <div class="left-info">
+                <div class="company-logo">
+                    <img src="{{ request.build_absolute_uri }}{% static 'images/logo.png' %}" alt="Company Logo" style="width: 60px; height: 60px;">
+                </div>
+
+                <div class="meeting-info">
+                    <p><strong>Meeting No:</strong><p>
+                    <p><strong>Ev. No:</strong><p>
+                    <p><strong>Center:</strong> {{center.code}}[{{center.name|upper}}]<p>
+                </div>
+            </div>
+            
+            <div class="center-info">
+                <div class="company-info">M & MB Soft Tech Pvt. Ltd.</div>
+                <p>Branch Office: Lahachok</p>
+                <h1>Collection Sheet</h1>
+            </div>
+            
+            <div class="right-info">
+                <p><strong>Meeting Date:</strong> {{ meeting_date|date:"Y/m/d" }}</p>
+                <p><strong>Meeting Place:</strong> {{center.meeting_place}}</p>
+                <p><strong>Meeting By:</strong> {{center.meeting_by.username}}</p>
+            </div>
+        </div>
+
+    <table class="table table-bordered table-hover table-striped">
+        <thead>
+            <tr>
+                <th colspan="2" style="text-align: center;">Member Info</th>
+                <th rowspan="2">Member Collection</th>
+                <th rowspan="2">Total (Rs)</th>
+                <!-- Savings Accounts -->
+                {% for account_type in account_types %}
+                    <th colspan="2" style="text-align: center;">{{ account_type.display }}</th>
+                {% endfor %}
+
+                <!-- Loans -->
+                {% for loan_type in loan_types %}
+                    <th colspan="2" style="text-align: center;">{{ loan_type }} Loan</th>
+                {% endfor %}
+            </tr>
+            <tr>
+                <th>Member Code</th>
+                <th>Member Name</th>
+                <!-- Sub-header for Savings Account types -->
+                {% for account_type in account_types %}
+                    <th>Amt</th>
+                    <th>Bal</th>
+                {% endfor %}
+
+                <!-- Sub-header for loans -->
+                {% for loan_type in loan_types %}
+                    <th>Inst. No</th>
+                    <th>Int. Amt</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in combined_data %}
+                {% for group, group_info in item.groups.items %}
+                    <tr>
+                        <td colspan="{{total_columns}}" style="font-weight: bold; text-align:center;">
+                            Group: {{ group.name }}
+                        </td>
+                    </tr>
+                    {% for data in group_info.data %}
+                        <tr>
+                            <td>{{ data.member.code }}</td>
+                            <td>{{ data.member.personalInfo.first_name }} {{ data.member.personalInfo.middle_name }} {{ data.member.personalInfo.last_name }}</td>
+                             <!-- Input for member_collection -->
+                            <td id="member_collection">
+                            </td>
+                            <td>{{ data.total }}</td>
+
+                            <!-- Savings Accounts -->
+                            {% for account_type in account_types %}
+                                <td>{{ data.account_details|get_item:account_type.key|get_item:"amount"|default:"-" }}</td>
+                                <td>{{ data.account_details|get_item:account_type.key|get_item:"balance"|default:"-" }}</td>
+                            {% endfor %}
+
+                            <!-- Loans -->
+                            {% for loan_type in loan_types %}
+                                <td>{{ data.loan_details|get_item:loan_type|get_item:"installment_no"|default:"-" }}</td>
+                                <td>{{ data.loan_details|get_item:loan_type|get_item:"installment_amount"|default:"-" }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                    <td colspan="2" style="font-weight: bold; text-align:left;">
+                        Total:
+                    </td>
+                    <td colspan="1" style="font-weight: bold;" id="collected-amount">
+                    </td>
+                    <td colspan="1" style="font-weight: bold;">
+                        {{ group_info.total }}
+                    </td>
+                    <td colspan="{{total_columns}}">
+                    </td>
+                {% endfor %}
+            {% empty %}
+                <tr>
+                    <td colspan="100%">No data available.</td>
+                </tr>
+            {% endfor %}
+            
+            <!-- Grand Totals -->
+            <tr style="font-weight: bold; background-color: #d1d1d1;">
+                <td colspan="2" style="text-align: left;">Grand Totals:</td>
+                <td id="total-table">
+                </td>
+                <td>{{ all_groups_total }}</td>
+                {% for account_type in account_types %}
+                    <td>{{ overall_total_savings|get_item:account_type.key|get_item:"amount"|default:"-" }}</td>
+                    <td>{{ overall_total_savings|get_item:account_type.key|get_item:"balance"|default:"-" }}</td>
+                {% endfor %}
+                <td></td>
+                {% for loan_type in loan_types %}
+                    <td>{{ overall_total_loans|get_item:loan_type|get_item:"installment_amount"|default:"-" }}</td>
+                {% endfor %}
+            </tr>
+        </tbody>
+    </table>  
+
+    <p><strong>Rs.</strong> {{all_groups_total|number_to_words|upper}}</p>
+
+    <!-- Footer Section -->
+    <div class="footer-container">
+        <!-- Signature of Depositor -->
+        <div class="signature-box">
+            <div class="line"></div>
+            <p>Signature of Depositor</p>
+            <div class="name">Name:</div>
+        </div>
+
+        <!-- Signature of Receiver -->
+        <div class="signature-box">
+            <div class="line"></div>
+            <p>Signature of Receiver</p>
+            <div class="name">Name:</div>
+        </div>
+
+        <!-- Signature of Accountant -->
+        <div class="signature-box">
+            <div class="line"></div>
+            <p>Signature of Accountant</p>
+            <div class="name">Name:</div>
+        </div>
+
+        <!-- Signature of Manager -->
+        <div class="signature-box">
+            <div class="line"></div>
+            <p>Signature of Manager</p>
+            <div class="name">Name:</div>
+        </div>
+    </div>
+</div>
+       
+</body>
+</html>
+

@@ -8,6 +8,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from dashboard.mixins import RoleRequiredMixin
 from django.contrib import messages
 from django.template.loader import get_template
+from django.views.generic import ListView
 
 from .models import Loan, EMIPayment
 from .forms import LoanDemandForm, LoanAnalysisForm, LoanDisburseForm, EMIPaymentForm  # Create EMIPaymentForm as needed
@@ -18,8 +19,31 @@ from core.models import  Voucher
 from xhtml2pdf import pisa
 from django.utils import timezone
 from django.db import transaction
+from django.db.models import Subquery, OuterRef
+
 
 from formtools.wizard.views import SessionWizardView
+
+class LoanListView(LoginRequiredMixin, RoleRequiredMixin, ListView):
+    model = Loan
+    template_name = 'loans/loan_list.html'
+    context_object_name = 'loans'
+
+    def get_queryset(self):
+        loans = Loan.objects.prefetch_related('emi_payments')
+        
+        # Annotate loans with the latest payment
+        for loan in loans:
+            latest_payment = loan.emi_payments.order_by('-payment_date').first()
+            if latest_payment:
+                loan.last_amount_paid = latest_payment.amount_paid
+                loan.last_closing_balance = latest_payment.closing_balance
+            else:
+                loan.last_amount_paid = 0.00
+                loan.last_closing_balance = loan.amount
+
+        return loans
+
 
 @login_required
 def member_loans(request, member_id):
@@ -555,6 +579,8 @@ def loan_disburse_form(request, loan_id):
         
         if form.is_valid():
             loan_info = form.save(commit=False)
+            emis = loan_info.calculate_emi_breakdown()[0]
+            loan_info.installement_amount = emis['emi_amount']
             loan_info.status = "disburse"
             loan_info.save() 
             return redirect('loan_analysis_list', member_id=member.id)
@@ -629,6 +655,8 @@ def loan_payment(request, loan_id):
             )
             # Update the loan status
             loan.status = "active"
+            loan.created_by = request.user
+            loan.created_date = timezone.now().date()
             loan.save()  
             messages.success(request, "Loan payment made successfully!")
             return redirect('loan_disburse_list', member_id=loan.member.id)

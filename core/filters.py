@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 from core.models import Voucher
+from dashboard.models import Center
 
 class VoucherFilter(django_filters.FilterSet):
     date = django_filters.DateFilter(
@@ -17,6 +18,32 @@ class VoucherFilter(django_filters.FilterSet):
     class Meta:
         model = Voucher
         fields = ('date',)
+
+class CollectionSheetFilter(django_filters.FilterSet):
+    date = django_filters.CharFilter(
+        method='filter_by_date',  # Custom filtering method
+        label="Apply Date",
+        widget=forms.DateInput(attrs={"type": "date"}),  # HTML5 date input widget
+    )
+
+    class Meta:
+        model = Center
+        fields = ('date',)
+
+    def filter_by_date(self, queryset, name, value):
+        """
+        Filters centers where `meeting_date` matches the day of the given date.
+        The `meeting_date` field stores only the day of the month.
+        """
+        if value:
+            try:
+                # Extract the day from the date (e.g., 2024-12-04 => day = 4)
+                day = int(value.split('-')[2])  # Get the day part of the date string
+                return queryset.filter(meeting_date=day)
+            except ValueError:
+                # Handle invalid date format
+                return queryset.none()
+        return queryset
 
 class ReportFilter(django_filters.FilterSet):
     start_date = django_filters.DateFilter(

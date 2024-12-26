@@ -19,13 +19,13 @@
         </div>
       </div>
     
-    {% if messages %}
+    {% comment %} {% if messages %}
         {% for message in messages %}
         <div class="alert alert-{{ message.tags }}{% if message.tags == 'error' %} alert-danger{% endif %}">
             {{ message }}
         </div>        
         {% endfor %}
-    {% endif %}
+    {% endif %} {% endcomment %}
 
         <!-- 1/4 cols for the filter form-->
     <div class="col-span-1">

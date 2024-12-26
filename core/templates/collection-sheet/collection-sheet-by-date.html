@@ -1,0 +1,11 @@
+{% extends "base/index.html" %}
+
+{% block title %}
+    <title>Collection Sheet</title>
+{% endblock title %}
+
+{% block content %}
+<div class="relative overflow-x-auto text-black" id="voucher-block">
+    {% include 'collection-sheet/partials/collection-sheet-container.html' %}
+</div>
+{% endblock %}

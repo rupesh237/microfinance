@@ -32,10 +32,17 @@
                 <li class="dropdown">
                     <a href="#" class="dropbtn">Transactions <i class="bi bi-chevron-down"></i></a>
                     <div class="dropdown-content">
-                        <a href="#">Loans</a>
+                        <a href="{% url 'loans' %}">Loans</a>
                         <a href="#">Payments</a>
                         <a href="#">Receipts</a>
                         <a href="#">Withdraw</a>
+                        <div class="nested-dropdown">
+                            <a href="#" class="dropbtn">Collection Sheet</a>
+                            <div class="nested-content">
+                                <a href="{% url 'collection_sheet_by_date' %}">By Date</a>
+                                <a href="{% url 'collection_sheet_by_center' %}">By Center</a>
+                            </div>
+                        </div>
                         <a href="{% url 'vouchers' %}">Voucher</a>
                     </div>
                 </li>

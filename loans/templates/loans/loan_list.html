@@ -1,0 +1,41 @@
+{% extends "base/index.html" %}
+{% load static %}
+
+{% block title %}
+    <title>Loans</title>
+{% endblock title %}
+
+{% block content %}
+<h3>Loan List</h3>
+<div class="container">
+    <table class="table table-bordered table-hover table-striped" id="loans-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Member Name</th>
+                <th>EMI Amount</th>
+                <th>Int. Rate</th>
+                <th>Principal</th>
+                <th>Closing Balance</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for loan in loans %}
+                <tr>
+                    <td>{{ loan.created_date }}</td>
+                    <td>{{ loan.member.personalInfo.first_name }} {{ loan.member.personalInfo.middle_name }} {{ loan.member.personalInfo.last_name }}</td>
+                    <td>{{ loan.last_amount_paid|floatformat:2 }}</td>
+                    <td>{{ loan.interest_rate }}</td>
+                    <td>{{ loan.amount }}</td>
+                    <td>{{ loan.last_closing_balance|floatformat:2 }}</td>
+                </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7">No payments made yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock content %}

@@ -1,5 +1,5 @@
 # loans/models.py
-
+from django.contrib.auth.models import User
 from django.db import models
 from dashboard.models import Member
 from decimal import Decimal
@@ -34,13 +34,17 @@ class Loan(models.Model):
 
     #Analysis
     loan_analysis_date = models.DateField(null=True, blank=True)
-    loan_analysis_amount =  models.DecimalField(default=0.0,max_digits=10, decimal_places=2)
+    loan_analysis_amount =  models.DecimalField(default=0.0, max_digits=10, decimal_places=2)
     approved_date = models.DateField(null=True, blank=True)
 
     # Disburse
     interest_rate = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     duration_months = models.IntegerField(default=0, null=True, blank=True)
     payments = models.ManyToManyField('EMIPayment', related_name='loans', blank=True)
+    installement_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+
+    created_by = models.ForeignKey(User, related_name='created_loans', on_delete=models.CASCADE, null=True)
+    created_date = models.DateField(null=True, blank=True)
 
 
     def __str__(self):
@@ -128,6 +132,10 @@ class Loan(models.Model):
                 })
 
         return breakdown
+    
+    def get_installment_number(self):
+        # Count the number of EMIPayment records associated with this loan
+        return self.emi_payments.count() + 1
 
 
 class EMIPayment(models.Model):
