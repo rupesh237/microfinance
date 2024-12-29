@@ -1,0 +1,340 @@
+{% extends "base/index.html" %}
+{% load core_filters %}
+
+{% block title %}
+    <title>Collection Sheet</title>
+{% endblock title %}
+
+{% block content %}
+<div class="collection-sheet-header">
+    <div class="row">
+        <div class="col-md-6" style="text-align: left;">
+            <p><strong>Center: {{center.code}} :: {{center.name|upper}}</strong><p>
+        </div>
+        <div class="col-md-6" style="text-align: right;">
+            <p><strong>Meeting No: {{meeting_no}} :: Date:{{meeting_date}}</strong><p>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex justify-content-end">
+    <a id="pdf-download-link" href="{% url 'collection_sheet_pdf' center.id %}?meeting_date={{ meeting_date }}" target="_blank"><i class="bi bi-file-earmark-pdf"></i></a>
+ </div>
+
+
+<form method="post">
+    {% csrf_token %}
+    <table class="table table-bordered table-hover table-striped">
+        <thead>
+            <tr>
+                <th colspan="2" style="text-align: center;">Member Info</th>
+                <th rowspan="2">Member Collection</th>
+                <th rowspan="2">Total (Rs)</th>
+                <th rowspan="2">S.R.</th>
+                <!-- Savings Accounts -->
+                {% for account_type in account_types %}
+                    <th colspan="2" style="text-align: center;">{{ account_type.display }}</th>
+                {% endfor %}
+
+                <!-- Loans -->
+                {% for loan_type in loan_types %}
+                    <th colspan="2" style="text-align: center;">{{ loan_type }} Loan</th>
+                {% endfor %}
+            </tr>
+            <tr>
+                <th>Member Code</th>
+                <th>Member Name</th>
+                <!-- Sub-header for Savings Account types -->
+                {% for account_type in account_types %}
+                    <th>Amt</th>
+                    <th>Bal</th>
+                {% endfor %}
+
+                <!-- Sub-header for loans -->
+                {% for loan_type in loan_types %}
+                    <th>Inst. No</th>
+                    <th>Int. Amt</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {{ formset.management_form }}
+            {% for item in combined_data %}
+                {% for group, group_info in item.groups.items %}
+                    <tr>
+                        <td colspan="100%" style="font-weight: bold; text-align:center;">
+                            Group: {{ group.name }}
+                        </td>
+                    </tr>
+                    {% for data, form in group_info.data|zip_lists:formset.forms %}
+                        <tr>
+                            <td>{{ data.member.code }}</td>
+                            <td>{{ data.member.personalInfo.first_name }} {{ data.member.personalInfo.middle_name }} {{ data.member.personalInfo.last_name }}</td>
+                             <!-- Input for member_collection -->
+                            <td id="member_collection">
+                                {{form.member_collection}}
+                            </td>
+                            <td>{{ data.total }}</td>
+                            <td>{{ form.special_record }}</td>
+
+                            <!-- Savings Accounts -->
+                            {% for account_type in account_types %}
+                                <td>{{ data.account_details|get_item:account_type.key|get_item:"amount"|default:"-" }}</td>
+                                <td>{{ data.account_details|get_item:account_type.key|get_item:"balance"|default:"-" }}</td>
+                            {% endfor %}
+
+                            <!-- Loans -->
+                            {% for loan_type in loan_types %}
+                                <td>{{ data.loan_details|get_item:loan_type|get_item:"installment_no"|default:"-" }}</td>
+                                <td>{{ data.loan_details|get_item:loan_type|get_item:"installment_amount"|default:"-" }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                    <td colspan="2" style="font-weight: bold; text-align:right;">
+                        Total
+                    </td>
+                    <td colspan="1" style="font-weight: bold;" id="collected-amount">
+                    </td>
+                    <td colspan="1" style="font-weight: bold;">
+                        {{ group_info.total }}
+                    </td>
+                    <td colspan="{{total_columns}}">
+                    </td>
+                {% endfor %}
+            {% empty %}
+                <tr>
+                    <td colspan="100%">No data available.</td>
+                </tr>
+            {% endfor %}
+            
+            <!-- Grand Totals -->
+            <tr style="font-weight: bold; background-color: #d1d1d1;">
+                <td colspan="2" style="text-align: right;">Grand Totals:</td>
+                <td id="total-table">
+                    <div class="form-group">
+                        <input type="number" class="form-control" id="total" name="total" value="0.00" readonly>
+                    </div>
+                </td>
+                
+                <td>{{ all_groups_total }}</td>
+                <td></td>
+                {% for account_type in account_types %}
+                    <td>{{ overall_total_savings|get_item:account_type.key|get_item:"amount"|default:"-" }}</td>
+                    <td>{{ overall_total_savings|get_item:account_type.key|get_item:"balance"|default:"-" }}</td>
+                {% endfor %}
+                <td></td>
+                {% for loan_type in loan_types %}
+                    <td>{{ overall_total_loans|get_item:loan_type|get_item:"installment_amount"|default:"-" }}</td>
+                {% endfor %}
+            </tr>
+        </tbody>
+    </table>  
+    
+     
+    <!-- Other Fields -->
+    <div class="container">
+        <div class="row justify-content-end" style="margin-top: 20px;">
+            <div class="col-md-4 col-12">
+                    <div class="form-group">
+                        <label for="evaluation_no">Evaluation No:</label>
+                        <input type="number" class="form-control" id="evaluation_no" name="evaluation_no" step="1" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="meeting_by">Meeting By:</label>
+                        <select id="meeting_by" name="meeting_by" class="form-control">
+                            <option value="" selected>Choose...</option>
+                            {% for user in users %}
+                                <option value="{{ user.id }}">
+                                    {{user.username }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>                    
+                    <div class="form-group">
+                        <label for="supervision_by_1">Supervision By 1:</label>
+                        <select id="supervision_by_1" name="supervision_by_1"  class="form-control">
+                            <option selected>Choose...</option>
+                            {% for user in users %}
+                                <option value="{{ user.id }}">
+                                    {{user.username }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="supervision_by_2">Supervision By 2:</label>
+                        <select id="supervision_by_2" name="supervision_by_2" class="form-control">
+                            <option selected>Choose...</option>
+                            {% for user in users %}
+                                <option value="{{ user.id }}">
+                                    {{user.username }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="next_meeting_date">Next Meeting Date:</label>
+                        <input type="date" class="form-control"  name="next_meeting_date" id="next_meeting_date" value="{{next_meeting_date}}">
+                    </div>
+
+                    <button type="submit" style="display: none;" id="submit-form-btn"></button> <!-- Trigger form submission -->
+            </div>
+        </div>
+    </div>
+    <div class="d-flex justify-content-end status-buttons">
+        <!-- Preview Button -->
+        <button type="button" class="btn btn-primary" id="preview-btn" style="margin-right: 6px;">Preview</button>
+
+        <!-- Save Button -->
+        <button type="button" class="btn btn-primary" id="save-btn" style="margin-right: 6px;" disabled>Save</button>
+
+        <!-- Update Button (this will replace Save after Save is clicked) -->
+        <button type="button" class="btn btn-primary" id="update-btn" style="display: none;">Update</button>
+
+        <!-- Submit Button -->
+        <button type="button" class="btn btn-primary" id="submit-btn" style="margin-right: 6px;" disabled>Submit</button>
+
+        <!-- Approve Button -->
+        <button type="button" class="btn btn-primary" id="approve-btn" style="margin-right: 6px;" disabled>Approve</button>
+
+        <!-- Accept Button -->
+        <button type="button" class="btn btn-primary" id="accept-btn" style="margin-right: 6px;" disabled>Accept</button>
+    </div>
+
+    <!-- Hidden field for status -->
+    <input type="hidden" name="status" id="status" value="preview"> 
+    <!-- If it's an existing collection sheet, add a hidden field for the ID -->
+    {% if collection_sheet %}
+        <input type="hidden" name="collection_sheet_id" value="{{ collection_sheet.id }}">
+    {% endif %}
+
+</form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const previewBtn = document.getElementById('preview-btn');
+        const saveBtn = document.getElementById('save-btn');
+        const updateBtn = document.getElementById('update-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const approveBtn = document.getElementById('approve-btn');
+        const acceptBtn = document.getElementById('accept-btn');
+        const statusField = document.getElementById('status');
+        const submitFormBtn = document.getElementById('submit-form-btn');
+    
+        // When Preview is clicked
+        previewBtn.addEventListener('click', function() {
+            statusField.value = 'preview';  // Set status to preview
+            enableSaveButton();  // Enable Save button
+        });
+    
+        // When Save is clicked
+        saveBtn.addEventListener('click', function() {
+            statusField.value = 'saved';  // Set status to saved
+            enableUpdateButton();  // Enable Update button
+            enableSubmitButton();  // Enable Submit button
+            submitFormBtn.click();  // Trigger form submission
+        });
+    
+        // When Update is clicked
+        updateBtn.addEventListener('click', function() {
+            statusField.value = 'saved';  // Ensure status is saved even on update
+            submitFormBtn.click();  // Trigger form submission
+        });
+
+        submitFormBtn.addEventListener('click', function(event) {
+            event.preventDefault();  // Prevent immediate form submission
+            updateTotal();  // Ensure the total is updated
+        
+            // Log to confirm that total is updated
+            console.log('Total Before Form Submission:', document.getElementById('total').value);
+            
+            // Trigger form submission after total is updated
+            document.querySelector('form').submit();  // Explicitly submit the form
+        });
+    
+        // When Submit is clicked
+        submitBtn.addEventListener('click', function() {
+            statusField.value = 'submitted';  // Set status to submitted
+            enableApproveButton();  // Enable Approve button
+            enableAcceptButton();  // Enable Accept button
+            submitFormBtn.click();  // Trigger form submission
+        });
+    
+        // When Approve is clicked
+        approveBtn.addEventListener('click', function() {
+            statusField.value = 'approved';  // Set status to approved
+            submitFormBtn.click();  // Trigger form submission
+        });
+    
+        // When Accept is clicked
+        acceptBtn.addEventListener('click', function() {
+            statusField.value = 'accepted';  // Set status to accepted
+            submitFormBtn.click();  // Trigger form submission
+        });
+    
+        // Helper functions to enable/disable buttons
+        function enableSaveButton() {
+            saveBtn.disabled = false;
+        }
+    
+        function enableUpdateButton() {
+            saveBtn.style.display = 'none';
+            updateBtn.style.display = 'inline-block';  // Show the Update button
+        }
+
+        function disableButton() {
+            saveBtn.disabled = true;
+            updateBtn.disabled = true;
+        }
+    
+        function enableSubmitButton() {
+            submitBtn.disabled = false;
+        }
+    
+        function enableApproveButton() {
+            approveBtn.disabled = false;
+        }
+    
+        function enableAcceptButton() {
+            acceptBtn.disabled = false;
+        }
+    });  
+    
+    function updateTotal() {
+        let total = 0;
+        const collectionInputs = document.querySelectorAll('input[name^="form"][name$="member_collection"]');
+    
+        collectionInputs.forEach(input => {
+            let value = parseFloat(input.value) || 0;
+            total += value;
+        });
+    
+        const totalInput = document.getElementById('total');
+        console.log('totalInput:', totalInput);  // Debug: log the total
+        if (totalInput) {
+            totalInput.value = total.toFixed(2);
+            console.log('Calculated Total:', total.toFixed(2));  // Debug: log the total
+        } else {
+            console.error('Total input field not found!');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const collectionInputs = document.querySelectorAll('input[name^="form"][name$="member_collection"]');
+
+        collectionInputs.forEach(input => {
+            input.addEventListener('input', function() {
+                updateTotal();  // Update total when input changes
+            });
+        });
+
+        updateTotal();  // Initialize total when the page loads
+    });
+
+    document.querySelector('form').addEventListener('submit', function() {
+        console.log('Final Total Before Submission:', document.getElementById('total').value);
+    });
+    
+    
+</script>
+{% endblock content %}

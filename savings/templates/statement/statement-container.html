@@ -67,11 +67,7 @@
               <tbody>
                   {% for statement in filter.qs %}
                     <tr>
-                        {% if statement.cash_sheet %}
-                        <td>CASH SHEET</td>
-                        {% elif statement.payment_sheet %}
-                        <td>PAYMENT SHEET</td>
-                        {% endif %}
+                        <td class="px-6 py-3">{{statement.category}}</td>
                         <td class="px-6 py-3">{{statement.transaction_date}}</td>
                         <td class="px-6 py-3">{{statement.cr_amount}}</td>
                         <td class="px-6 py-3">{{statement.dr_amount}}</td>

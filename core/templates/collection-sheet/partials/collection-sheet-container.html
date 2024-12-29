@@ -1,0 +1,153 @@
+{% load widget_tweaks %}
+{% load humanize %}
+{% load core_filters %}
+
+<div class="flex flex-col-reverse md:grid md:grid-cols-4 md:gap-4"
+    id="voucher-container">
+
+      <div class="flex justify-between items-center mt-4 mb-6">
+        <h3 class="mt-4 mb-4 prose prose-2xl text-black">
+          Collection Sheet List
+        <h3>     
+      </div>
+
+        <!-- 1/4 cols for the filter form-->
+    <div class="col-span-1">
+        <form hx-get="{% url 'collection_sheet_by_date' %}"
+              hx-target="#voucher-container"
+              hx-swap="outerHTML">
+          <div class="row mb-2 d-flex align-items-center">
+                <div class="col-md-6 text-center">
+                    <strong>
+                        {% if selected_date %}{{selected_date}}{% else %}{{today}}{% endif %}
+                    </strong>
+                </div>
+                <div class="col-md-6 ms-auto d-flex justify-content-end align-items-center">
+                    <div class="mr-2">
+                        {{ filter.form.date|add_label_class:"label text-black" }}
+                        {% render_field filter.form.date class="input bg-gray-50 text-gray-900" %}
+                    </div>
+                    <button class="btn btn-success">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+  
+        </form>
+      </div>
+      <h6 style="text-align: center;">Scheduled Meetings<h6>
+      
+          <table class="table table-bordered table-hover table-striped">
+              <thead class="text-xs text-black uppercase">
+                  <th class="px-6 py-3">Code</th>
+                  <th class="px-6 py-3">Center</th>
+                  <th class="px-6 py-3">Saved</th>
+                  <th class="px-6 py-3">Submitted</th>
+                  <th class="px-6 py-3">Approved</th>
+                  <th class="px-6 py-3">Accepted</th>
+                  <th class="px-6 py-3">By</th>
+                  <th class="px-6 py-3">Meeting Date</th>
+                  <th class="px-6 py-3">Meeting Of</th>
+                  <th class="px-6 py-3">M.No.</th>
+                  <th class="px-6 py-3">Status</th>
+                  <th class="px-6 py-3">Actions</th>
+              </thead>
+              {% if filter.qs %}
+              <tbody>
+                  {% for meeting in filter.qs %}
+                    <tr>
+                        <td class="px-6 py-3">{{metting.code}}</td>
+                        <td class="px-6 py-3">{{meeting.name}}</td>
+                        <td class="px-6 py-3">
+                            <div class="form-check">
+                              <input 
+                                  class="form-check-input" 
+                                  type="checkbox" 
+                                  value="saved" 
+                                  id="savedCheckbox{{ meeting.id }}" 
+                                  {% if centers_with_sheets|get_item:meeting.id %}checked{% endif %}
+                              >
+                            </div>
+                          </td>
+                          <td class="px-6 py-3">
+                            {% with centers_with_sheets|get_item:meeting.id as sheet %}
+                              <div class="form-check">
+                                <input 
+                                    class="form-check-input" 
+                                    type="checkbox" 
+                                    value="submitted" 
+                                    id="submittedCheckbox{{ meeting.id }}" 
+                                    {% if sheet.status == "Submitted" %}checked{% endif %}
+                                    {% if sheet.status == "Approved" %}checked{% endif %}
+                                    {% if sheet.status == "Accepted" %}checked{% endif %}
+                                >
+                            </div>
+                            {% endwith %}
+                          </td>
+                          <td class="px-6 py-3">
+                            {% with centers_with_sheets|get_item:meeting.id as sheet %}
+                              <div class="form-check">
+                                <input 
+                                    class="form-check-input" 
+                                    type="checkbox" 
+                                    value="approved" 
+                                    id="approvedCheckbox{{ meeting.id }}" 
+                                    {% if sheet.status == "Approved" %}checked{% endif %}
+                                    {% if sheet.status == "Accepted" %}checked{% endif %}
+                                >
+                            </div>
+                            {% endwith %}
+                          </td>
+                          <td class="px-6 py-3">
+                            {% with centers_with_sheets|get_item:meeting.id as sheet %}
+                              <div class="form-check">
+                                <input 
+                                    class="form-check-input" 
+                                    type="checkbox" 
+                                    value="accepted" 
+                                    id="acceptedCheckbox{{ meeting.id }}" 
+                                    {% if sheet.status == "Accepted" %}checked{% endif %}
+                                >
+                            </div>
+                            {% endwith %}
+                        </td>
+                        <td class="px-6 py-3">{{meeting.meeting_by}}</td>
+                        <td class="px-6 py-3">{{meeting.meeting_date|format_meeting_date}}</td>
+                        <td class="px-6 py-3">{{meeting.meeting_date|format_meeting_date}}</td>
+                        <td class="px-6 py-3">
+                          {% with centers_with_sheets|get_item:meeting.id as sheet %}
+                          {% if sheet %}{{sheet.meeting_no}}{% endif %}
+                          {% endwith %}
+                        </td>
+                        <td class="px-6 py-3">
+                          {% with centers_with_sheets|get_item:meeting.id as sheet %}
+                          {% if sheet %}{{sheet.status}}{% endif %}
+                          {% endwith %}
+                        </td>
+                        <td class="px-6 py-3">
+                            <i class='bi bi-pencil-fill mr-2'></i>
+                            {% if centers_with_sheets|get_item:meeting.id %}
+                            <a href="{% url 'collection_sheet' meeting.id %}?meeting_date={{ meeting.meeting_date|format_meeting_date }}"><i class="bi bi-file-earmark-spreadsheet-fill"></i></a>
+                            {% else %}
+                            <a href="{% url 'create_collection_sheet' meeting.id %}"><i class="bi bi-file-earmark-spreadsheet-fill"></i></a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                  {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center text-2xl text-black">
+                            No Collection Sheet for this day.
+                        </td>
+                    </tr>
+                  {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center text-2xl text-black">
+                            No records found.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+
+</div>

@@ -1,5 +1,6 @@
 form {
-    width: 80%;
+    width: 100%;
+    overflow-x: auto;
     margin: 10px auto;
     padding: 20px;
     background-color: white;
@@ -104,3 +105,17 @@ th {
     background-color: #4ebb66;
     color: #0d3d18; /* Optional: Adjust text color for better contrast */
 }
+
+.form-group {
+    margin-bottom: 8px; /* Ensures consistent spacing between fields */
+}
+
+.container .form-group input,
+.container .form-group select,
+.container .form-group textarea {
+    width: 80%; /* Ensures inputs fill the container's width */
+    height: 10%;
+    padding: 3px; /* Adds padding for better spacing */
+    box-sizing: border-box; /* Includes padding within the width calculation */
+}
+

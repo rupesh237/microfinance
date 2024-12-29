@@ -237,12 +237,15 @@ class Center(models.Model):
 
     def __str__(self):
         return self.code
+    
+    class Meta:
+        ordering = ['formed_date']  
 
 # Group information
 class GRoup(models.Model):
     code = models.CharField(max_length=20)
     name = models.CharField(max_length=100)
-    center = models.ForeignKey(Center, on_delete=models.CASCADE)
+    center = models.ForeignKey(Center, on_delete=models.CASCADE, related_name="groups")
     position = models.IntegerField(default=1)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     created_on = models.DateTimeField(auto_now_add=True)
@@ -380,25 +383,25 @@ class LandInformation(models.Model):
 
 class IncomeInformation(models.Model):
     member = models.OneToOneField(Member, on_delete=models.CASCADE, related_name='incomeInfo')
-    agriculture_income = models.FloatField(default=0.0)
-    animal_farming_income = models.FloatField(default=0.0)
-    business_income = models.FloatField(default=0.0)
-    abroad_employment_income = models.FloatField(default=0.0)
-    wages_income = models.FloatField(default=0.0)
-    personal_job_income = models.FloatField(default=0.0)
-    government_post = models.FloatField(default=0.0)
-    pension = models.FloatField(default=0.0)
-    other = models.FloatField(default=0.0)
+    agriculture_income = models.FloatField(default=0.0, null=True, blank=True)
+    animal_farming_income = models.FloatField(default=0.0, null=True, blank=True)
+    business_income = models.FloatField(default=0.0, null=True, blank=True)
+    abroad_employment_income = models.FloatField(default=0.0, null=True, blank=True)
+    wages_income = models.FloatField(default=0.0, null=True, blank=True)
+    personal_job_income = models.FloatField(default=0.0, null=True, blank=True)
+    government_post = models.FloatField(default=0.0, null=True, blank=True)
+    pension = models.FloatField(default=0.0, null=True, blank=True)
+    other = models.FloatField(default=0.0, null=True, blank=True)
     
 
 class ExpensesInformation(models.Model):
     member = models.OneToOneField(Member, on_delete=models.CASCADE, related_name='expensesInfo')
-    house_expenses = models.FloatField(default=0.0)
-    education_expenses = models.FloatField(default=0.0)
-    health_expenses = models.FloatField(default=0.0)
-    festival_expenses = models.FloatField(default=0.0)
-    clothes_expenses = models.FloatField(default=0.0)
-    communication_expenses = models.FloatField(default=0.0)
-    fuel_expenses = models.FloatField(default=0.0)
-    entertaiment_expenses = models.FloatField(default=0.0)
-    other_expenses = models.FloatField(default=0.0)
+    house_expenses = models.FloatField(default=0.0, null=True, blank=True)
+    education_expenses = models.FloatField(default=0.0, null=True, blank=True)
+    health_expenses = models.FloatField(default=0.0, null=True, blank=True)
+    festival_expenses = models.FloatField(default=0.0, null=True, blank=True)
+    clothes_expenses = models.FloatField(default=0.0, null=True, blank=True)
+    communication_expenses = models.FloatField(default=0.0, null=True, blank=True)
+    fuel_expenses = models.FloatField(default=0.0, null=True, blank=True)
+    entertaiment_expenses = models.FloatField(default=0.0, null=True, blank=True)
+    other_expenses = models.FloatField(default=0.0, null=True, blank=True)

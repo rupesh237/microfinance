@@ -124,6 +124,7 @@ class CashSheetCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
                             member=member,
                             cash_sheet=cash_sheet,
                             transaction_type='credit',
+                            category='Cash Sheet',
                             cr_amount=amount,
                             prev_balance=prev_balance,
                             curr_balance=account.balance,
@@ -240,6 +241,8 @@ class PaymentSheetCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
                                 member=member,
                                 payment_sheet=payment_sheet,
                                 transaction_type='debit',
+                                category='Payment Sheet',
+                                cr_amount=0.0,  # Debits are always 0 in this case, as it's a deduction from the account balance.
                                 dr_amount=amount,
                                 prev_balance=prev_balance,
                                 curr_balance=account.balance,

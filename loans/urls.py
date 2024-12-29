@@ -3,6 +3,8 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path('', views.LoanListView.as_view(), name='loans'),
+
     path('member/<int:member_id>/loans/', views.member_loans, name='member_loans'),
     path('update-member-info-for-loan/<int:member_id>', views.UpdateMemberInfoforLoan.as_view(views.FORMSS), name='update_member_for_loans'),
     path('take-loan/<int:member_id>', views.take_loan, name='take_loan'),

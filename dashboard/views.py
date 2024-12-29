@@ -7,6 +7,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import User
+from django.core.paginator import Paginator
+
 import nepali_datetime
 from django.db import transaction
 
@@ -191,6 +193,12 @@ class CenterListView(LoginRequiredMixin, ListView):
     context_object_name = 'centers'
     template_name = 'center/center_list.html'
 
+    def get_queryset(self):
+        queryset = Center.objects.all()
+        paginator = Paginator(queryset, 10)  # 10 centers per page
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        return page_obj
 
 class CenterCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
     model = Center
@@ -250,6 +258,13 @@ class GroupListView(LoginRequiredMixin, ListView):
     model = GRoup
     context_object_name = 'groups'
     template_name = 'group/group_list.html'
+
+    def get_queryset(self):
+        queryset = GRoup.objects.all()
+        paginator = Paginator(queryset, 10)  # 10 centers per page
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        return page_obj
 
 def get_center_code(request, center_id):
     try:
@@ -1468,11 +1483,19 @@ def change_member_status(request):
         if request.POST.get('create_accounts') == 'yes':
             # Loop through each account type and create them for the member
             for account_code, account_name in INITIAL_SAVING_ACCOUNT_TYPE:
+                # Set default amount based on account_code
+                if account_code == "CS":
+                    amount = 200.0
+                elif account_code == "CF":
+                    amount = 10.0
+                else:
+                    amount = 0 
                 SavingsAccount.objects.create(
                     member=member,
                     account_type=account_code,
                     account_number=f"{member.code}.{account_code}.1", 
-                    balance=0.00 ,
+                    amount=amount,
+                    balance=0.00,
                 )
             
         return JsonResponse({'success': True})
@@ -1483,16 +1506,20 @@ def change_member_status(request):
 @login_required
 def branch_list_view(request):
     branches = Branch.objects.all()
-    return render(request, "branch/branch_list.html",{
-        'branches': branches
-    })
+    paginator = Paginator(branches, 10)  # Show 10 centers per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'branch/branch_list.html', {'branches': page_obj})
 
 
 @login_required
 def employee_list_view(request):
     employees = Employee.objects.all().select_related('user')
+    paginator = Paginator(employees, 10)  # Show 10 centers per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     return render(request, 'employee/employee_list.html', {
-        'employees': employees
+        'employees': page_obj
     })
 
 
