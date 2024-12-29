@@ -430,7 +430,7 @@ class PersonalInfoView(FormView):
         personal_info = form.cleaned_data
 
         # Debugging: Print cleaned data
-        print("Cleaned data from form:", personal_info)
+        # print("Cleaned data from form:", personal_info)
 
         # Serialize only the specific fields
         try:
@@ -457,7 +457,7 @@ class PersonalInfoView(FormView):
         self.request.session.modified = True
 
         # Debugging: Check session data
-        print("Session data saved:", self.request.session['personal_info'])
+        # print("Session data saved:", self.request.session['personal_info'])
 
         return redirect('family_info')  # Redirect to the next step
 
@@ -613,18 +613,8 @@ def expenses_info_view(request):
                 code = request.session.get('code')
                 position = request.session.get('position')
 
-                # Ensure registered_by is valid
-                registered_by_id = personal_info.get('registered_by')  # Ensure you're getting the ID
-                try:
-                    registered_by = User.objects.get(pk=registered_by_id)
-                    print(registered_by)
-                except User.DoesNotExist:
-                    raise ValueError("Invalid registered user ID.")
-
                 print(f'Center_id: {center_id}, Group_id: {group_id}, Member_code: {member_code}, '
                       f'Member_category: {member_category}, Code: {code}, Position: {position}')
-
-                # Create the Member object
                 member = Member.objects.create(
                     center_id=center_id,
                     group_id=group_id,
@@ -649,11 +639,17 @@ def expenses_info_view(request):
                         house_no=address_data['house_no'],
                         address_type=address_type
                     )
+                if 'registered_by' in personal_info:
+                    del personal_info['registered_by']
 
-                # Create related objects
-                personal_info['registered_by'] = registered_by.id  # Ensure it's the User object, not ID
-                PersonalInformation.objects.create(member=member, **personal_info)
-                FamilyInformation.objects.create(member=member, **family_info)
+                user = request.user
+                PersonalInformation.objects.create(
+                    member=member,
+                    registered_by=user,
+                    **personal_info
+                )
+                for family_data in family_info:
+                   FamilyInformation.objects.create(member=member, **family_data)
                 LivestockInformation.objects.create(member=member, **livestock_info)
                 HouseInformation.objects.create(member=member, **house_info)
                 LandInformation.objects.create(member=member, **land_info)
@@ -770,83 +766,185 @@ class UpdatePersonalInfoView(UpdateView):
         personal_info = form.save(commit=False)
         personal_info.registered_by = self.request.user
         personal_info.registered_date = nepali_datetime.date.today()  # Assuming Nepali date is needed
+        member_id = self.object.member_id
         personal_info.save()
 
         # Redirect to the member detail view with the correct URL argument
-        return redirect(reverse('member_detail', kwargs={'member_id': personal_info.member.id}))
+        return redirect(reverse('update_family_info', kwargs={'member_id': member_id}))
 
     def form_invalid(self, form):
         """Handle invalid forms."""
         return self.render_to_response(self.get_context_data(form=form))
 
+def update_family_info_view(request, member_id):
+    member = get_object_or_404(Member, id=member_id)
 
-def update_income_info(request, member_id):
-    member = get_member(member_id)
+    # Define relationships that should not be modified
+    predefined_relationships = ['Father', 'Husband', 'Father-In-Law']
+    
+    # Fetch all existing FamilyInformation for the member
+    existing_family_info = FamilyInformation.objects.filter(member=member)
+
+    # Split forms into predefined and dynamic based on relationship
+    predefined_forms = []
+    dynamic_forms = []
 
     if request.method == 'POST':
-        form = IncomeInformationForm(request.POST)
+        valid = True
+
+        # Handle predefined relationships
+        for relationship in predefined_relationships:
+            instance = existing_family_info.filter(relationship=relationship).first()
+            form = FamilyInformationForm(
+                request.POST,
+                instance=instance,
+                prefix=f'predefined-{relationship}'
+            )
+            predefined_forms.append(form)
+            if not form.is_valid():
+                valid = False
+
+        # Handle dynamically added relationships
+        i = 0
+        while f'dynamic-form-{i}-family_member_name' in request.POST:
+            instance = existing_family_info.exclude(relationship__in=predefined_relationships).order_by('id')[i] if i < existing_family_info.exclude(relationship__in=predefined_relationships).count() else None
+            form = FamilyInformationForm(
+                request.POST,
+                instance=instance,
+                prefix=f'dynamic-form-{i}'
+            )
+            dynamic_forms.append(form)
+            if not form.is_valid():
+                valid = False
+            i += 1
+
+        if valid:
+            # Save predefined forms
+            for form in predefined_forms:
+                family_info = form.save(commit=False)
+                family_info.member = member
+                family_info.save()
+
+            # Save dynamic forms
+            for form in dynamic_forms:
+                family_info = form.save(commit=False)
+                family_info.member = member
+                family_info.save()
+
+            return redirect('update_livestock_info', member_id=member.id)
+    else:
+        # Initialize predefined forms
+        for relationship in predefined_relationships:
+            instance = existing_family_info.filter(relationship=relationship).first()
+            form = FamilyInformationForm(
+                instance=instance,
+                initial={'relationship': relationship},
+                prefix=f'predefined-{relationship}'
+            )
+            predefined_forms.append(form)
+
+        # Initialize dynamic forms
+        dynamic_family_info = existing_family_info.exclude(relationship__in=predefined_relationships)
+        for i, instance in enumerate(dynamic_family_info):
+            form = FamilyInformationForm(instance=instance, prefix=f'dynamic-form-{i}')
+            dynamic_forms.append(form)
+
+    return render(request, 'member/update_family_info.html', {
+        'member': member,
+        'predefined_forms': predefined_forms,
+        'dynamic_forms': dynamic_forms,
+    })
+
+def update_livestock_info_view(request, member_id):
+    member = get_object_or_404(Member, id=member_id)
+    livestock_info = LivestockInformation.objects.filter(member=member).first()
+
+    if request.method == 'POST':
+        form = LivestockInformationForm(request.POST, instance=livestock_info)
         if form.is_valid():
-            request.session['income_info'] = form.cleaned_data
+            livestock_info = form.save(commit=False)
+            livestock_info.member = member
+            livestock_info.save()
+            return redirect('update_house_info', member_id=member.id)
+    else:
+        form = LivestockInformationForm(instance=livestock_info)
+
+    return render(request, 'member/update_livestock_info.html', {'form': form, 'member': member})
+
+def update_house_info_view(request, member_id):
+    member = get_object_or_404(Member, id=member_id)
+    house_info = HouseInformation.objects.filter(member=member).first()
+
+    if request.method == 'POST':
+        form = HouseInformationForm(request.POST, instance=house_info)
+        if form.is_valid():
+            house_info = form.save(commit=False)
+            house_info.member = member
+            house_info.save()
+            return redirect('update_land_info', member_id=member.id)
+    else:
+        form = HouseInformationForm(instance=house_info)
+
+    return render(request, 'member/update_house_info.html', {'form': form, 'member': member})
+
+def update_land_info_view(request, member_id):
+    member = get_object_or_404(Member, id=member_id)
+    land_info = LandInformation.objects.filter(member=member).first()
+
+    if request.method == 'POST':
+        form = LandInformationForm(request.POST, instance=land_info)
+        if form.is_valid():
+            land_info = form.save(commit=False)
+            land_info.member = member
+            land_info.save()
+            return redirect('update_income_info', member_id=member.id)
+    else:
+        form = LandInformationForm(instance=land_info)
+
+    return render(request, 'member/update_land_info.html', {'form': form, 'member': member})
+
+def update_income_info(request, member_id):
+    # Fetch the member and their existing IncomeInformation if it exists
+    member = get_object_or_404(Member, id=member_id)
+    income_info = IncomeInformation.objects.filter(member=member).first()
+
+    if request.method == 'POST':
+        # Bind the form with the existing instance if available, otherwise create a new one
+        form = IncomeInformationForm(request.POST, instance=income_info)
+        if form.is_valid():
+            # Save the form and associate it with the member
+            income_info = form.save(commit=False)
+            income_info.member = member
+            income_info.save()
             return redirect('update_expenses_info', member_id=member.id)
     else:
-        form = IncomeInformationForm()
+        # Initialize the form with the existing data if available
+        form = IncomeInformationForm(instance=income_info)
 
-    return render(request, 'update_income_info.html', {'form': form, 'member': member})
+    return render(request, 'member/update_income_info.html', {'form': form, 'member': member})
 
 # Step 4: Expenses Information Update
 def update_expenses_info(request, member_id):
-    member = get_member(member_id)
+    # Fetch the member and their existing ExpensesInformation if it exists
+    member = get_object_or_404(Member, id=member_id)
+    expenses_info = ExpensesInformation.objects.filter(member=member).first()
 
     if request.method == 'POST':
-        form = ExpensesInformationForm(request.POST)
+        # Bind the form with the existing instance if available, otherwise create a new one
+        form = ExpensesInformationForm(request.POST, instance=expenses_info)
         if form.is_valid():
-            request.session['expenses_info'] = form.cleaned_data
-            return redirect('final_update', member_id=member.id)
+            # Save the form and associate it with the member
+            expenses_info = form.save(commit=False)
+            expenses_info.member = member
+            expenses_info.save()
+            return redirect('member_detail', member_id=member.id)
     else:
-        form = ExpensesInformationForm()
+        # Initialize the form with the existing data if available
+        form = ExpensesInformationForm(instance=expenses_info)
 
-    return render(request, 'update_expenses_info.html', {'form': form, 'member': member})
+    return render(request, 'member/update_expenses_info.html', {'form': form, 'member': member})
 
 # Final Step: Save all information atomically
-def final_update(request, member_id):
-    member = get_member(member_id)
-
-    # Retrieve all session data
-    address_info = request.session.get('address_info')
-    personal_info = request.session.get('personal_info')
-    income_info = request.session.get('income_info')
-    expenses_info = request.session.get('expenses_info')
-
-    # If any data is missing, redirect back to the first step
-    if not address_info or not personal_info or not income_info or not expenses_info:
-        messages.error(request, "Please complete all steps first.")
-        return redirect('update_address_info', member_id=member.id)
-
-    # Start a transaction block
-    try:
-        with transaction.atomic():
-            # Save address information
-            AddressInformation.objects.update_or_create(member=member, defaults=address_info)
-
-            # Save personal information
-            PersonalInformation.objects.update_or_create(member=member, defaults=personal_info)
-
-            # Save income information
-            IncomeInformation.objects.update_or_create(member=member, defaults=income_info)
-
-            # Save expenses information
-            ExpensesInformation.objects.update_or_create(member=member, defaults=expenses_info)
-
-        # Clear session data
-        request.session['address_info'] = request.session['personal_info'] = request.session['income_info'] = request.session['expenses_info'] = None
-
-        # Show success message
-        messages.success(request, "All member information updated successfully.")
-        return redirect('member_detail', member_id=member.id)
-
-    except Exception as e:
-        messages.error(request, f"An error occurred: {e}")
-        return redirect('update_address_info', member_id=member.id)
 
 FORMS = [
     ("address", AddressInformationForm),
@@ -1354,7 +1452,7 @@ class MemberListView(ListView):
         # Ensure the filter value is one of the valid status codes
         valid_status_codes = [code for code, label in Member.MEMBER_STATUS]
         if status_filter in valid_status_codes:
-           queryset = Member.objects.all().select_related('personalInfo').filter(status__iexact=status_filter)
+           queryset = Member.objects.all().select_related('personalInfo').prefetch_related(current_address_prefetch).filter(status__iexact=status_filter)
         return queryset
     
 def change_member_status(request):

@@ -1,15 +1,103 @@
 {% extends "base/index.html" %}
 
 {% block content %}
-<h1>Update Address Information for {{ member.personalInfo.first_name }} {{ member.personalInfo.middle_name }} {{ member.personalInfo.last_name }}</h1>
+<div class="container mt-5">
+    <h1 class="text-center mb-4">
+        Update Address Information for {{ member.personalInfo.first_name }} {{ member.personalInfo.middle_name }} {{ member.personalInfo.last_name }}
+    </h1>
 
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-primary">Save</button>
-</form>
+    <form method="post" class="p-4 border rounded bg-light shadow-sm">
+        {% csrf_token %}
 
-<a href="{% url 'member_detail' member.id %}">Back to Member Details</a>
+        <h3 class="mb-3 text-primary">Current Address</h3>
+        <div class="row g-3">
+            <div class="col-md-4">
+                {{ form.current_province.label_tag }} {{ form.current_province }}
+            </div>
+            <div class="col-md-4">
+                {{ form.current_district.label_tag }} {{ form.current_district }}
+            </div>
+            <div class="col-md-4">
+                {{ form.current_municipality.label_tag }} {{ form.current_municipality }}
+            </div>
+            <div class="col-md-4">
+                {{ form.current_ward_no.label_tag }} {{ form.current_ward_no }}
+            </div>
+            <div class="col-md-4">
+                {{ form.current_tole.label_tag }} {{ form.current_tole }}
+            </div>
+            <div class="col-md-4">
+                {{ form.current_house_no.label_tag }} {{ form.current_house_no }}
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <h3 class="mb-3 text-primary">Permanent Address</h3>
+        <div class="form-check mb-3">
+            {{ form.same_as_current_permanent }} 
+            <label for="id_same_as_current_permanent" class="form-check-label">
+                {{ form.same_as_current_permanent.label }}
+            </label>
+        </div>
+        <div class="row g-3">
+            <div class="col-md-4">
+                {{ form.permanent_province.label_tag }} {{ form.permanent_province }}
+            </div>
+            <div class="col-md-4">
+                {{ form.permanent_district.label_tag }} {{ form.permanent_district }}
+            </div>
+            <div class="col-md-4">
+                {{ form.permanent_municipality.label_tag }} {{ form.permanent_municipality }}
+            </div>
+            <div class="col-md-4">
+                {{ form.permanent_ward_no.label_tag }} {{ form.permanent_ward_no }}
+            </div>
+            <div class="col-md-4">
+                {{ form.permanent_tole.label_tag }} {{ form.permanent_tole }}
+            </div>
+            <div class="col-md-4">
+                {{ form.permanent_house_no.label_tag }} {{ form.permanent_house_no }}
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <h3 class="mb-3 text-primary">Old Address</h3>
+        <div class="form-check mb-3">
+            {{ form.same_as_current_old }}
+            <label for="id_same_as_current_old" class="form-check-label">
+                {{ form.same_as_current_old.label }}
+            </label>
+        </div>
+        <div class="row g-3">
+            <div class="col-md-4">
+                {{ form.old_province.label_tag }} {{ form.old_province }}
+            </div>
+            <div class="col-md-4">
+                {{ form.old_district.label_tag }} {{ form.old_district }}
+            </div>
+            <div class="col-md-4">
+                {{ form.old_municipality.label_tag }} {{ form.old_municipality }}
+            </div>
+            <div class="col-md-4">
+                {{ form.old_ward_no.label_tag }} {{ form.old_ward_no }}
+            </div>
+            <div class="col-md-4">
+                {{ form.old_tole.label_tag }} {{ form.old_tole }}
+            </div>
+            <div class="col-md-4">
+                {{ form.old_house_no.label_tag }} {{ form.old_house_no }}
+            </div>
+        </div>
+
+        <div class="mt-4 text-center">
+            <button type="submit" class="btn btn-primary btn-lg">Save</button>
+            <a href="{% url 'member_detail' member.id %}" class="btn btn-secondary btn-lg">Back</a>
+        </div>
+    </form>
+</div>
+
 
 <script type="text/javascript">
     $(document).ready(function () {

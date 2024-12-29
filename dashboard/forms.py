@@ -337,20 +337,12 @@ class AddressInformationForm(forms.ModelForm):
                 except (ValueError, TypeError):
                     self.fields[municipality_field].queryset = Municipality.objects.none()
 
-            elif self.instance and self.instance.pk:
-                # Pre-fill districts and municipalities if editing an instance
-                for address_type in ['current', 'permanent', 'old']:
-                    province_field = f"{address_type}_province"
-                    district_field = f"{address_type}_district"
-                    municipality_field = f"{address_type}_municipality"
+            # Pre-fill fields based on initial data or instance
+            if self.initial.get(province_field):
+                self.fields[district_field].queryset = District.objects.filter(province=self.initial[province_field])
 
-                    if getattr(self.instance, province_field):
-                        province = getattr(self.instance, province_field)
-                        self.fields[district_field].queryset = District.objects.filter(province=province)
-
-                    if getattr(self.instance, district_field):
-                        district = getattr(self.instance, district_field)
-                        self.fields[municipality_field].queryset = Municipality.objects.filter(district=district)
+            if self.initial.get(district_field):
+                self.fields[municipality_field].queryset = Municipality.objects.filter(district=self.initial[district_field])
 
     def clean(self):
         cleaned_data = super().clean()

@@ -357,6 +357,9 @@ class FamilyInformation(models.Model):
     monthly_income = models.FloatField(default=0.00, blank=True, null=True)
     phone_number = models.CharField(max_length=15)
 
+    def __str__(self):
+        return f"{self.member.personalInfo.first_name}'s {self.relationship}: {self.family_member_name}"
+
 class LivestockInformation(models.Model):
     member = models.OneToOneField(Member, on_delete=models.CASCADE, related_name='livestockInfo')
     cows = models.IntegerField(default=0)

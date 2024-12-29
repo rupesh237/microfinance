@@ -1,9 +1,23 @@
 {% extends "base/index.html" %}
 {% block content %}
-  <h1>Update Family Information</h1>
-  <form method="post">
+<h1>Update Family Information for {{ member.personalInfo.first_name }}</h1>
+
+<form method="post">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Save Changes</button>
-  </form>
+    <h2>Predefined Family Members</h2>
+    {% for form in predefined_forms %}
+        <div>
+            {{ form.as_p }}
+        </div>
+    {% endfor %}
+
+    <h2>Dynamic Family Members</h2>
+    {% for form in dynamic_forms %}
+        <div>
+            {{ form.as_p }}
+        </div>
+    {% endfor %}
+
+    <button type="submit">Save</button>
+</form>
 {% endblock %}
