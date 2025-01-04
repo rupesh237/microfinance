@@ -47,9 +47,9 @@ urlpatterns= [
     path('income-information/', views.income_info_view, name = 'income_info'),
     path('expenses-information/', views.expenses_info_view, name = 'expenses_info'),
 
-    path('add-member/', views.MemberWizard.as_view(views.FORMS), name='add_member'),
+    # path('add-member/', views.MemberWizard.as_view(views.FORMS), name='add_member'),
     path('member/<int:member_id>/', views.member_detail_view, name='member_detail'),
-    path('update-member/<int:member_id>', views.MemberUpdateWizard.as_view(views.FORMSS), name='update_members'),
+    # path('update-member/<int:member_id>', views.MemberUpdateWizard.as_view(views.FORMSS), name='update_members'),
     
 # update of member information urls
     path('update_address/<int:member_id>/', views.update_address_info, name='update_member'),

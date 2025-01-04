@@ -21,7 +21,6 @@ from django.utils import timezone
 from django.db import transaction
 from django.views.generic import UpdateView
 import nepali_datetime
-from django.db.models import Subquery, OuterRef
 
 
 from formtools.wizard.views import SessionWizardView
@@ -426,294 +425,6 @@ def update_expenses_info(request, member_id):
 # Update member information for loan application ends here.
 
 
-FORMSS = [
-    ("personal", PersonalInformationForm),
-    ("address", AddressInformationForm),
-    ("family", FamilyInformationForm),
-    ("livestock", LivestockInformationForm),
-    ("house", HouseInformationForm),
-    ("land", LandInformationForm),
-    ("income", IncomeInformationForm),
-    ("expenses", ExpensesInformationForm),
-]
-
-TEMPLATES = {
-    "personal": "member/update_member/personal_info.html",
-    "address": "member/update_member/address_info.html",
-    "family": "member/update_member/family_info.html",
-    "livestock": "member/update_member/livestock_info.html",
-    "house": "member/update_member/house_info.html",
-    "land": "member/update_member/land_info.html",
-    "income": "member/update_member/income_info.html",
-    "expenses": "member/update_member/expenses_info.html",
-}
-
-class UpdateMemberInfoforLoan(LoginRequiredMixin, RoleRequiredMixin, SessionWizardView):
-    def get_template_names(self):
-        return [TEMPLATES[self.steps.current]]
-
-    def get_form_initial(self, step):
-        member_id = self.kwargs.get('member_id')
-        member = get_object_or_404(Member, pk=member_id)
-        
-        # Fetch related models for the member
-        personal_info = get_object_or_404(PersonalInformation, member=member)
-        address_info = get_object_or_404(AddressInformation, member=member)
-        family_info = get_object_or_404(FamilyInformation, member=member)
-        livestock_info = get_object_or_404(LivestockInformation, member=member)
-        house_info = get_object_or_404(HouseInformation, member=member)
-        land_info = get_object_or_404(LandInformation, member=member)
-        income_info = get_object_or_404(IncomeInformation, member=member)
-        expenses_info = get_object_or_404(ExpensesInformation, member=member)
-
-        initial = super().get_form_initial(step)
-
-        if step == "personal":
-            initial.update({
-                'first_name': personal_info.first_name,
-                'middle_name': personal_info.middle_name,
-                'last_name': personal_info.last_name,
-                'phone_number': personal_info.phone_number,
-                'gender': personal_info.gender,
-                'marital_status': personal_info.marital_status,
-                'family_status': personal_info.family_status,
-                'education': personal_info.education,
-                'religion': personal_info.religion,
-                'occupation': personal_info.occupation,
-                'family_member_no': personal_info.family_member_no,
-                'date_of_birth': personal_info.date_of_birth,
-                'voter_id': personal_info.voter_id,
-                'voter_id_issued_on': personal_info.voter_id_issued_on,
-                'citizenship_no': personal_info.citizenship_no,
-                'issued_from': personal_info.issued_from,
-                'issued_date': personal_info.issued_date,
-                'marriage_reg_no': personal_info.marriage_reg_no,
-                'registered_vdc': personal_info.registered_vdc,
-                'marriage_regd_date': personal_info.marriage_regd_date,
-                'file_no': personal_info.file_no,
-            })
-        elif step == "address":
-            initial.update({
-                'permanent_province': address_info.permanent_province,
-                'permanent_district': address_info.permanent_district,
-                'permanent_municipality': address_info.permanent_municipality,
-                'permanent_ward_no': address_info.permanent_ward_no,
-                'permanent_tole': address_info.permanent_tole,
-                'permanent_house_no': address_info.permanent_house_no,
-                'current_province': address_info.current_province,
-                'current_district': address_info.current_district,
-                'current_municipality': address_info.current_municipality,
-                'current_ward_no': address_info.current_ward_no,
-                'current_tole': address_info.current_tole,
-                'current_house_no': address_info.current_house_no,
-                'old_province': address_info.old_province,
-                'old_district': address_info.old_district,
-                'old_municipality': address_info.old_municipality,
-                'old_ward_no': address_info.old_ward_no,
-                'old_tole': address_info.old_tole,
-                'old_house_no': address_info.old_house_no,
-            })
-        elif step == "family":
-            initial.update({
-                'family_member_name': family_info.family_member_name,
-                'relationship': family_info.relationship,
-                'date_of_birth': family_info.date_of_birth,
-                'citizenship_no': family_info.citizenship_no,
-                'issued_from': family_info.issued_from,
-                'issued_date': family_info.issued_date,
-                'education': family_info.education,
-                'occupation': family_info.occupation,
-                'monthly_income': family_info.monthly_income,
-                'phone_number': family_info.phone_number,
-            })
-        elif step == "livestock":
-            initial.update({
-                'cows': livestock_info.cows,
-                'buffalo': livestock_info.buffalo,
-                'goat': livestock_info.goat,
-                'sheep': livestock_info.sheep,
-            })
-        elif step == "house":
-            initial.update({
-                'concrete': house_info.concrete,
-                'mud': house_info.mud,
-                'iron': house_info.iron,
-            })
-        elif step == "land":
-            initial.update({
-                'farming_land': land_info.farming_land,
-                'other_land': land_info.other_land,
-            })
-        elif step == "income":
-            initial.update({
-                'agriculture_income': income_info.agriculture_income,
-                'animal_farming_income': income_info.animal_farming_income,
-                'business_income': income_info.business_income,
-                'abroad_employment_income': income_info.abroad_employment_income,
-                'wages_income': income_info.wages_income,
-                'personal_job_income': income_info.personal_job_income,
-                'government_post': income_info.government_post,
-                'pension': income_info.pension,
-                'other': income_info.other,
-            })
-        elif step == "expenses":
-            initial.update({
-                'house_expenses': expenses_info.house_expenses,
-                'education_expenses': expenses_info.education_expenses,
-                'health_expenses': expenses_info.health_expenses,
-                'festival_expenses': expenses_info.festival_expenses,
-                'clothes_expenses': expenses_info.clothes_expenses,
-                'communication_expenses': expenses_info.communication_expenses,
-                'fuel_expenses': expenses_info.fuel_expenses,
-                'entertaiment_expenses': expenses_info.entertaiment_expenses,
-                'other_expenses': expenses_info.other_expenses,
-            })
-
-
-        return initial
-
-    def done(self, form_list, **kwargs):
-        member_id = self.kwargs.get('member_id')
-        member = get_object_or_404(Member, pk=member_id)
-
-        with transaction.atomic():
-            for form in form_list:
-                form_instance = form.save(commit=False)
-                
-                if isinstance(form_instance, PersonalInformation):
-                    personal_info, created = PersonalInformation.objects.update_or_create(
-                        member=member,
-                        defaults={
-                            'first_name': form_instance.first_name,
-                            'middle_name': form_instance.middle_name,
-                            'last_name': form_instance.last_name,
-                            'phone_number': form_instance.phone_number,
-                            'gender': form_instance.gender,
-                            'marital_status': form_instance.marital_status,
-                            'family_status': form_instance.family_status,
-                            'education': form_instance.education,
-                            'religion': form_instance.religion,
-                            'occupation': form_instance.occupation,
-                            'family_member_no': form_instance.family_member_no,
-                            'date_of_birth': form_instance.date_of_birth,
-                            'voter_id': form_instance.voter_id,
-                            'voter_id_issued_on': form_instance.voter_id_issued_on,
-                            'citizenship_no': form_instance.citizenship_no,
-                            'issued_from': form_instance.issued_from,
-                            'issued_date': form_instance.issued_date,
-                            'marriage_reg_no': form_instance.marriage_reg_no,
-                            'registered_vdc': form_instance.registered_vdc,
-                            'marriage_regd_date': form_instance.marriage_regd_date,
-                            'file_no': form_instance.file_no,
-                        }
-                    )
-                elif isinstance(form_instance, AddressInformation):
-                    AddressInformation.objects.update_or_create(
-                        member=member,
-                        defaults={
-                            'permanent_province': form_instance.permanent_province,
-                            'permanent_district': form_instance.permanent_district,
-                            'permanent_municipality': form_instance.permanent_municipality,
-                            'permanent_ward_no': form_instance.permanent_ward_no,
-                            'permanent_tole': form_instance.permanent_tole,
-                            'permanent_house_no': form_instance.permanent_house_no,
-                            'current_district': form_instance.current_district,
-                            'current_municipality': form_instance.current_municipality,
-                            'current_province': form_instance.current_province,
-                            'current_ward_no': form_instance.current_ward_no,
-                            'current_tole': form_instance.current_tole,
-                            'current_house_no': form_instance.current_house_no,
-                            'old_province': form_instance.old_province,
-                            'old_district': form_instance.old_district,
-                            'old_municipality': form_instance.old_municipality,
-                            'old_ward_no': form_instance.old_ward_no,
-                            'old_tole': form_instance.old_tole,
-                            'old_house_no': form_instance.old_house_no,
-                        }
-                    )
-                elif isinstance(form_instance, FamilyInformation):
-                    FamilyInformation.objects.update_or_create(
-                        member=member,
-                        defaults={
-                            'family_member_name': form_instance.family_member_name,
-                            'relationship': form_instance.relationship,
-                            'date_of_birth': form_instance.date_of_birth,
-                            'citizenship_no': form_instance.citizenship_no,
-                            'issued_from': form_instance.issued_from,
-                            'issued_date': form_instance.issued_date,
-                            'education': form_instance.education,
-                            'occupation': form_instance.occupation,
-                            'monthly_income': form_instance.monthly_income,
-                            'phone_number': form_instance.phone_number,
-                        }
-                    )
-                elif isinstance(form_instance, LivestockInformation):
-                    LivestockInformation.objects.update_or_create(
-                        member=member,
-                        defaults={
-                            'cows': form_instance.cows,
-                            'buffalo': form_instance.buffalo,
-                            'goat': form_instance.goat,
-                            'sheep': form_instance.sheep,
-                        }
-                    )
-                elif isinstance(form_instance, HouseInformation):
-                    HouseInformation.objects.update_or_create(
-                        member=member,
-                        defaults={
-                            'concrete': form_instance.concrete,
-                            'mud': form_instance.mud,
-                            'iron': form_instance.iron,
-                        }
-                    )
-                elif isinstance(form_instance, LandInformation):
-                    LandInformation.objects.update_or_create(
-                        member=member,
-                        defaults={
-                            'farming_land': form_instance.farming_land,
-                            'other_land': form_instance.other_land,
-                        }
-                    )
-                elif isinstance(form_instance, IncomeInformation):
-                    IncomeInformation.objects.update_or_create(
-                        member=member,
-                        defaults={
-                            'agriculture_income': form_instance.agriculture_income,
-                            'animal_farming_income': form_instance.animal_farming_income,
-                            'business_income': form_instance.business_income,
-                            'abroad_employment_income': form_instance.abroad_employment_income,
-                            'wages_income': form_instance.wages_income,
-                            'personal_job_income': form_instance.personal_job_income,
-                            'government_post': form_instance.government_post,
-                            'pension': form_instance.pension,
-                            'other': form_instance.other,
-                        }
-                    )
-                elif isinstance(form_instance, ExpensesInformation):
-                    ExpensesInformation.objects.update_or_create(
-                        member=member,
-                        defaults={
-                            'house_expenses': form_instance.house_expenses,
-                            'education_expenses': form_instance.education_expenses,
-                            'health_expenses': form_instance.health_expenses,
-                            'festival_expenses': form_instance.festival_expenses,
-                            'clothes_expenses': form_instance.clothes_expenses,
-                            'communication_expenses': form_instance.communication_expenses,
-                            'fuel_expenses': form_instance.fuel_expenses,
-                            'entertaiment_expenses': form_instance.entertaiment_expenses,
-                            'other_expenses': form_instance.other_expenses,
-                        }
-                    )
-                    
-        return redirect('loan_demand_form', member_id=member.id)
-
-def take_loan(request, member_id):
-    member = get_object_or_404(Member, id =member_id)
-    loans = member.loans.all()
-    return render (request, 'loans/take_loan.html', {
-        'member': member,
-        'loans': loans
-    })
 
 ## LOAN DEMAND ##
 def loan_demand_form(request, member_id):
@@ -729,7 +440,8 @@ def loan_demand_form(request, member_id):
     else:
         form = LoanDemandForm(initial={'member': member})
         return render (request, 'loans/forms/loan_demand_form.html',{
-            'form': form
+            'form': form,
+            'member':member
         })
     return render (request, 'loans/forms/loan_demand_form.html', {
         'form': form,
@@ -946,85 +658,72 @@ def loan_payment(request, loan_id):
     return render(request, 'loans/forms/loan_payment.html', context)
 
 
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from django.utils import timezone
 
+# Need to be updated
 @login_required
 def confirm_clear_loan(request, loan_id):
     loan = get_object_or_404(Loan, id=loan_id)
 
-    # Calculate the total principal paid so far
-    total_principal_paid = sum(payment.principal_paid for payment in loan.emi_payments.all())
-    remaining_principal = loan.amount - total_principal_paid
-
-    # Check if the loan is already cleared
+    # Ensure loan is not already cleared
     if loan.is_cleared:
         messages.info(request, f'Loan "{loan.loan_type}" is already cleared.')
         return HttpResponseRedirect(reverse('member_loans', args=[loan.member.id]))
 
-    # Get the last payment date or use the start date of the loan
+    # Calculate remaining principal
+    total_principal_paid = sum(payment.principal_paid for payment in loan.emi_payments.all())
+    remaining_principal = loan.amount - total_principal_paid
+
+    # Calculate accrued interest
     last_payment = EMIPayment.get_last_payment(loan)
-    last_payment_date = last_payment.payment_date if last_payment else loan.start_date
-
-    # Calculate the number of days between the last payment and today
+    last_payment_date = last_payment.payment_date if last_payment else loan.loan_disburse_date
     today = timezone.now().date()
-    days_since_last_payment = (today - last_payment_date).days
-
-    # Calculate the pro-rata interest for the remaining principal over those days
-    if days_since_last_payment > 0:
-        daily_interest_rate = loan.interest_rate / 365 / 100  # Annual interest divided by 365 days
-        accrued_interest = round(remaining_principal * daily_interest_rate * days_since_last_payment, 2)
-    else:
-        accrued_interest = Decimal(0)
-
-    # Total amount due is the remaining principal plus accrued interest
+    days_since_last_payment = max((today - last_payment_date).days, 0)
+    daily_interest_rate = loan.interest_rate / 365 / 100
+    accrued_interest = round(remaining_principal * daily_interest_rate * days_since_last_payment, 2)
     total_due = remaining_principal + accrued_interest
 
     if request.method == 'GET':
-        context = {
+        return render(request, 'loans/confirm_clear_loan.html', {
             'loan': loan,
             'remaining_principal': remaining_principal,
             'accrued_interest': accrued_interest,
             'total_due': total_due,
             'days_since_last_payment': days_since_last_payment,
-        }
-        return render(request, 'loans/confirm_clear_loan.html', context)
+        })
 
-    # Process the payment when the form is submitted
     if request.method == 'POST':
-        amount_paid = Decimal(request.POST.get('amount_paid'))
-
-        if amount_paid == total_due:
-            # Create a final payment record to clear the loan
-            EMIPayment.objects.create(
-                loan=loan,
-                payment_date=today,
-                amount_paid=amount_paid,
-                principal_paid=remaining_principal,
-                interest_paid=accrued_interest,
-            )
-
-            # Mark the loan as cleared
-            loan.is_cleared = True
-            loan.status = 'closed'
-            loan.save()
-
-            messages.success(request, f'Loan "{loan.loan_type}" has been successfully cleared.')
-            return HttpResponseRedirect(reverse('member_loans', args=[loan.member.id]))
-        else:
-            messages.error(request, 'The amount entered does not match the outstanding total due.')
+        try:
+            amount_paid = Decimal(request.POST.get('amount_paid'))
+            if amount_paid == total_due:
+                EMIPayment.objects.create(
+                    loan=loan,
+                    payment_date=today,
+                    amount_paid=amount_paid,
+                    principal_paid=remaining_principal,
+                    interest_paid=accrued_interest,
+                )
+                loan.is_cleared = True
+                loan.status = 'closed'
+                loan.save()
+                messages.success(request, f'Loan "{loan.loan_type}" has been successfully cleared.')
+                return HttpResponseRedirect(reverse('member_loans', args=[loan.member.id]))
+            else:
+                messages.error(request, 'The amount entered does not match the outstanding total due.')
+        except (ValueError, InvalidOperation):
+            messages.error(request, 'Invalid payment amount entered.')
 
     return HttpResponseRedirect(reverse('confirm_clear_loan', args=[loan.id]))
+
 
 @login_required
 def cleared_loans(request, member_id):
     member = get_object_or_404(Member, id=member_id)
-    # Fetch only cleared loans
-    loans = member.loans.filter(is_cleared=True)
-    payment_history = {loan.id: loan.emi_payments.all() for loan in loans}
-    
+    loans = member.loans.filter(is_cleared=True).prefetch_related('emi_payments')
     return render(request, 'loans/cleared_loans.html', {
         'member': member,
         'loans': loans,
-        'payment_history': payment_history,
+        'payment_history': {loan.id: loan.emi_payments.all() for loan in loans},
     })
+

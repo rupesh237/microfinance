@@ -43,17 +43,3 @@ label {
     color: red;
     font-size: 0.9em;
 }
-
-button[type="submit"] {
-    margin-top: 20px;
-    padding: 10px 20px;
-    background-color: green;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
-}
-
-button[type="submit"]:hover {
-    background-color: rgb(42, 135, 42);
-}

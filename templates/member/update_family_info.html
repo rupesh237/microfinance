@@ -1,23 +1,40 @@
 {% extends "base/index.html" %}
 {% block content %}
-<h1>Update Family Information for {{ member.personalInfo.first_name }}</h1>
-
-<form method="post">
-    {% csrf_token %}
-    <h2>Predefined Family Members</h2>
-    {% for form in predefined_forms %}
-        <div>
-            {{ form.as_p }}
+<div class="container mt-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">Update Family Information for {{ member.personalInfo.first_name }} {{ member.personalInfo.last_name }} </h2>
         </div>
-    {% endfor %}
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <h2>Predefined Family Members</h2>
+                {% for form in predefined_forms %}
+                <div class="row">
+                    {% for field in form %}
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">
+                                {{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <small class="form-text text-muted">{{ field.help_text }}</small>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
 
-    <h2>Dynamic Family Members</h2>
-    {% for form in dynamic_forms %}
-        <div>
-            {{ form.as_p }}
+
+                <div class="d-flex justify-content-between mt-4">
+                    <button class="btn btn-secondary" type="button" onclick="window.history.back()">Back</button>
+                    <button type="submit" class="btn btn-primary">Next</button>
+                </div>
+            </form>
         </div>
-    {% endfor %}
-
-    <button type="submit">Save</button>
-</form>
+    </div>
+</div>
 {% endblock %}

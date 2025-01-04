@@ -56,7 +56,7 @@ INSTALLED_APPS = [
     "django_htmx",
     # 3rd parties apps
     'compressor',
-    # 'nepali_datetime_field',
+    'nepali_datetime_field',
 ]
 
 MIDDLEWARE = [

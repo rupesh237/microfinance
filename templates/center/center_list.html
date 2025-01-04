@@ -5,39 +5,52 @@
 {% endblock title %}
 
 {% block content %}
-    <h1>Center List</h1>
-    <a href="{% url 'add_center' %}">Add Center</a>
-    <table>
-        <thead>
-            <tr>
-                <th>Code</th>
-                <th>Name</th>
-                <th>Branch</th>
-                <th>Category</th>
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for center in centers %}
-            <tr>
-                <td>{{ center.code }}</td>
-                <td>{{ center.name }}</td>
-                <td>{{ center.branch.name }}</td>
-                <td>{{ center.category }}</td>
-                <td>{{ center.status }}</td>
-                <td>
-                    <a href="{% url 'edit_center' center.id %}"><i class='bi bi-pencil-fill'></i></a>
-                    <a href="{% url 'delete_center' center.id %}"><i class='bi bi-trash-fill'></i></a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Center List</h1>
+        <a href="{% url 'add_center' %}" class="btn btn-primary">Add Center</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead class="table-primary">
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Branch</th>
+                    <th>Category</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for center in centers %}
+                <tr>
+                    <td>{{ center.code }}</td>
+                    <td>{{ center.name }}</td>
+                    <td>{{ center.branch.name }}</td>
+                    <td>{{ center.category }}</td>
+                    <td>{{ center.status }}</td>
+                    <td>
+                        <a href="{% url 'edit_center' center.id %}" class="text-primary me-2">
+                            <i class='bi bi-pencil-fill'></i>
+                        </a>
+                        <a href="{% url 'delete_center' center.id %}" class="text-danger">
+                            <i class='bi bi-trash-fill'></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">No centers found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
     <!-- Pagination controls -->
-    <div class="pagination">
-        <ul class="pagination">
+    <nav aria-label="Center list pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
             {% if centers.has_previous %}
                 <li class="page-item">
                     <a href="?page=1" class="page-link">&laquo; First</a>
@@ -60,6 +73,6 @@
                 </li>
             {% endif %}
         </ul>
-    </div>
-    
+    </nav>
+</div>
 {% endblock %}

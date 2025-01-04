@@ -1,12 +1,25 @@
 {% extends 'base/index.html' %}
-
+{% block title %}
+<title>Update Land Information</title>
+{% endblock %}
 {% block content %}
-<h1>Update Land Information for {{ member.personalInfo.first_name }} {{ member.personalInfo.last_name }}</h1>
-<form method="post">
-    {% csrf_token %}
-        {{ form.as_p }}
+<div class="container mt-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">Update Land Information for {{ member.personalInfo.first_name }} {{ member.personalInfo.last_name }}</h2>
+        </div>
+        <div class="card-body">
+        <form method="post">
+        {% csrf_token %}
+            {{ form.as_p }}
 
-        <button type="submit" class="btn btn-primary">Save</button>
-    </form>
+            <div class="d-flex justify-content-between mt-4">
+                <button class="btn btn-secondary" type="button" onclick="window.history.back()">Back</button>
+                <button class="btn btn-primary" type="submit">Next</button>
+            </div>
+        </form>
+    </div>
+    </div>
+</div>
     <a href="{% url 'member_detail' member.id %}">Back to Member Details</a>
 {% endblock %}

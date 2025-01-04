@@ -1,13 +1,48 @@
 {% extends "base/index.html" %}
 {% load static %}
-{% block corecss %}
-{% endblock corecss%}
+
+
+{% block title %}
+    <title>Loan Demand Form</title>
+{% endblock title %}
 
 {% block content %}
-    <h2>Loan Demand</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Submit</button>
-    </form>
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h2 class="text-center text-primary mb-4">Loan Demand For</h2>
+                        <p class="text-center text-muted"><strong>Member:</strong> {{ member.personalInfo.first_name }} {{ member.personalInfo.middle_name }} {{ member.personalInfo.last_name }}</p>
+
+                        <form method="post">
+                            {% csrf_token %}
+                            {{ form.non_field_errors }}
+                            <div class="row mb-3">
+                                {% for field in form %}
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                            {{ field }}
+                                            {% if field.help_text %}
+                                                <div class="form-text">{{ field.help_text }}</div>
+                                            {% endif %}
+                                            {% for error in field.errors %}
+                                                <div class="text-danger">{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'member_detail' member.id %}" class="btn btn-secondary">Cancel</a>
+                                <button type="submit" class="btn btn-primary">Submit</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock content %}

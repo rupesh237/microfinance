@@ -8,6 +8,10 @@ from django.core.exceptions import ValidationError
 from .models import AddressInformation, PersonalInformation, FamilyInformation, LivestockInformation, LandInformation, HouseInformation, IncomeInformation, ExpensesInformation, GRoup
 from .models import Province, District, Municipality
 class BranchForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(BranchForm, self).__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
     class Meta:
         model = Branch
         fields = '__all__'
@@ -32,7 +36,7 @@ class BranchForm(forms.ModelForm):
 
                 except (ValueError, TypeError):
                     pass
-
+    
 
 class EmployeeForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput)
@@ -54,6 +58,13 @@ class EmployeeForm(forms.ModelForm):
             self.add_error('confirm_password', "Passwords do not match")
 
         return cleaned_data
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super(EmployeeForm, self).__init__(*args, **kwargs)
+
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
+    
     
 
 class CenterForm(forms.ModelForm):
@@ -79,6 +90,9 @@ class CenterForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super(CenterForm, self).__init__(*args, **kwargs)
+
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
         # Disable only the 'every' field
         self.fields['every'].disabled = True
         self.fields['formed_date_display'].disabled = True
@@ -209,6 +223,9 @@ class GroupForm(forms.ModelForm):
                     self.fields['position'].choices = []
             else:
                 self.fields['position'].choices = []
+            
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
 
 
     def clean(self):
@@ -246,36 +263,37 @@ class CenterSelectionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(CenterSelectionForm, self).__init__(*args, **kwargs)
 
-        # If editing an existing instance, populate the group field with groups from the selected center
+        # Add 'form-control' class to all fields
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
+
+        center = None
         if 'center' in self.data:
             try:
                 center_id = int(self.data.get('center'))
-                self.fields['group'].queryset = GRoup.objects.filter(center_id=center_id)
-                
                 center = Center.objects.get(id=center_id)
-                max_member_code = center.no_of_group * center.no_of_members
-                self.fields['member_code'].choices = [(i, i) for i in range(1, max_member_code + 1)]
             except (ValueError, TypeError, Center.DoesNotExist):
-                self.fields['group'].queryset = GRoup.objects.none()
-                self.fields['member_code'].choices = []
+                pass
         elif self.instance.pk:
             center = self.instance.center
-            self.fields['group'].queryset = GRoup.objects.filter(center=center)
-            max_member_code = center.no_of_group * center.no_of_members
-            self.fields['member_code'].choices = [(i, i) for i in range(1, max_member_code + 1)]
-        else:
-            self.fields['group'].queryset = GRoup.objects.none()
-            self.fields['member_code'].choices = []
+
+        if center:
+            self.populate_fields(center)
+
+    def populate_fields(self, center):
+        """Helper method to populate group and member_code fields based on the center."""
+        self.fields['group'].queryset = GRoup.objects.filter(center=center)
+        max_member_code = center.no_of_group * center.no_of_members if center.no_of_group and center.no_of_members else 0
+        self.fields['member_code'].choices = [(i, i) for i in range(1, max_member_code + 1)]
 
     def clean_member_code(self):
         member_code = self.cleaned_data.get('member_code')
         center = self.cleaned_data.get('center')
-        
+
         if center and member_code:
-            # Check if the member_code is already used in the given center
             if Member.objects.filter(center=center, member_code=member_code).exists():
                 raise ValidationError(f"The member code {member_code} is already used in this center.")
-        
+
         return member_code
 
 
@@ -316,6 +334,9 @@ class AddressInformationForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(AddressInformationForm, self).__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            if field_name != 'same_as_current_permanent' or field_name != 'same_as_current_old':
+                field.widget.attrs['class'] = 'form-control'
 
         # Dynamically set queryset for district and municipality fields
         for address_type in ['current', 'permanent', 'old']:
@@ -365,6 +386,11 @@ class PersonalInformationForm(forms.ModelForm):
                    'occupation', 'family_member_no', 'date_of_birth', 'voter_id', 'voter_id_issued_on', 'citizenship_no', 'issued_from', 'issued_date', 'marriage_reg_no',
                    'registered_vdc', 'marriage_regd_date', 'registered_by', 'file_no',
          ]
+        
+        def __init__(self, *args, **kwargs):
+            super(PersonalInformationForm, self).__init__(*args, **kwargs)
+            for field_name, field in self.fields.items():
+                field.widget.attrs['class'] = 'form-control'
 
 
 class FamilyInformationForm(forms.ModelForm):
@@ -383,6 +409,9 @@ class FamilyInformationForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         relationships = kwargs.pop('relationships', [])
         super().__init__(*args, **kwargs)
+
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
 
         if 'relationship' in self.initial and self.initial['relationship'] in relationships:
             self.fields['relationship'].widget.attrs.update({
@@ -405,10 +434,20 @@ class LivestockInformationForm(forms.ModelForm):
         model = LivestockInformation
         fields = ['cows', 'buffalo', 'goat', 'sheep']
 
+    def __init__(self, *args, **kwargs):
+        super(LivestockInformationForm, self).__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
+
 class HouseInformationForm(forms.ModelForm):
     class Meta:
         model = HouseInformation
         fields = ['concrete', 'mud', 'iron']
+
+    def __init__(self, *args, **kwargs):
+        super(HouseInformationForm, self).__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
 
 class LandInformationForm(forms.ModelForm):
     class Meta:
@@ -419,12 +458,27 @@ class LandInformationForm(forms.ModelForm):
             'other_land': forms.TextInput(attrs={'placeholder': 'Other Land (Dhur)'})
         }
 
+    def __init__(self, *args, **kwargs):
+        super(LandInformationForm, self).__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
+
 class IncomeInformationForm(forms.ModelForm):
     class Meta:
         model = IncomeInformation
         fields = ['agriculture_income', 'animal_farming_income', 'business_income', 'abroad_employment_income', 'wages_income', 'personal_job_income', 'government_post', 'pension', 'other']
 
+    def __init__(self, *args, **kwargs):
+        super(IncomeInformationForm, self).__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
+
 class ExpensesInformationForm(forms.ModelForm):
     class Meta:
         model = ExpensesInformation
         fields = ['house_expenses', 'education_expenses', 'health_expenses', 'festival_expenses', 'clothes_expenses', 'communication_expenses', 'fuel_expenses', 'entertaiment_expenses', 'other_expenses']
+
+    def __init__(self, *args, **kwargs):
+        super(ExpensesInformationForm, self).__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'

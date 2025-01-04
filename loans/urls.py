@@ -6,8 +6,7 @@ urlpatterns = [
     path('', views.LoanListView.as_view(), name='loans'),
 
     path('member/<int:member_id>/loans/', views.member_loans, name='member_loans'),
-    path('update-member-info-for-loan/<int:member_id>', views.UpdateMemberInfoforLoan.as_view(views.FORMSS), name='update_member_for_loans'),
-    path('take-loan/<int:member_id>', views.take_loan, name='take_loan'),
+
 
     path('update_address/<int:member_id>/', views.update_address_info, name='update_member_for_loan'),
     path('update_personal/<int:member_id>/', views.UpdatePersonalInfoView.as_view(), name='update_personal_info_for_loan'),

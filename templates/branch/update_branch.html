@@ -9,21 +9,27 @@
 {% endblock corecss %}
 
 {% block content %}
-    <h3>Update Branch:</h3>
+<div class="container mt-5">
+    <h3 class="text-center mb-4">Update Branch</h3>
     <form method="post" action="{% url 'update_branch' branch.id %}">
         {% csrf_token %}
-        <div class="container">
+        <div class="row g-3">
             {% for field in form %}
-                    <div class="grid-item">
+                <div class="col-md-6">
+                    <div class="form-group">
                         {{ field.label_tag }}
                         {{ field }}
                         {% for error in field.errors %}
-                            <div class="error">{{ error }}</div>
+                            <div class="text-danger">{{ error }}</div>
                         {% endfor %}
                     </div>
+                </div>
             {% endfor %}
         </div>
-        <button type="submit">Update</button>
-        <button href="{% url 'branch_list' %}">Cancel</button>
+        <div class="d-flex justify-content-between mt-4">
+            <button type="submit" class="btn btn-primary me-2">Update</button>
+            <a href="{% url 'branch_list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
     </form>
+</div>
 {% endblock %}

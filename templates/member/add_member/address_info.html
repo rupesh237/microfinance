@@ -1,169 +1,235 @@
 {% extends "base/index.html" %}
 
+{% block title %}
+    <title>Address Information</title>
+{% endblock %}
+
 {% block content %}
-    <h2>Address Information</h2>
-    <form method="post">
-        {% csrf_token %}
-        
-        <h3>Current Address</h3>
-        {{ form.current_province }}
-        {{ form.current_district }}
-        {{ form.current_municipality }}
-        {{ form.current_ward_no }}
-        {{ form.current_tole }}
-        {{ form.current_house_no }}
-    
-        <h3>Permanent Address</h3>
-        {{ form.permanent_province }}
-        {{ form.permanent_district }}
-        {{ form.permanent_municipality }}
-        {{ form.permanent_ward_no }}
-        {{ form.permanent_tole }}
-        {{ form.permanent_house_no }}
-        <label for="id_same_as_current_permanent">
-            {{ form.same_as_current_permanent }} Same as current address
-        </label>
-    
-        <h3>Old Address</h3>
-        {{ form.old_province }}
-        {{ form.old_district }}
-        {{ form.old_municipality }}
-        {{ form.old_ward_no }}
-        {{ form.old_tole }}
-        {{ form.old_house_no }}
-        <label for="id_same_as_current_old">
-            {{ form.same_as_current_old }} Same as current address
-        </label>
-    
-        <div>
-            <button class="secondary" type="button" onclick="window.history.back()">Back</button>
-            <button type="submit">Next</button>
+<div class="container mt-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">Address Information</h2>
         </div>
-    </form>    
-    <script type="text/javascript">
-        $(document).ready(function () {
-            // Function to handle AJAX for district loading
-            function loadDistricts(provinceSelector, districtSelector) {
-                const provinceId = $(provinceSelector).val();
-                const url = "{% url 'load_districts' %}";
-    
-                if (provinceId) {
-                    $.ajax({
-                        url: url,
-                        data: { 'province': provinceId },
-                        success: function (data) {
-                            $(districtSelector).html('<option value="">Select district</option>');
-                            $.each(data, function (key, value) {
-                                $(districtSelector).append('<option value="' + value.id + '">' + value.name + '</option>');
-                            });
-                        }
-                    });
-                } else {
-                    $(districtSelector).html('<option value="">Select district</option>');
-                }
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                <h3 class="mb-3 text-primary">Current Address</h3>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        {{ form.current_province.label_tag }} {{ form.current_province }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.current_district.label_tag }} {{ form.current_district }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.current_municipality.label_tag }} {{ form.current_municipality }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.current_ward_no.label_tag }} {{ form.current_ward_no }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.current_tole.label_tag }} {{ form.current_tole }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.current_house_no.label_tag }} {{ form.current_house_no }}
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <h3 class="mb-3 text-primary">Permanent Address</h3>
+                <div class="form-check mb-3">
+                    {{ form.same_as_current_permanent }} 
+                    <label for="id_same_as_current_permanent" class="form-check-label">
+                        {{ form.same_as_current_permanent.label }}
+                    </label>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        {{ form.permanent_province.label_tag }} {{ form.permanent_province }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.permanent_district.label_tag }} {{ form.permanent_district }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.permanent_municipality.label_tag }} {{ form.permanent_municipality }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.permanent_ward_no.label_tag }} {{ form.permanent_ward_no }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.permanent_tole.label_tag }} {{ form.permanent_tole }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.permanent_house_no.label_tag }} {{ form.permanent_house_no }}
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <h3 class="mb-3 text-primary">Old Address</h3>
+                <div class="form-check mb-3">
+                    {{ form.same_as_current_old }}
+                    <label for="id_same_as_current_old" class="form-check-label">
+                        {{ form.same_as_current_old.label }}
+                    </label>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        {{ form.old_province.label_tag }} {{ form.old_province }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.old_district.label_tag }} {{ form.old_district }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.old_municipality.label_tag }} {{ form.old_municipality }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.old_ward_no.label_tag }} {{ form.old_ward_no }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.old_tole.label_tag }} {{ form.old_tole }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.old_house_no.label_tag }} {{ form.old_house_no }}
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <button class="btn btn-secondary" type="button" onclick="window.history.back()">Back</button>
+                    <button class="btn btn-primary" type="submit">Next</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        // Function to handle AJAX for district loading
+        function loadDistricts(provinceSelector, districtSelector) {
+            const provinceId = $(provinceSelector).val();
+            const url = "{% url 'load_districts' %}";
+
+            if (provinceId) {
+                $.ajax({
+                    url: url,
+                    data: { 'province': provinceId },
+                    success: function (data) {
+                        $(districtSelector).html('<option value="">Select district</option>');
+                        $.each(data, function (key, value) {
+                            $(districtSelector).append('<option value="' + value.id + '">' + value.name + '</option>');
+                        });
+                    }
+                });
+            } else {
+                $(districtSelector).html('<option value="">Select district</option>');
             }
-    
-            // Function to handle AJAX for municipality loading
-            function loadMunicipalities(districtSelector, municipalitySelector) {
-                const districtId = $(districtSelector).val();
-                const url = "{% url 'load_municipalities' %}";
-    
-                if (districtId) {
-                    $.ajax({
-                        url: url,
-                        data: { 'district': districtId },
-                        success: function (data) {
-                            $(municipalitySelector).html('<option value="">Select municipality</option>');
-                            $.each(data, function (key, value) {
-                                $(municipalitySelector).append('<option value="' + value.id + '">' + value.name + '</option>');
-                            });
-                        }
-                    });
-                } else {
-                    $(municipalitySelector).html('<option value="">Select municipality</option>');
-                }
+        }
+
+        // Function to handle AJAX for municipality loading
+        function loadMunicipalities(districtSelector, municipalitySelector) {
+            const districtId = $(districtSelector).val();
+            const url = "{% url 'load_municipalities' %}";
+
+            if (districtId) {
+                $.ajax({
+                    url: url,
+                    data: { 'district': districtId },
+                    success: function (data) {
+                        $(municipalitySelector).html('<option value="">Select municipality</option>');
+                        $.each(data, function (key, value) {
+                            $(municipalitySelector).append('<option value="' + value.id + '">' + value.name + '</option>');
+                        });
+                    }
+                });
+            } else {
+                $(municipalitySelector).html('<option value="">Select municipality</option>');
             }
-    
-            // Handle dynamic loading for current address
-            $("#id_current_province").change(function () {
-                loadDistricts("#id_current_province", "#id_current_district");
-                $("#id_current_municipality").html('<option value="">Select municipality</option>'); // Reset municipality
-            });
-    
-            $("#id_current_district").change(function () {
-                loadMunicipalities("#id_current_district", "#id_current_municipality");
-            });
-    
-            // Handle dynamic loading for permanent address
-            $("#id_permanent_province").change(function () {
-                loadDistricts("#id_permanent_province", "#id_permanent_district");
-                $("#id_permanent_municipality").html('<option value="">Select municipality</option>'); // Reset municipality
-            });
-    
-            $("#id_permanent_district").change(function () {
-                loadMunicipalities("#id_permanent_district", "#id_permanent_municipality");
-            });
-    
-            // Handle dynamic loading for old address
-            $("#id_old_province").change(function () {
-                loadDistricts("#id_old_province", "#id_old_district");
-                $("#id_old_municipality").html('<option value="">Select municipality</option>'); // Reset municipality
-            });
-    
-            $("#id_old_district").change(function () {
-                loadMunicipalities("#id_old_district", "#id_old_municipality");
-            });
-    
-            // Address copying logic
-            const currentProvince = document.getElementById('id_current_province');
-            const currentDistrict = document.getElementById('id_current_district');
-            const currentMunicipality = document.getElementById('id_current_municipality');
-            const currentWardNo = document.getElementById('id_current_ward_no');
-            const currentTole = document.getElementById('id_current_tole');
-            const currentHouseNo = document.getElementById('id_current_house_no');
-    
-            const permanentProvince = document.getElementById('id_permanent_province');
-            const permanentDistrict = document.getElementById('id_permanent_district');
-            const permanentMunicipality = document.getElementById('id_permanent_municipality');
-            const permanentWardNo = document.getElementById('id_permanent_ward_no');
-            const permanentTole = document.getElementById('id_permanent_tole');
-            const permanentHouseNo = document.getElementById('id_permanent_house_no');
-    
-            const oldProvince = document.getElementById('id_old_province');
-            const oldDistrict = document.getElementById('id_old_district');
-            const oldMunicipality = document.getElementById('id_old_municipality');
-            const oldWardNo = document.getElementById('id_old_ward_no');
-            const oldTole = document.getElementById('id_old_tole');
-            const oldHouseNo = document.getElementById('id_old_house_no');
-    
-            const sameAsCurrentPermanent = document.getElementById('id_same_as_current_permanent');
-            const sameAsCurrentOld = document.getElementById('id_same_as_current_old');
-    
-            function copyAddressToPermanent() {
-                if (sameAsCurrentPermanent.checked) {
-                    permanentProvince.value = currentProvince.value;
-                    permanentDistrict.value = currentDistrict.value;
-                    permanentMunicipality.value = currentMunicipality.value;
-                    permanentWardNo.value = currentWardNo.value;
-                    permanentTole.value = currentTole.value;
-                    permanentHouseNo.value = currentHouseNo.value;
-                }
-            }
-    
-            function copyAddressToOld() {
-                if (sameAsCurrentOld.checked) {
-                    oldProvince.value = currentProvince.value;
-                    oldDistrict.value = currentDistrict.value;
-                    oldMunicipality.value = currentMunicipality.value;
-                    oldWardNo.value = currentWardNo.value;
-                    oldTole.value = currentTole.value;
-                    oldHouseNo.value = currentHouseNo.value;
-                }
-            }
-    
-            sameAsCurrentPermanent.addEventListener('change', copyAddressToPermanent);
-            sameAsCurrentOld.addEventListener('change', copyAddressToOld);
+        }
+
+        // Handle dynamic loading for current address
+        $("#id_current_province").change(function () {
+            loadDistricts("#id_current_province", "#id_current_district");
+            $("#id_current_municipality").html('<option value="">Select municipality</option>'); // Reset municipality
         });
-    </script>    
+
+        $("#id_current_district").change(function () {
+            loadMunicipalities("#id_current_district", "#id_current_municipality");
+        });
+
+        // Handle dynamic loading for permanent address
+        $("#id_permanent_province").change(function () {
+            loadDistricts("#id_permanent_province", "#id_permanent_district");
+            $("#id_permanent_municipality").html('<option value="">Select municipality</option>'); // Reset municipality
+        });
+
+        $("#id_permanent_district").change(function () {
+            loadMunicipalities("#id_permanent_district", "#id_permanent_municipality");
+        });
+
+        // Handle dynamic loading for old address
+        $("#id_old_province").change(function () {
+            loadDistricts("#id_old_province", "#id_old_district");
+            $("#id_old_municipality").html('<option value="">Select municipality</option>'); // Reset municipality
+        });
+
+        $("#id_old_district").change(function () {
+            loadMunicipalities("#id_old_district", "#id_old_municipality");
+        });
+
+        // Address copying logic
+        const currentProvince = document.getElementById('id_current_province');
+        const currentDistrict = document.getElementById('id_current_district');
+        const currentMunicipality = document.getElementById('id_current_municipality');
+        const currentWardNo = document.getElementById('id_current_ward_no');
+        const currentTole = document.getElementById('id_current_tole');
+        const currentHouseNo = document.getElementById('id_current_house_no');
+
+        const permanentProvince = document.getElementById('id_permanent_province');
+        const permanentDistrict = document.getElementById('id_permanent_district');
+        const permanentMunicipality = document.getElementById('id_permanent_municipality');
+        const permanentWardNo = document.getElementById('id_permanent_ward_no');
+        const permanentTole = document.getElementById('id_permanent_tole');
+        const permanentHouseNo = document.getElementById('id_permanent_house_no');
+
+        const oldProvince = document.getElementById('id_old_province');
+        const oldDistrict = document.getElementById('id_old_district');
+        const oldMunicipality = document.getElementById('id_old_municipality');
+        const oldWardNo = document.getElementById('id_old_ward_no');
+        const oldTole = document.getElementById('id_old_tole');
+        const oldHouseNo = document.getElementById('id_old_house_no');
+
+        const sameAsCurrentPermanent = document.getElementById('id_same_as_current_permanent');
+        const sameAsCurrentOld = document.getElementById('id_same_as_current_old');
+
+        function copyAddressToPermanent() {
+            if (sameAsCurrentPermanent.checked) {
+                permanentProvince.value = currentProvince.value;
+                permanentDistrict.value = currentDistrict.value;
+                permanentMunicipality.value = currentMunicipality.value;
+                permanentWardNo.value = currentWardNo.value;
+                permanentTole.value = currentTole.value;
+                permanentHouseNo.value = currentHouseNo.value;
+            }
+        }
+
+        function copyAddressToOld() {
+            if (sameAsCurrentOld.checked) {
+                oldProvince.value = currentProvince.value;
+                oldDistrict.value = currentDistrict.value;
+                oldMunicipality.value = currentMunicipality.value;
+                oldWardNo.value = currentWardNo.value;
+                oldTole.value = currentTole.value;
+                oldHouseNo.value = currentHouseNo.value;
+            }
+        }
+
+        sameAsCurrentPermanent.addEventListener('change', copyAddressToPermanent);
+        sameAsCurrentOld.addEventListener('change', copyAddressToOld);
+    });
+</script>
 
 {% endblock %}

@@ -2,33 +2,50 @@
 {% load static %}
 
 {% block title %}
-    <title>Add branch</title>
+    <title>Add Branch</title>
 {% endblock title %}
+
 {% block corecss %}
     <link rel="stylesheet" href="{% static 'css/branch.css' %}">
 {% endblock corecss %}
+
 {% block content %}
-    <h1>Add Branch</h1>
-    <form method="post">
-        {% csrf_token %}
-        <div class="container">
-            {% for field in form %}
-                    <div class="grid-item">
-                        {{ field.label_tag }}
-                        {{ field }}
-                        {% for error in field.errors %}
-                            <div class="error">{{ error }}</div>
+    <div class="container mt-5">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h2 class="mb-0">Add Branch</h2>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'add_branch' %}">
+                    {% csrf_token %}
+                    <div class="row">
+                        {% for field in form %}
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ field.id_for_label }}" class="form-label">
+                                    {{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}
+                                </label>
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <small class="form-text text-muted">{{ field.help_text }}</small>
+                                {% endif %}
+                                {% for error in field.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            </div>
                         {% endfor %}
                     </div>
-            {% endfor %}
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <button type="submit">Save</button>
-    </form>
+    </div>
 
     <script type="text/javascript">
         $(document).ready(function () {
             $("#id_province").change(function () {
-                var url = "{% url 'load_districts' %}"; 
+                var url = "{% url 'load_districts' %}";
                 var provinceId = $(this).val();
 
                 $.ajax({
@@ -47,7 +64,7 @@
             });
 
             $("#id_district").change(function () {
-                var url = "{% url 'load_municipalities' %}";  // Update this with your url name
+                var url = "{% url 'load_municipalities' %}";
                 var districtId = $(this).val();
 
                 $.ajax({
