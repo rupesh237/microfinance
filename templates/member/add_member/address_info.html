@@ -3,6 +3,22 @@
 {% block title %}
     <title>Address Information</title>
 {% endblock %}
+{% block corecss %}
+<style>
+    .form-check-inline {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .form-check-inline input[type="checkbox"] {
+        margin: 0;
+    }
+</style>
+
+
+{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
@@ -39,7 +55,7 @@
                 <hr class="my-4">
 
                 <h3 class="mb-3 text-primary">Permanent Address</h3>
-                <div class="form-check mb-3">
+                <div class="form-check form-check-inline">
                     {{ form.same_as_current_permanent }} 
                     <label for="id_same_as_current_permanent" class="form-check-label">
                         {{ form.same_as_current_permanent.label }}
@@ -69,7 +85,7 @@
                 <hr class="my-4">
 
                 <h3 class="mb-3 text-primary">Old Address</h3>
-                <div class="form-check mb-3">
+                <div class="form-check form-check-inline">
                     {{ form.same_as_current_old }}
                     <label for="id_same_as_current_old" class="form-check-label">
                         {{ form.same_as_current_old.label }}
@@ -207,25 +223,44 @@
 
         function copyAddressToPermanent() {
             if (sameAsCurrentPermanent.checked) {
+                // Set static fields
                 permanentProvince.value = currentProvince.value;
-                permanentDistrict.value = currentDistrict.value;
-                permanentMunicipality.value = currentMunicipality.value;
                 permanentWardNo.value = currentWardNo.value;
                 permanentTole.value = currentTole.value;
                 permanentHouseNo.value = currentHouseNo.value;
+        
+                // Load districts and municipalities dynamically
+                $(permanentProvince).trigger('change'); // Trigger change to load districts
+                setTimeout(() => {
+                    permanentDistrict.value = currentDistrict.value;
+                    $(permanentDistrict).trigger('change'); // Trigger change to load municipalities
+                    setTimeout(() => {
+                        permanentMunicipality.value = currentMunicipality.value;
+                    }, 500); // Delay to allow municipalities to load
+                }, 500); // Delay to allow districts to load
             }
         }
 
         function copyAddressToOld() {
             if (sameAsCurrentOld.checked) {
+                // Set static fields
                 oldProvince.value = currentProvince.value;
-                oldDistrict.value = currentDistrict.value;
-                oldMunicipality.value = currentMunicipality.value;
                 oldWardNo.value = currentWardNo.value;
                 oldTole.value = currentTole.value;
                 oldHouseNo.value = currentHouseNo.value;
+        
+                // Load districts and municipalities dynamically
+                $(oldProvince).trigger('change'); // Trigger change to load districts
+                setTimeout(() => {
+                    oldDistrict.value = currentDistrict.value;
+                    $(oldDistrict).trigger('change'); // Trigger change to load municipalities
+                    setTimeout(() => {
+                        oldMunicipality.value = currentMunicipality.value;
+                    }, 500); // Delay to allow municipalities to load
+                }, 500); // Delay to allow districts to load
             }
         }
+        
 
         sameAsCurrentPermanent.addEventListener('change', copyAddressToPermanent);
         sameAsCurrentOld.addEventListener('change', copyAddressToOld);

@@ -127,9 +127,7 @@
             if (provinceId) {
                 $.ajax({
                     url: url,
-                    data: {
-                        'province': provinceId
-                    },
+                    data: {'province': provinceId},
                     success: function (data) {
                         $("#id_district").html('');  // Clear the district select box
                         $("#id_district").append('<option value="">Select district</option>');

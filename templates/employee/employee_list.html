@@ -1,4 +1,8 @@
 {% extends "base/index.html" %}
+{% load static %}
+{% block corecss %}
+    <link rel="stylesheet" href="{% static 'css/member_list.css' %}">
+{% endblock %}
 
 {% block title %}
     <title>Employee</title>
@@ -10,15 +14,30 @@
         <h1 class="h3">Employee List</h1>
         <a href="{% url 'add_employee' %}" class="btn btn-primary">Add Employee</a>
     </div>
-    <div class="table-responsive">
-        <table class="table table-bordered">
-            <thead class="table-primary">
+    <div>
+        <table>
+            <thead>
                 <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Phone Number</th>
-                    <th>Role</th>
-                    <th>Branch</th>
+                    <th>
+                        Name
+                        <input type="text" id="searchName" placeholder="Search Name">
+                    </th>
+                    <th>
+                        Email
+                        <input type="text" id="searchEmail" placeholder="Search Email">
+                    </th>
+                    <th>
+                        Phone Number
+                        <input type="text" id="searchPhoneNumber" placeholder="Search Phone Number">
+                    </th>
+                    <th>
+                        Role
+                        <input type="text" id="searchRole" placeholder="Search Role">
+                    </th>
+                    <th>
+                        Branch
+                        <input type="text" id="searchBranch" placeholder="Search Branch">
+                    </th>
                 </tr>
             </thead>
             <tbody>

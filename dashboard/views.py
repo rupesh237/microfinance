@@ -67,11 +67,12 @@ def dashboard(request):
 @login_required
 def admin_dashboard(request):
     members =Member.objects.all().select_related('personalInfo')
+    address_info= None
     try:
         for member in members:
             address_info = member.address_info.filter(address_type='current').first()
     except:
-        address_info = None
+        address_info = 'No Address Found!'
     groups = GRoup.objects.all()
     centers = Center.objects.all()
     employees = Employee.objects.all()
@@ -356,7 +357,6 @@ from .forms import (
     LivestockInformationForm, HouseInformationForm, LandInformationForm, 
     IncomeInformationForm, ExpensesInformationForm
 )
-from formtools.wizard.views import SessionWizardView
 
 class AddressInfoView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
     model = AddressInformation
@@ -423,24 +423,7 @@ class PersonalInfoView(FormView):
     def get_initial(self):
         """Populate initial data for the form from session."""
         initial_data = self.request.session.get('personal_info', {})
-
-        if 'date_of_birth' in initial_data:
-            try:
-                # Case 1: If already a `nepali_datetime.date`, leave it as is
-                if isinstance(initial_data['date_of_birth'], nepali_datetime.date):
-                    pass
-                # Case 2: If it's an ISO string, convert it
-                elif isinstance(initial_data['date_of_birth'], str):
-                    # Parse ISO format string (YYYY-MM-DD)
-                    parsed_date = datetime.date.fromisoformat(initial_data['date_of_birth'])
-                    # Convert to Nepali date
-                    initial_data['date_of_birth'] = nepali_datetime.date.from_datetime_date(parsed_date)
-                else:
-                    raise ValueError("Unsupported date format.")
-            except Exception as e:
-                print(f"Error parsing date_of_birth: {e}")
-                initial_data['date_of_birth'] = None  # Reset invalid date
-
+  # Reset invalid date
         return initial_data
 
     def form_valid(self, form):
@@ -456,6 +439,12 @@ class PersonalInfoView(FormView):
                 personal_info['date_of_birth'] = personal_info['date_of_birth'].isoformat()
             if isinstance(personal_info.get('issued_date'), nepali_datetime.date):
                 personal_info['issued_date'] = personal_info['issued_date'].isoformat()
+            if isinstance(personal_info.get('voter_id_issued_on'), nepali_datetime.date):
+                personal_info['voter_id_issued_on'] = personal_info['voter_id_issued_on'].isoformat()
+            if isinstance(personal_info.get('marriage_regd_date'), nepali_datetime.date):
+                personal_info['marriage_regd_date'] = personal_info['marriage_regd_date'].isoformat()
+            if isinstance(personal_info.get('registered_date'), nepali_datetime.date):
+                personal_info['registered_date'] = personal_info['registered_date'].isoformat()
 
             # Handle registered_by (ForeignKey) -> Ensure always serialized from form
             registered_by = personal_info.get('registered_by', self.request.user)
@@ -483,34 +472,103 @@ class PersonalInfoView(FormView):
         return self.render_to_response(self.get_context_data(form=form))
 
 
-def family_info_view(request):
-    if 'personal_info' not in request.session or 'address_info' not in request.session:
-        return redirect('address_info')
+class FamilyInfoView(FormView):
+    template_name = 'member/add_member/family_info.html'
+    form_class = FamilyInformationForm
 
-    request.session['current_step'] = 3
-    predefined_relationships = ['Father', 'Husband', 'Father-In-Law']
+    def get_initial(self):
+        """
+        Populate initial data for the forms from session if available.
+        """
+        family_info = self.request.session.get('family_info', [])
+        initial_data = {}
+        # For members relationships, we check if the members are Male or female and show relationships accordingly
+        personal_info = self.request.session.get('personal_info')
+        gender = personal_info.get('gender')
+        marital_status = personal_info.get('marital_status')
+        print(f'Gender: {gender}')
+        print(f'Marital Status: {marital_status}')
+            
+        try:    
+            if gender == 'Male' or (gender == 'Female' and marital_status == 'Single'):
+                predefined_relationships = ['Grandfather', 'Father', 'Mother']
+            else:
+                predefined_relationships = ['Father', 'Husband', 'Father-In-Law']
+        except:
+            predefined_relationships = ['Father', 'Husband', 'Father-In-Law']
+        for i, rel in enumerate(predefined_relationships):
+            if i < len(family_info):
+                initial_data[f'form-{i}'] = family_info[i]
+            else:
+                initial_data[f'form-{i}'] = {'relationship': rel}
 
-    # Only create forms for predefined relationships
-    forms = [
-        FamilyInformationForm(initial={'relationship': rel}, prefix=f'form-{i}')
-        for i, rel in enumerate(predefined_relationships)
-    ]
+        return initial_data
 
-    if request.method == 'POST':
+    def get(self, request, *args, **kwargs):
+        """
+        Handle GET requests to display the initial forms.
+        """
+        if 'personal_info' not in request.session or 'address_info' not in request.session:
+            return redirect('address_info')
+
+        request.session['current_step'] = 3
+        initial_data = self.get_initial()
+
+        # Create forms for predefined relationships
+        self.forms = [
+            FamilyInformationForm(initial=initial_data.get(f'form-{i}', {}), prefix=f'form-{i}')
+            for i in range(3)  # Assuming 3 predefined relationships
+        ]
+
+        return self.render_to_response({'forms': self.forms})
+
+    def form_valid(self, form):
+        """
+        Handle valid form submissions.
+        """
+        family_info = form.cleaned_data
+        try:
+            if isinstance(family_info.get('date_of_birth'), nepali_datetime.date):
+                family_info['date_of_birth'] = family_info['date_of_birth'].isoformat()
+            if isinstance(family_info.get('issued_date'), nepali_datetime.date):
+                family_info['issued_date'] = family_info['issued_date'].isoformat()
+        except Exception as e:
+            print(f"Serialization error: {e}")
+            form.add_error(None, "An error occurred while saving personal information.")
+            return self.form_invalid(form)
+
+        # Save the cleaned data to session
+        self.request.session['family_info'] = family_info
+        self.request.session.modified = True
+
+
+        personal_info = self.request.session.get('personal_info')
+        gender = personal_info.get('gender')
+        marital_status = personal_info.get('marriage_status')
+        print(f'Gender: {gender}')
+        print(f'Marital Status: {marital_status}')
+            
+        try:    
+            if gender == 'Male' or (gender == 'Female' and marital_status == 'Single'):
+                predefined_relationships = ['Grandfather', 'Father', 'Mother']
+            else:
+                predefined_relationships = ['Father', 'Husband', 'Father-In-Law']
+        except:
+            predefined_relationships = ['Father', 'Husband', 'Father-In-Law']
         valid = True
         forms = []
 
         # Validate predefined forms
         for i in range(len(predefined_relationships)):
-            form = FamilyInformationForm(request.POST, prefix=f'form-{i}')
+            form = FamilyInformationForm(self.request.POST, prefix=f'form-{i}')
             forms.append(form)
             if not form.is_valid():
                 valid = False
 
-        # Validate additional forms added dynamically
+        # Validate additional forms dynamically
         i = len(predefined_relationships)
-        while f'form-{i}-family_member_name' in request.POST:
-            form = FamilyInformationForm(request.POST, prefix=f'form-{i}')
+        while f'form-{i}-family_member_name' in self.request.POST:
+            form = FamilyInformationForm(self.request.POST, prefix=f'form-{i}')
             forms.append(form)
             if not form.is_valid():
                 valid = False
@@ -521,19 +579,29 @@ def family_info_view(request):
             for form in forms:
                 form_data = form.cleaned_data.copy()
                 for key, value in form_data.items():
-                    # Check if the value is a date instance
                     if isinstance(value, date):
-                        form_data[key] = value.isoformat()  # Convert to string for JSON compatibility
+                        form_data[key] = value.isoformat()
                 family_info_list.append(form_data)
 
-            # Save the serialized data to the session
-            request.session['family_info'] = family_info_list
-            request.session.modified = True
+            # Save to session
+            self.request.session['family_info'] = family_info_list
+            self.request.session.modified = True
             return redirect('livestock_info')
 
-    return render(request, 'member/add_member/family_info.html', {'forms': forms})
+        return self.render_to_response({'forms': forms})
 
-
+    def form_invalid(self, form):
+        """
+        Handle invalid forms.
+        """
+        return self.render_to_response(self.get_context_data(forms=form))
+    
+from django.template.loader import render_to_string
+def get_new_family_form(request):
+    existing_count = int(request.GET.get('count', 0))  # Pass current form count in the AJAX call
+    new_form = FamilyInformationForm(prefix=f'form-{existing_count}')
+    form_html = render_to_string('member/add_member/family_info_form.html', {'form': new_form})
+    return JsonResponse({'form_html': form_html})
 
 
 def livestock_info_view(request):
@@ -1102,7 +1170,13 @@ def branch_list_view(request):
     paginator = Paginator(branches, 10)  # Show 10 centers per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    return render(request, 'branch/branch_list.html', {'branches': page_obj})
+
+    # managers = {}
+    # for branch in branches:
+    #     manager = Employee.objects.filter(branch=branch, role='manager').first()
+    #     managers = branch.id[manager]
+    managers = {branch.id: Employee.objects.filter(branch=branch, role='manager').all() for branch in branches}
+    return render(request, 'branch/branch_list.html', {'branches': page_obj, 'managers': managers})
 
 
 @login_required

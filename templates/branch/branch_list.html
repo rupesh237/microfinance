@@ -1,7 +1,12 @@
 {% extends "base/index.html" %}
+{% load custom_filters %}
+{% load static %}
 {% block title %}
     <title>Branch List</title>
 {% endblock title %}
+{% block corecss %}
+    <link rel="stylesheet" href="{% static 'css/member_list.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
@@ -14,14 +19,26 @@
         </a>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-bordered">
-            <thead class="text-center table-primary">
+    <div>
+        <table>
+            <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Location</th>
-                    <th>Manager</th>
+                    <th>
+                        ID<br>
+                        <input type="text" id="searchId" placeholder="Search ID">
+                    </th>
+                    <th>
+                        Name
+                        <input type="text" id="searchName" placeholder="Search Name">
+                    </th>
+                    <th>
+                        Location
+                        <input type="text" id="searchLocation" placeholder="Search Location">
+                    </th>
+                    <th>
+                        Manager
+                        <input type="text" id="searchManager" placeholder="Search Manager">
+                    </th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -31,7 +48,11 @@
                     <td>{{ branch.id }}</td>
                     <td>{{ branch.name }}</td>
                     <td>{{ branch.municipality }}-{{ branch.wardNo }}, {{ branch.district }}</td>
-                    <td>{{ branch.manager}}</td>
+                    {% for manager in managers|get_item:branch.id %}
+                    <td>{{ manager.name }}</td>
+                    {% empty %}
+                    <td>Not Assigned</td>
+                    {% endfor %}
                     <td class="text-center">
                         <a href="{% url 'update_branch' branch.id %}" class="btn btn-warning btn-sm" title="Edit">
                             <i class="bi bi-pencil-fill"></i>

@@ -1,5 +1,12 @@
 {% load widget_tweaks %}
 {% load humanize %}
+{% load static %}
+
+{% block corecss %}
+    <link rel="stylesheet" href="{% static 'css/member_list.css' %}">
+{% endblock corecss %}
+
+
 
 <div class="flex flex-col-reverse md:grid md:grid-cols-4 md:gap-4"
     id="voucher-container">
@@ -35,14 +42,31 @@
       
           <table class='table'>
               <thead class="text-xs text-black uppercase">
-                  <th class="px-6 py-3">V. No</th>
-                  <th class="px-6 py-3">Amount</th>
-                  <th class="px-6 py-3">Type</th>
-                  <th class="px-6 py-3">Category</th>
-                  <th class="px-6 py-3">Description</th>
-                  <th class="px-6 py-3">Txn. Date</th>
-                  <th class="px-6 py-3">Created Date</th>
-                  <th class="px-6 py-3">Created By</th>
+                  <th class="px-6 py-3">
+                    V. No
+                    <input type="text" id="searchVoucherNumber" placeholder="Search Voucher No.">
+                  </th>
+                  <th class="px-6 py-3">Amount
+                    <input type="text" id="searchAmount" placeholder="Search Amnt">
+                  </th>
+                  <th class="px-6 py-3">Type
+                    <input type="text" id="searchType" placeholder="Search Type">
+                  </th>
+                  <th class="px-6 py-3">Category
+                    <input type="text" id="searchCategory" placeholder="Search Category">
+                  </th>
+                  <th class="px-6 py-3">Description
+                    <input type="text" id="searchDescription" placeholder="Search Description">
+                  </th>
+                  <th class="px-6 py-3">Txn. Date
+                    <input type="text" id="searchTransactionDate" placeholder="Search Transaction Date">
+                  </th>
+                  <th class="px-6 py-3">Created Date
+                    <input type="text" id="searchCreatedDate" placeholder="Search Created Date">
+                  </th>
+                  <th class="px-6 py-3">Created By
+                    <input type="text" id="searchCreatedBy" placeholder="Search Created By">
+                  </th>
                   <th class="px-6 py-3">Action</th>
               </thead>
               {% if filter.qs %}

@@ -5,10 +5,10 @@
 {% endblock title %}
 {% block content %}
     <h2>Delete Center</h2>
-    <form method="post">
+    <form method="post" class="div">
         {% csrf_token %}
         <p>Are you sure you want to delete "{{ object.name }}"?</p>
         <input type="submit" class="btn btn-danger" value='Confirm'>
-        <button><a href="{% url 'center_list' %}">Cancel</a></button>
+        <a href="{% url 'center_list' %}" class="btn btn-warning">Cancel</a>
     </form>
 {% endblock %}

@@ -74,12 +74,9 @@ class CenterForm(forms.ModelForm):
         model = Center
         fields = ['input_code', 'name', 'branch', 'province', 'district', 'municipality', 'category', 'no_of_group', 'no_of_members', 'meeting_place', 'meeting_distance', 'formed_by', 'meeting_start_date', 'meeting_start_time', 'meeting_end_time', 'walking_time', 'meeting_by', 'meeting_repeat_type', 'meeting_interval', 'meeting_date', 'every', 'pgt_by', 'from_date', 'to_date', 'grt_by', 'approved_by' ]
         widgets = {
-            'meeting_start_date': DateInput(attrs={'type': 'date'}),
             'meeting_start_time': TimeInput(attrs={'type': 'time'}),
             'meeting_end_time': TimeInput(attrs={'type': 'time'}),
             'walking_time': TimeInput(attrs={'type': 'time'}),
-            'from_date': DateInput(attrs={'type': 'date'}),
-            'to_date': DateInput(attrs={'type': 'date'}),
             'meeting_repeat_type': forms.Select(attrs={'id': 'id_meeting_repeat_type'}),
             'meeting_interval': forms.Select(attrs={'id': 'id_meeting_interval'}),
             'meeting_date': forms.NumberInput(attrs={'id': 'id_meeting_date'}),
@@ -401,10 +398,7 @@ class FamilyInformationForm(forms.ModelForm):
             'citizenship_no', 'issued_from', 'issued_date', 
             'education', 'occupation', 'monthly_income', 'phone_number'
         ]
-        widgets = {
-            'date_of_birth': forms.DateInput(attrs={'type': 'date'}),
-            'issued_date': forms.DateInput(attrs={'type': 'date'}),
-        }
+        
 
     def __init__(self, *args, **kwargs):
         relationships = kwargs.pop('relationships', [])

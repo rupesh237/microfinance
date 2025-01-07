@@ -1,4 +1,8 @@
 {% extends "base/index.html" %}
+{% load static %}
+{% block corecss %}
+    <link rel="stylesheet" href="{% static 'css/member_list.css' %}">
+{% endblock %}
 
 {% block title %}
     <title>Group List</title>
@@ -10,15 +14,30 @@
         <h1 class="h3">Group List</h1>
         <a href="{% url 'add_group' %}" class="btn btn-primary">Add Group</a>
     </div>
-    <div class="table-responsive">
-        <table class="table table-bordered">
-            <thead class="table-primary">
+    <div>
+        <table>
+            <thead>
                 <tr>
-                    <th>Code</th>
-                    <th>Name</th>
-                    <th>Center Code</th>
-                    <th>Center Name</th>
-                    <th>Status</th>
+                    <th>
+                        Code
+                        <input type="text" id="searchCode" placeholder="Search Code">
+                    </th>
+                    <th>
+                        Name
+                        <input type="text" id="searchName" placeholder="Search Name">
+                    </th>
+                    <th>
+                        Center Code
+                        <input type="text" id="searchCenterCode" placeholder="Search Center Code">
+                    </th>
+                    <th>
+                        Center Name
+                        <input type="text" id="searchCenterName" placeholder="Search Center Name">
+                    </th>
+                    <th>
+                        Status
+                        <input type="text" id="searchStatus" placeholder="Search Status">
+                    </th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -30,12 +49,12 @@
                     <td>{{ group.center.code }}</td>
                     <td>{{ group.center.name }}</td>
                     <td>{{ group.status }}</td>
-                    <td>
-                        <a href="{% url 'edit_group' group.id %}" class="text-primary me-2">
-                            <i class='bi bi-pencil-fill'></i>
+                    <td class="text-center">
+                        <a href="{% url 'edit_group' group.id %}" class="btn btn-warning btn-sm" title="Edit">
+                            <i class="bi bi-pencil-fill"></i>
                         </a>
-                        <a href="{% url 'delete_group' group.id %}" class="text-danger">
-                            <i class='bi bi-trash-fill'></i>
+                        <a href="{% url 'delete_group' group.id %}" class="btn btn-danger btn-sm" title="Delete">
+                            <i class="bi bi-trash-fill"></i>
                         </a>
                     </td>
                 </tr>

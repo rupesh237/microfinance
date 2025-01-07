@@ -43,6 +43,7 @@ class AccountStatus(models.TextChoices):
 class InterestTypes(models.TextChoices):
     FLAT  = 'Flat', _('Flat')
     DECLINING = 'Declining', _('Declining')
+    INTEREST_ONLY = 'Interest Only', _('Interest Only')
 
 
 class ReceiptTypes(models.TextChoices):
@@ -115,9 +116,17 @@ RELIGION_CHOICES = [
 ]
 OCCUPATION_CHOICES = [
     ('Agriculture', 'Agriculture'),
+    ('Engineer', 'Engineer'),
+    ('Teacher', 'Teacher'),
+    ('Student', 'Student'),
+    ('Doctor', 'Doctor'),
     ('Business', 'Business'),
     ('Housewife', 'Housewife'),
+    ('Government Job', 'Government Job'),
+    ('Private Job', 'Private Job'),
+    ('Retired', 'Retired'),
     ('Foreign Employment', 'Foreign Employment'),
+    ('Other', 'Other'),
 ]
 
 class Province(models.Model):
@@ -209,16 +218,16 @@ class Center(models.Model):
     category = models.CharField(max_length=15, choices=CATEGORY_CHOICES, default='general')
 
     no_of_group = models.IntegerField( default=1, null=True)
-    no_of_members = models.IntegerField( default=4, null=True)
+    no_of_members = models.IntegerField( default=5, null=True)
     meeting_place = models.CharField(max_length=50, null=True)
     meeting_distance = models.IntegerField(default=0, null=True)
     formed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="formed_by", null=True)
     formed_date = models.DateTimeField(auto_now_add=True)
 
-    meeting_start_date = models.DateTimeField(null=True)
+    meeting_start_date = NepaliDateField(null=True)
     meeting_start_time = models.TimeField(null=True)
     meeting_end_time = models.TimeField(null=True)
-    walking_time = models.TimeField(null=True)
+    walking_time = models.CharField(max_length=20, null=True)
     meeting_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name="meeting_by") #optional
 
     meeting_repeat_type = models.CharField(max_length=25, choices=MEETING_REPEAT_TYPE_CHOICES, null=True)
@@ -229,8 +238,8 @@ class Center(models.Model):
 
     #CENTER ESTD
     pgt_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="pgt_by", null=True)
-    from_date = models.DateTimeField(null=True)
-    to_date = models.DateTimeField(null=True)
+    from_date = NepaliDateField(null=True)
+    to_date = NepaliDateField(null=True)
     grt_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="grt_by", null=True)
     approved_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="app_by", null=True)
 
@@ -248,7 +257,7 @@ class GRoup(models.Model):
     center = models.ForeignKey(Center, on_delete=models.CASCADE, related_name="groups")
     position = models.IntegerField(default=1)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    created_on = models.DateTimeField(auto_now_add=True)
+    created_on = NepaliDateField(auto_now_add=True)
 
     status = models.CharField(max_length=50, default='Active')
 
@@ -344,16 +353,30 @@ RELATIONSHIP_CHOICES = [
     ('Father-In-Law', 'Father-In-Law'),
     ('Son', 'Son'),
     ('Daughter', 'Daughter'),
+    ('Mother', 'Mother'),
+    ('Mother-In-Law', 'Mother-In-Law'),
+    ('Brother', 'Brother'),
+    ('Sister', 'Sister'),
+    ('Grandfather', 'Grandfather'),
+    ('Grandmother', 'Grandmother'),
+    ('Uncle', 'Uncle'),
+    ('Aunt', 'Aunt'),
+    ('Grandson', 'Grandson'),
+    ('Granddaughter', 'Granddaughter'),
+    ('Nephew', 'Nephew'),
+    ('Niece', 'Niece'),
+    ('Cousin', 'Cousin'),
+    ('Other', 'Other'),
 ]
 class FamilyInformation(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='familyInfo')
 
     family_member_name = models.CharField(max_length=50)
     relationship = models.CharField(max_length=30, choices=RELATIONSHIP_CHOICES)
-    date_of_birth = models.DateField()
+    date_of_birth = NepaliDateField()
     citizenship_no = models.CharField(max_length=20, blank=True, null=True)
     issued_from = models.CharField(max_length=20, blank=True, null=True)
-    issued_date = models.DateField(blank=True, null=True)
+    issued_date = NepaliDateField(blank=True, null=True)
 
     education = models.CharField(max_length=30, choices=EDUCATION_CHOICES, null=True, blank=True)
     occupation = models.CharField(max_length=30, blank=True, null=True)
@@ -379,6 +402,8 @@ class HouseInformation(models.Model):
 class LandInformation(models.Model):
     member = models.OneToOneField(Member, on_delete=models.CASCADE, related_name='landInfo')
     farming_land = models.FloatField(default=0.0)
+    # animal_farming_land = models.FloatField(default=0.0)
+    # business_land = models.FloatField(default=0.0) 
     other_land = models.FloatField(default=0.0)
 
 class IncomeInformation(models.Model):
