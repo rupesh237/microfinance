@@ -6,12 +6,75 @@ from django.contrib.auth.models import User
 from dashboard.models import Branch, Center, Member
 
 # Create your models here.
-class CashManagement(models.Model):
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
-    balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+class Teller(models.Model):
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name="tellers")
+    employee = models.ForeignKey(User, on_delete=models.CASCADE)
+    # name = models.CharField(max_length=100, blank=True, null=True)
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    pending_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, null=True, blank=True)
+    created_at = models.DateField(auto_now_add=True)
 
     def __str__(self):
-        return f"Cash Management - {self.branch}"
+        return f"Teller -{self.employee.employee_detail.name}-{self.branch.code}"
+
+class CashVault(models.Model):
+    branch = models.OneToOneField(Branch, on_delete=models.CASCADE, related_name="cash_vault")
+    current_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    last_updated = models.DateTimeField()
+    pending_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, null=True, blank=True)
+
+    def __str__(self):
+        return f"Cash At Vault - {self.branch.code}"
+
+class VaultTransaction(models.Model):
+    TRANSACTION_TYPE_CHOICES = [
+        ('Deposit', 'Deposit'),
+        ('Withdraw', 'Withdraw'),
+    ]
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
+    transaction_type = models.CharField(max_length=30, choices=TRANSACTION_TYPE_CHOICES)
+    teller = models.ForeignKey(Teller, on_delete=models.SET_NULL, null=True, blank=True, related_name="transactions")
+    cash_vault = models.ForeignKey(CashVault, on_delete=models.CASCADE, related_name="transactions")
+    amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    description = models.TextField(blank=True, null=True)
+    deposited_by = models.CharField(max_length=100, blank=True, null=True)
+    date = models.DateTimeField(auto_now_add=True)
+
+    status = models.CharField(max_length=30, choices=[('Pending', 'Pending'), ('Approved', 'Approved')], default='Pending')
+
+    def __str__(self):
+        return f"{self.transaction_type} - {self.teller} of {self.amount}"
+
+class TellerToTellerTransaction(models.Model):
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
+    from_teller = models.ForeignKey(Teller, on_delete=models.CASCADE, related_name="sender")
+    to_teller = models.ForeignKey(Teller, on_delete=models.CASCADE, related_name="receiver")
+    amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    description = models.TextField(blank=True, null=True)
+    date = models.DateTimeField(auto_now_add=True)
+
+    status = models.CharField(max_length=30, choices=[('Pending', 'Pending'), ('Approved', 'Approved')], default='Pending')
+
+
+# Represents a summary of the daily cash position at a branch.
+class DailyCashSummary(models.Model):
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name="daily_summaries")
+    opening_vault_balance = models.DecimalField(max_digits=12, decimal_places=2)
+    closing_vault_balance = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    teller_balances = models.JSONField(default=dict)  # Stores teller-wise cash balance for the day.
+    date = models.DateField()
+
+    def __str__(self):
+        return f"Daily Summary - {self.branch.name} ({self.date})"
+
+    def update_balances(self):
+        # Automatically calculate closing balances based on transactions.
+        vault_transactions = self.branch.cash_vault.transactions.filter(date__date=self.date)
+        self.closing_vault_balance = (
+            self.opening_vault_balance +
+            vault_transactions.filter(transaction_type='Deposit', status='Approved').aggregate(models.Sum('amount'))['amount__sum'] or 0 -
+            vault_transactions.filter(transaction_type='Withdraw', status='Approved').aggregate(models.Sum('amount'))['amount__sum'] or 0
+        )
 
 class Voucher(models.Model):
     VOUCHER_TYPE_CHOICES = [

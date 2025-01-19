@@ -172,14 +172,14 @@ class Employee(models.Model):
         ('employee', 'Employee')
     ]
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employee')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employee_detail')
     name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=20)
     image = models.ImageField(upload_to= settings.PHOTO_PATH, blank=True, null=True)
     citizenship_card = models.ImageField(upload_to=settings.PHOTO_PATH, blank=True, null=True)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES)
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name="employees")
 
     def __str__(self):
         return f'{self.name} ({self.role})'

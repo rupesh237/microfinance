@@ -119,3 +119,20 @@ th {
     box-sizing: border-box; /* Includes padding within the width calculation */
 }
 
+.enable {
+    pointer-events: auto; /* Enable clicking and interaction */
+    background-color: #e6ffe6; /* Example: Light green background */
+}
+
+.disabled {
+    pointer-events: none; /* Disable clicking and interaction */
+    background-color: #f9f9f9; /* Example: Light grey background */
+    color: #aaa; /* Grey out text */
+}
+
+button[disabled] {
+    background-color: #d3d3d3; /* Light gray */
+    color: #808080; /* Dark gray */
+    cursor: not-allowed;
+}
+
