@@ -471,134 +471,116 @@ class PersonalInfoView(FormView):
         """Handle invalid forms."""
         return self.render_to_response(self.get_context_data(form=form))
 
-
 class FamilyInfoView(FormView):
-    template_name = 'member/add_member/family_info.html'
+    template_name = "member/add_member/family_info.html"
     form_class = FamilyInformationForm
 
+    def get_predefined_relationships(self):
+        """Determine predefined relationships based on personal info."""
+        personal_info = self.request.session.get("personal_info", {})
+        gender = personal_info.get("gender")
+        marital_status = personal_info.get("marital_status")
+
+        if gender == "Male" or (gender == "Female" and marital_status == "Single"):
+            return ["Grandfather", "Father", "Mother"]
+        return ["Father", "Husband", "Father-In-Law"]
+
     def get_initial(self):
-        """
-        Populate initial data for the forms from session if available.
-        """
-        family_info = self.request.session.get('family_info', [])
+        """Populate initial data for the forms from session if available."""
+        family_info = self.request.session.get("family_info", [])
+        predefined_relationships = self.get_predefined_relationships()
+
         initial_data = {}
-        # For members relationships, we check if the members are Male or female and show relationships accordingly
-        personal_info = self.request.session.get('personal_info')
-        gender = personal_info.get('gender')
-        marital_status = personal_info.get('marital_status')
-        print(f'Gender: {gender}')
-        print(f'Marital Status: {marital_status}')
-            
-        try:    
-            if gender == 'Male' or (gender == 'Female' and marital_status == 'Single'):
-                predefined_relationships = ['Grandfather', 'Father', 'Mother']
-            else:
-                predefined_relationships = ['Father', 'Husband', 'Father-In-Law']
-        except:
-            predefined_relationships = ['Father', 'Husband', 'Father-In-Law']
         for i, rel in enumerate(predefined_relationships):
             if i < len(family_info):
-                initial_data[f'form-{i}'] = family_info[i]
+                initial_data[f"form-{i}"] = family_info[i]
             else:
-                initial_data[f'form-{i}'] = {'relationship': rel}
+                initial_data[f"form-{i}"] = {"relationship": rel}
 
         return initial_data
 
     def get(self, request, *args, **kwargs):
-        """
-        Handle GET requests to display the initial forms.
-        """
-        if 'personal_info' not in request.session or 'address_info' not in request.session:
-            return redirect('address_info')
-
-        request.session['current_step'] = 3
+        """Handle GET requests to display initial forms."""
+        if "personal_info" not in request.session or "address_info" not in request.session:
+            return redirect("address_info")
+        
+        request.session["current_step"] = 3
         initial_data = self.get_initial()
+        predefined_relationships = self.get_predefined_relationships()
 
         # Create forms for predefined relationships
-        self.forms = [
-            FamilyInformationForm(initial=initial_data.get(f'form-{i}', {}), prefix=f'form-{i}')
-            for i in range(3)  # Assuming 3 predefined relationships
+        forms = [
+            FamilyInformationForm(initial=initial_data.get(f"form-{i}", {}), prefix=f"form-{i}")
+            for i in range(len(predefined_relationships))
         ]
 
-        return self.render_to_response({'forms': self.forms})
+        return self.render_to_response({"forms": forms})
 
-    def form_valid(self, form):
-        """
-        Handle valid form submissions.
-        """
-        family_info = form.cleaned_data
-        try:
-            if isinstance(family_info.get('date_of_birth'), nepali_datetime.date):
-                family_info['date_of_birth'] = family_info['date_of_birth'].isoformat()
-            if isinstance(family_info.get('issued_date'), nepali_datetime.date):
-                family_info['issued_date'] = family_info['issued_date'].isoformat()
-        except Exception as e:
-            print(f"Serialization error: {e}")
-            form.add_error(None, "An error occurred while saving personal information.")
-            return self.form_invalid(form)
-
-        # Save the cleaned data to session
-        self.request.session['family_info'] = family_info
-        self.request.session.modified = True
-
-
-        personal_info = self.request.session.get('personal_info')
-        gender = personal_info.get('gender')
-        marital_status = personal_info.get('marriage_status')
-        print(f'Gender: {gender}')
-        print(f'Marital Status: {marital_status}')
-            
-        try:    
-            if gender == 'Male' or (gender == 'Female' and marital_status == 'Single'):
-                predefined_relationships = ['Grandfather', 'Father', 'Mother']
-            else:
-                predefined_relationships = ['Father', 'Husband', 'Father-In-Law']
-        except:
-            predefined_relationships = ['Father', 'Husband', 'Father-In-Law']
-        valid = True
+    def process_forms(self, request):
+        """Process forms submitted via POST."""
+        predefined_relationships = self.get_predefined_relationships()
         forms = []
+        valid = True
 
         # Validate predefined forms
         for i in range(len(predefined_relationships)):
-            form = FamilyInformationForm(self.request.POST, prefix=f'form-{i}')
+            form = FamilyInformationForm(request.POST, prefix=f"form-{i}")
             forms.append(form)
             if not form.is_valid():
                 valid = False
 
         # Validate additional forms dynamically
-        i = len(predefined_relationships)
-        while f'form-{i}-family_member_name' in self.request.POST:
-            form = FamilyInformationForm(self.request.POST, prefix=f'form-{i}')
-            forms.append(form)
-            if not form.is_valid():
-                valid = False
-            i += 1
+        prefixes = set(
+            key.split("-")[0]
+            for key in request.POST.keys()
+            if key.startswith("form-") and "-family_member_name" in key
+        )
 
+        for prefix in prefixes:
+            if prefix not in [f"form-{i}" for i in range(len(predefined_relationships))]:
+                form = FamilyInformationForm(request.POST, prefix=prefix)
+                forms.append(form)
+                if not form.is_valid():
+                    valid = False
+
+        return forms, valid
+
+    def post(self, request, *args, **kwargs):
+        """Handle POST requests for form submission."""
+        forms, valid = self.process_forms(request)
+        print(forms)
+        print(request.POST)
         if valid:
             family_info_list = []
             for form in forms:
                 form_data = form.cleaned_data.copy()
+
+                # Serialize Nepali dates
                 for key, value in form_data.items():
-                    if isinstance(value, date):
+                    if isinstance(value, (date, nepali_datetime.date)):
                         form_data[key] = value.isoformat()
+
                 family_info_list.append(form_data)
 
             # Save to session
-            self.request.session['family_info'] = family_info_list
-            self.request.session.modified = True
-            return redirect('livestock_info')
+            request.session["family_info"] = family_info_list
+            request.session.modified = True
+            return redirect("livestock_info")
 
-        return self.render_to_response({'forms': forms})
+        return self.render_to_response({"forms": forms})
 
-    def form_invalid(self, form):
-        """
-        Handle invalid forms.
-        """
-        return self.render_to_response(self.get_context_data(forms=form))
-    
+    def render_to_response(self, context, **response_kwargs):
+        """Ensure proper context rendering."""
+        response_kwargs.setdefault("content_type", self.content_type)
+        return super().render_to_response(context, **response_kwargs)
+
+
 from django.template.loader import render_to_string
 def get_new_family_form(request):
-    existing_count = int(request.GET.get('count', 0))  # Pass current form count in the AJAX call
+    """
+    AJAX view to dynamically add a new family member form.
+    """
+    existing_count = int(request.GET.get('count', 0))
     new_form = FamilyInformationForm(prefix=f'form-{existing_count}')
     form_html = render_to_string('member/add_member/family_info_form.html', {'form': new_form})
     return JsonResponse({'form_html': form_html})
@@ -734,7 +716,7 @@ def expenses_info_view(request):
                     **personal_info
                 )
                 for family_data in family_info:
-                   FamilyInformation.objects.create(member=member, **family_data)
+                    FamilyInformation.objects.create(member=member, **family_data)
                 LivestockInformation.objects.create(member=member, **livestock_info)
                 HouseInformation.objects.create(member=member, **house_info)
                 LandInformation.objects.create(member=member, **land_info)
@@ -830,7 +812,7 @@ def update_address_info(request, member_id):
 
         form = AddressInformationForm(initial=initial_data)
 
-    return render(request, "member/update_address_info.html", {
+    return render(request, "member/add_member/address_info.html", {
         "form": form,
         "member": member,
     })
@@ -839,7 +821,7 @@ def update_address_info(request, member_id):
 class UpdatePersonalInfoView(UpdateView):
     model = PersonalInformation
     form_class = PersonalInformationForm
-    template_name = 'member/update_personal_info.html'
+    template_name = 'member/add_member/personal_info.html'
 
     def get_object(self):
         """Retrieve the PersonalInformation object for the given member."""
@@ -865,7 +847,15 @@ def update_family_info_view(request, member_id):
     member = get_object_or_404(Member, id=member_id)
 
     # Define relationships that should not be modified
-    predefined_relationships = ['Father', 'Husband', 'Father-In-Law']
+    personal_info = get_object_or_404(PersonalInformation, id=member_id)
+    gender = personal_info.gender
+    marital_status = personal_info.marital_status
+    print(f'Gender: {gender}')
+    print(f'Marital Status: {marital_status}')
+    if gender == 'Male' or (gender == 'Female' and marital_status == 'Single'):
+        predefined_relationships = ['Grandfather', 'Father', 'Mother']
+    else:
+        predefined_relationships = ['Father', 'Husband', 'Father-In-Law']
     
     # Fetch all existing FamilyInformation for the member
     existing_family_info = FamilyInformation.objects.filter(member=member)
@@ -954,7 +944,7 @@ def update_livestock_info_view(request, member_id):
     else:
         form = LivestockInformationForm(instance=livestock_info)
 
-    return render(request, 'member/update_livestock_info.html', {'form': form, 'member': member})
+    return render(request, 'member/add_member/livestock_info.html', {'form': form, 'member': member})
 
 def update_house_info_view(request, member_id):
     member = get_object_or_404(Member, id=member_id)
@@ -970,7 +960,7 @@ def update_house_info_view(request, member_id):
     else:
         form = HouseInformationForm(instance=house_info)
 
-    return render(request, 'member/update_house_info.html', {'form': form, 'member': member})
+    return render(request, 'member/add_member/house_info.html', {'form': form, 'member': member})
 
 def update_land_info_view(request, member_id):
     member = get_object_or_404(Member, id=member_id)
@@ -986,7 +976,7 @@ def update_land_info_view(request, member_id):
     else:
         form = LandInformationForm(instance=land_info)
 
-    return render(request, 'member/update_land_info.html', {'form': form, 'member': member})
+    return render(request, 'member/add_member/land_info.html', {'form': form, 'member': member})
 
 def update_income_info(request, member_id):
     # Fetch the member and their existing IncomeInformation if it exists
@@ -1006,7 +996,7 @@ def update_income_info(request, member_id):
         # Initialize the form with the existing data if available
         form = IncomeInformationForm(instance=income_info)
 
-    return render(request, 'member/update_income_info.html', {'form': form, 'member': member})
+    return render(request, 'member/add_member/income_info.html', {'form': form, 'member': member})
 
 # Step 4: Expenses Information Update
 def update_expenses_info(request, member_id):
@@ -1027,7 +1017,7 @@ def update_expenses_info(request, member_id):
         # Initialize the form with the existing data if available
         form = ExpensesInformationForm(instance=expenses_info)
 
-    return render(request, 'member/update_expenses_info.html', {'form': form, 'member': member})
+    return render(request, 'member/add_member/expenses_info.html', {'form': form, 'member': member})
 
 # Final Step: Save all information atomically
 

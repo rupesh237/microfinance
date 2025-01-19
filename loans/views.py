@@ -258,7 +258,15 @@ def update_family_info_view(request, member_id):
     member = get_object_or_404(Member, id=member_id)
 
     # Define relationships that should not be modified
-    predefined_relationships = ['Father', 'Husband', 'Father-In-Law']
+    personal_info = get_object_or_404(PersonalInformation, id=member_id)
+    gender = personal_info.gender
+    marital_status = personal_info.marital_status
+    print(f'Gender: {gender}')
+    print(f'Marital Status: {marital_status}')
+    if gender == 'Male' or (gender == 'Female' and marital_status == 'Single'):
+        predefined_relationships = ['Grandfather', 'Father', 'Mother']
+    else:
+        predefined_relationships = ['Father', 'Husband', 'Father-In-Law']
     
     # Fetch all existing FamilyInformation for the member
     existing_family_info = FamilyInformation.objects.filter(member=member)

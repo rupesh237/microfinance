@@ -224,7 +224,7 @@ class Center(models.Model):
     formed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="formed_by", null=True)
     formed_date = models.DateTimeField(auto_now_add=True)
 
-    meeting_start_date = NepaliDateField(null=True)
+    meeting_start_date = models.DateTimeField(null=True)
     meeting_start_time = models.TimeField(null=True)
     meeting_end_time = models.TimeField(null=True)
     walking_time = models.CharField(max_length=20, null=True)
@@ -238,8 +238,8 @@ class Center(models.Model):
 
     #CENTER ESTD
     pgt_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="pgt_by", null=True)
-    from_date = NepaliDateField(null=True)
-    to_date = NepaliDateField(null=True)
+    from_date = models.DateTimeField(null=True)
+    to_date = models.DateTimeField(null=True)
     grt_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="grt_by", null=True)
     approved_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="app_by", null=True)
 
@@ -257,7 +257,7 @@ class GRoup(models.Model):
     center = models.ForeignKey(Center, on_delete=models.CASCADE, related_name="groups")
     position = models.IntegerField(default=1)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    created_on = NepaliDateField(auto_now_add=True)
+    created_on = models.DateTimeField(auto_now_add=True)
 
     status = models.CharField(max_length=50, default='Active')
 
@@ -316,7 +316,7 @@ class AddressInformation(models.Model):
 class PersonalInformation(models.Model):
     member = models.OneToOneField(Member, on_delete=models.CASCADE, related_name='personalInfo')
     first_name = models.CharField(max_length=50)
-    middle_name = models.CharField(max_length=50, null=True, blank=True)
+    middle_name = models.CharField(max_length=50, blank=True)
     last_name = models.CharField(max_length=50)
     phone_number = models.CharField(max_length=15, null=True)
     gender = models.CharField(max_length=15, choices=GENDER_CHOICES, default='Female')
@@ -351,6 +351,7 @@ RELATIONSHIP_CHOICES = [
     ('Father', 'Father'),
     ('Husband', 'Husband'),
     ('Father-In-Law', 'Father-In-Law'),
+    ('Wife', 'Wife'),
     ('Son', 'Son'),
     ('Daughter', 'Daughter'),
     ('Mother', 'Mother'),

@@ -74,9 +74,12 @@ class CenterForm(forms.ModelForm):
         model = Center
         fields = ['input_code', 'name', 'branch', 'province', 'district', 'municipality', 'category', 'no_of_group', 'no_of_members', 'meeting_place', 'meeting_distance', 'formed_by', 'meeting_start_date', 'meeting_start_time', 'meeting_end_time', 'walking_time', 'meeting_by', 'meeting_repeat_type', 'meeting_interval', 'meeting_date', 'every', 'pgt_by', 'from_date', 'to_date', 'grt_by', 'approved_by' ]
         widgets = {
+            'meeting_start_date': DateInput(attrs={'type': 'date'}),
             'meeting_start_time': TimeInput(attrs={'type': 'time'}),
             'meeting_end_time': TimeInput(attrs={'type': 'time'}),
-            'walking_time': TimeInput(attrs={'type': 'time'}),
+            'from_date': DateInput(attrs={'type': 'date'}),
+            'to_date': DateInput(attrs={'type': 'date'}),
+            # 'walking_time': TimeInput(attrs={'type': 'time'}),
             'meeting_repeat_type': forms.Select(attrs={'id': 'id_meeting_repeat_type'}),
             'meeting_interval': forms.Select(attrs={'id': 'id_meeting_interval'}),
             'meeting_date': forms.NumberInput(attrs={'id': 'id_meeting_date'}),
@@ -398,27 +401,18 @@ class FamilyInformationForm(forms.ModelForm):
             'citizenship_no', 'issued_from', 'issued_date', 
             'education', 'occupation', 'monthly_income', 'phone_number'
         ]
-        
 
+        widgets = {
+            'date_of_birth': forms.TextInput(attrs={'class': 'form-control nepali-date-field'}),
+            'issued_date': forms.TextInput(attrs={'class': 'form-control nepali-date-field'}),
+        }
+        
     def __init__(self, *args, **kwargs):
-        relationships = kwargs.pop('relationships', [])
-        super().__init__(*args, **kwargs)
+        super(FamilyInformationForm, self).__init__(*args, **kwargs)
 
         for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
-
-        if 'relationship' in self.initial and self.initial['relationship'] in relationships:
-            self.fields['relationship'].widget.attrs.update({
-                'readonly': 'readonly',
-                'disabled': 'disabled',
-            })
-
-    def clean_relationship(self):
-        relationship = self.cleaned_data.get('relationship')
-        if self.fields['relationship'].widget.attrs.get('disabled'):
-            return self.initial.get('relationship')  # Return the preset relationship
-        return relationship
-
+            if field_name not in ['date_of_birth', 'issued_date']:
+                field.widget.attrs['class'] = 'form-control'
 
 
 
