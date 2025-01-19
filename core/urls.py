@@ -14,4 +14,8 @@ urlpatterns = [
     path('reports/', views.report_list, name="reports"),
     path('reports/receipt/', views.receipt_compile_report, name='generate_pdf_receipt'),  
     path('reports/payment/', views.payment_compile_report, name='generate_pdf_payment'),  
+
+    path('cash-management/', views.cash_management_view, name="cash_management_view"),
+    path('cash-management/teller/<int:transaction_id>/approve', views.update_teller_transaction, name="update_teller_transaction"),
+    path('cash-management/vault/<int:transaction_id>/approve', views.update_vault_transaction, name="update_vault_transaction"),
 ]

@@ -17,7 +17,7 @@ from dateutil.relativedelta import relativedelta
 from weasyprint import HTML, CSS
 from django.template.loader import get_template
 
-from core.models import Voucher, CollectionSheet
+from core.models import Voucher, CollectionSheet, Teller, CashVault, VaultTransaction, TellerToTellerTransaction
 from core.forms import CollectionSheetForm
 from core.filters import VoucherFilter, ReportFilter, CollectionSheetFilter
 
@@ -83,7 +83,9 @@ def receipt_compile_report(request):
             if receipt_filter.qs.exists():
                 # Data exists, proceed with preparing data for the PDF
                 saving_receipts = {}
+                loan_receipts = {}
                 counter = 1
+                loan_counter = 1
                 for code, _ in SAVING_ACCOUNT_TYPE:
                     for receipt in receipt_filter.qs:
                         for statement in receipt.voucher_statement.all():
@@ -110,10 +112,18 @@ def receipt_compile_report(request):
                                 for center_key, center_data in account_data.items()
                                 if center_key != 'total'  # Skip the total key
                             )
+
+                for receipt in receipt_filter.qs:
+                    if receipt.category == 'Loan':
+                        loan_receipts[receipt.voucher_number] = {'SNo': loan_counter, 'amount': receipt.amount}
+                        loan_counter += 1
+
+                print(loan_receipts)
                 # Render the HTML template for the PDF
                 template = get_template('reports/receipt-compile-pdf.html')
                 html_content = template.render({
                     'saving_receipts': saving_receipts,
+                    'loan_receipts': loan_receipts,
                     'total_savings': total_savings,
                     'today': today,
                     'start_date': start_date,
@@ -959,3 +969,232 @@ def collection_sheet_pdf(request, center_id):
     HTML(string=html_string, base_url=request.build_absolute_uri('/')).write_pdf(response)
 
     return response
+
+# CASH MANAGEMET #
+from decimal import Decimal
+def create_vault_transaction(request, vault, teller, transaction_type, amount):
+    # print(f"Branch: {vault.branch}")
+    if transaction_type == 'Deposit':
+        if Decimal(amount) > teller.balance:
+            messages.error(request, f'Insufficient balance with {teller}.')
+            return None
+        
+        try:
+            transaction = VaultTransaction.objects.create(
+                branch = vault.branch,
+                transaction_type=transaction_type,
+                cash_vault=vault, 
+                teller=teller,
+                amount=amount,
+                )
+            
+            vault.pending_amount += Decimal(amount)
+            vault.save()
+
+            # Update teller's balance
+            teller.balance -= Decimal(amount)
+            teller.save()
+
+            print(f'Successfully deposited {amount} into vault.')
+            return transaction
+        except Exception as e:
+            print(f'Error creating vault transaction: {e}')
+    elif transaction_type == 'Withdraw':
+        if Decimal(amount) > vault.current_balance:
+            messages.error(request, f'Insufficient balance in vault.')
+            return None
+        
+        try:
+            transaction = VaultTransaction.objects.create(
+                branch = vault.branch,
+                transaction_type=transaction_type,
+                cash_vault=vault, 
+                teller=teller,
+                amount=amount,
+                )
+            
+            # update cashvault balance
+            vault.current_balance -= Decimal(amount)
+            vault.last_updated = datetime.now()
+            vault.save()
+
+            # Add teller's pending amount
+            teller.pending_amount += Decimal(amount)
+            teller.save()
+
+            print(f'Successfully withdrawn {amount} from vault.')
+            return transaction
+        except Exception as e:
+            print(f'Error creating vault transaction: {e}')
+
+def create_teller_to_teller_transaction(request,from_teller, to_teller, amount):
+    branch = from_teller.branch
+    if Decimal(amount) > from_teller.balance:
+        messages.error(request, f'Insufficient balance with {from_teller}.')
+        return None  # Ensure the function exits early
+    
+    # Proceed with transaction creation
+    try:
+        transaction =TellerToTellerTransaction.objects.create(
+            branch = branch,
+            from_teller=from_teller, 
+            to_teller=to_teller,
+            amount=amount,
+            )
+        # update from_teller balance
+        from_teller.balance -= Decimal(amount)
+        from_teller.save()
+
+        # Add teller's pending amount
+        to_teller.pending_amount += Decimal(amount)
+        to_teller.save()
+        return transaction
+    except Exception as e:
+        print(f'Error creating teller to teller transaction: {e}')
+
+def update_vault_transaction(request, transaction_id):
+    print(transaction_id)
+    vault_transaction = VaultTransaction.objects.get(id=transaction_id)
+
+    try:
+        # Update vault balance
+        vault = vault_transaction.cash_vault
+        vault.current_balance += vault_transaction.amount
+        vault.pending_amount -= vault_transaction.amount
+        vault.last_updated = datetime.now()
+        vault.save()
+
+        vault_transaction.status = "Approved"
+        vault_transaction.save()
+        messages.success(request, f'Amount of {vault_transaction.amount} is successfully approved for {vault_transaction.cash_vault}')
+    except Exception as e:
+        # print(f'Error updating vault transaction: {e}')
+        messages.error(request, f'Error updating vault transaction: {e}')
+        return redirect(reverse('cash_management_view'))
+
+    return redirect(reverse('cash_management_view'))
+
+def update_teller_transaction(request, transaction_id):
+    print(transaction_id)
+    type = request.GET.get('type')
+    if type == 'TellerToTeller':
+        try:
+            teller_to_teller_transaction = TellerToTellerTransaction.objects.get(id=transaction_id)
+            print(teller_to_teller_transaction)
+
+            # Update teller balances
+            to_teller = teller_to_teller_transaction.to_teller
+            print(to_teller)
+            to_teller.balance += teller_to_teller_transaction.amount
+            to_teller.pending_amount -= teller_to_teller_transaction.amount
+            to_teller.save()
+
+            # Update transaction status
+            teller_to_teller_transaction.status = 'Approved'
+            teller_to_teller_transaction.save()
+            messages.success(request, f'Amount of {teller_to_teller_transaction.amount} is successfully approved for {to_teller}')
+        except Exception as e:  
+            print(f'Error updating teller to teller transaction: {e}')
+    elif type == 'VaultToTeller':
+        try:
+            vault_transaction = VaultTransaction.objects.get(id=transaction_id)
+            print(vault_transaction)
+
+            # Update teller balances
+            teller = vault_transaction.teller
+            print(teller)
+            teller.balance += vault_transaction.amount
+            teller.pending_amount -= vault_transaction.amount
+            teller.save()
+
+            # Update transaction status
+            vault_transaction.status = 'Approved'
+            vault_transaction.save()
+            messages.success(request, f'Amount of {vault_transaction.amount} is successfully approved for {teller}')
+        except Exception as e:
+            print(f'Error updating vault transaction: {e}')
+    else:
+        messages.error(request, 'Error while updating teller transaction, please try again')
+        return redirect(reverse('cash_management_view'))
+
+    return redirect(reverse('cash_management_view'))
+
+def cash_management_view(request):
+    current_user = request.user
+    branch = current_user.employee_detail.branch
+    tellers = Teller.objects.all().filter(branch=branch).all()
+    vault = CashVault.objects.get(branch=branch)
+    
+    # Calculate pending amount
+    cash_control = 0
+    for teller in tellers:
+        if teller.pending_amount is not None:
+            cash_control += teller.pending_amount
+    if vault.pending_amount is not None:
+        cash_control += vault.pending_amount
+
+    # Teller Transaction
+    teller_transactions = []
+    current_teller = Teller.objects.get(employee=current_user)
+    teller_teller_transactions = TellerToTellerTransaction.objects.filter(branch=branch, to_teller=current_teller).all()
+    teller_vault_transactions = VaultTransaction.objects.filter(branch=branch, transaction_type="Withdraw", teller=current_teller).all()
+    # Process TellerToTellerTransactions
+    for transaction in teller_teller_transactions:
+        teller_transactions.append({
+            'transaction_detail': transaction,
+            'date': transaction.date,
+            'from': transaction.from_teller, 
+            'amount': transaction.amount,
+            'type': 'TellerToTeller',
+        })
+    # Process VaultTransactions
+    for transaction in teller_vault_transactions:
+        teller_transactions.append({
+            'transaction_detail': transaction,
+            'date': transaction.date,
+            'from': transaction.cash_vault,
+            'amount': transaction.amount,
+            'type': 'VaultToTeller',
+        })
+    # Sort transactions by date (optional)
+    teller_transactions.sort(key=lambda x: x['date'])
+
+    # Vault Transaction
+    vault_transactions = VaultTransaction.objects.filter(branch=branch, transaction_type="Deposit").all()
+         
+    context = {
+        'tellers': tellers,
+        'vault': vault,
+        'current_user': current_user,
+        'cash_control': cash_control,
+        'teller_transactions': teller_transactions,
+        'vault_transactions': vault_transactions,
+    }
+    
+    if request.method == "POST":
+        transaction_type = request.POST.get('transaction_type')
+        amount = request.POST.get('amount')
+        teller_id = request.POST.get('teller-id')
+        teller = Teller.objects.get(id=teller_id)
+        # print(amount)
+        if amount and teller:
+            try:
+                if transaction_type:
+                    v_transaction = create_vault_transaction(request, vault=vault, teller=teller, transaction_type=transaction_type, amount=amount)
+                    if v_transaction is None:
+                      return redirect(reverse('cash_management_view'))  # Redirect back on failure
+                    messages.success(request, f'{transaction_type} of {amount} successfully processed for {teller}.')
+                else:
+                    from_teller = Teller.objects.get(employee=current_user)
+                    to_teller = teller
+                    t_transaction = create_teller_to_teller_transaction(request, from_teller=from_teller, to_teller=to_teller, amount=amount)
+                    if t_transaction is None:
+                        return redirect(reverse('cash_management_view'))  # Redirect back on failure
+                    messages.success(request, f'{amount} successfully transferred from {from_teller} to {to_teller}.')
+            except Exception as e:
+                messages.error(request, f'Error processing transaction: {e}')
+        
+        return redirect(reverse('cash_management_view'))
+
+    return render(request, 'cash_management/cash_management_view.html', context=context)
+
