@@ -128,6 +128,29 @@
                 </tr>
             </thead>
             <tbody>
+                <!--Loan Receipt-->
+                {% for loan_type, centers in loan_receipts.items %}
+                <tr>
+                    <td colspan="3"><strong>{{ loan_type }}</strong></td>
+                </tr>
+                {% for center, details in centers.items %}
+                {% if center != 'total' %} 
+                <tr>
+                    <td class="px-6 py-3">{{details.SNo }}</td>
+                    <td class="px-6 py-3">{{ center }}</td>
+                    <td class="px-6 py-3">{{ details.amount|floatformat:2 }}</td>
+                </tr>
+                {% with overall_counter=overall_counter|add:1 %} <!-- Increment the counter -->
+                {% endwith %}
+                {% endif %}
+                {% endfor %}
+                <tr>
+                    <td  class="px-6 py-3" colspan="2" style="text-align: right;"><strong>Total:</strong></td>
+                    <td  class="px-6 py-3"><strong>{{ centers.total|floatformat:2 }}</strong></td>
+                </tr>
+                {% endfor %}
+
+                <!--Saving Receipt-->
                 {% for account_type, centers in saving_receipts.items %}
                 <tr>
                     <td colspan="3"><strong>{{ account_type }}</strong></td>
@@ -144,14 +167,14 @@
                 {% endif %}
                 {% endfor %}
                 <tr>
-                    <td  class="px-6 py-3" colspan="2"><strong>Total:</strong></td>
+                    <td  class="px-6 py-3" colspan="2" style="text-align: right;"><strong>Total:</strong></td>
                     <td  class="px-6 py-3"><strong>{{ centers.total|floatformat:2 }}</strong></td>
                 </tr>
                 {% endfor %}
                 <tr>
-                    <td><strong>Total</strong></td>
+                    <td><strong>Grand Total</strong></td>
                     <td colspan="1"></td>
-                    <td>{{ total_savings|floatformat:2 }}</td>
+                    <td>{{ grand_total|floatformat:2 }}</td>
                 </tr>
             </tbody>
         </table>

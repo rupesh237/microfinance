@@ -112,7 +112,7 @@ class Voucher(models.Model):
         verbose_name_plural = "Vouchers"
 
     def __str__(self):
-        return f"{self.voucher_type.capitalize()} Voucher #{self.voucher_number}"
+        return f"{self.voucher_type.capitalize()} : {self.category} Voucher #{self.voucher_number}"
 
     def save(self, *args, **kwargs):
         # Generate voucher_number if it doesn't already exist

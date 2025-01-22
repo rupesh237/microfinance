@@ -23,7 +23,7 @@ from core.filters import VoucherFilter, ReportFilter, CollectionSheetFilter
 
 from dashboard.models import Center, GRoup, Member, User
 from savings.models import SAVING_ACCOUNT_TYPE, SavingsAccount, CashSheet, Statement
-from loans.models import Loan
+from loans.models import Loan, LOAN_TYPE_CHOICES
 
 from collections import defaultdict
 
@@ -85,7 +85,37 @@ def receipt_compile_report(request):
                 saving_receipts = {}
                 loan_receipts = {}
                 counter = 1
-                loan_counter = 1
+
+                # Process loan receipts
+                for code, _ in LOAN_TYPE_CHOICES:
+                    for receipt in receipt_filter.qs:
+                        if receipt.category == 'Loan':  # Filter only loan receipts
+                            for emi in receipt.emi_payments.all():  # Iterate over EMI payments
+                                loan_type = emi.loan.loan_type
+                                center = emi.loan.member.center
+                                loan_type_display = emi.loan.get_loan_type_display()
+
+                                # Initialize nested dictionaries if not already present
+                                if loan_type_display not in loan_receipts:
+                                    loan_receipts[loan_type_display] = {'total': 0}
+
+                                if center not in loan_receipts[loan_type_display]:
+                                    loan_receipts[loan_type_display][center] = {'SNo': counter, 'amount': 0}
+                                    counter += 1
+
+                                # Accumulate the amount for this center and loan type
+                                loan_receipts[loan_type_display][center]['amount'] += receipt.amount
+
+                                # Accumulate the total amount for this loan type
+                                loan_receipts[loan_type_display]['total'] += receipt.amount
+
+                total_loans = sum(
+                    center_data['amount']
+                    for loan_data in loan_receipts.values()
+                    for center_key, center_data in loan_data.items()
+                    if center_key != 'total'  # Skip the total key
+                )
+
                 for code, _ in SAVING_ACCOUNT_TYPE:
                     for receipt in receipt_filter.qs:
                         for statement in receipt.voucher_statement.all():
@@ -112,19 +142,20 @@ def receipt_compile_report(request):
                                 for center_key, center_data in account_data.items()
                                 if center_key != 'total'  # Skip the total key
                             )
+                
+                grand_total = total_loans + total_savings
 
-                for receipt in receipt_filter.qs:
-                    if receipt.category == 'Loan':
-                        loan_receipts[receipt.voucher_number] = {'SNo': loan_counter, 'amount': receipt.amount}
-                        loan_counter += 1
-
-                print(loan_receipts)
+                # print("Saving Receipts:", saving_receipts)
+                # print("Loan Receipts:", loan_receipts)
+                # print("Total Savings:", total_savings)
+                # print("Total Loans:", total_loans)
+                # print("Grand Total:", grand_total)
                 # Render the HTML template for the PDF
                 template = get_template('reports/receipt-compile-pdf.html')
                 html_content = template.render({
                     'saving_receipts': saving_receipts,
                     'loan_receipts': loan_receipts,
-                    'total_savings': total_savings,
+                    'grand_total': grand_total,
                     'today': today,
                     'start_date': start_date,
                     'end_date': end_date,

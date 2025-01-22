@@ -64,17 +64,19 @@ def member_loans(request, member_id):
 
             payment.principal_paid = emi_info['principal_component']
             payment.interest_paid = emi_info['interest_component']
-            payment.save()
 
             # Create voucher for payment
-            Voucher.objects.create(
+            voucher = Voucher.objects.create(
                 voucher_type='Receipt',
                 category='Loan',
-                amount=loan.loan_analysis_amount,
-                description=f'Loan Receipt of {loan.member.personalInfo.first_name} {loan.member.personalInfo.middle_name} {loan.member.personalInfo.last_name}: {loan.amount}',
+                amount=payment.amount_paid,
+                description=f'Loan Receipt of {loan.member.personalInfo.first_name} {loan.member.personalInfo.middle_name} {loan.member.personalInfo.last_name}: {payment.amount_paid}',
                 transaction_date=timezone.now().date(),
                 created_by=request.user,
             )
+
+            payment.voucher = voucher
+            payment.save()
 
             # Mark loan as cleared if balance is zero after this payment
             if payment.closing_balance == 0:

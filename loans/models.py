@@ -2,15 +2,15 @@
 from django.contrib.auth.models import User
 from django.db import models
 from dashboard.models import Member
+from core.models import Voucher
 from decimal import Decimal
 
-class Loan(models.Model):
-    LOAN_TYPE_CHOICES = [
+LOAN_TYPE_CHOICES = [
         ('flat', 'Flat Interest'),
         ('declining', 'Declining Balance'),
         ('interest_only', 'Interest Only'),
     ]
-
+class Loan(models.Model):
     LOAN_PURPOSE_CHOICES = [
         ('Crop and Crop Services', 'Crop and Crop Services'),
         ('Wholesale and Retail Business', 'Wholesale and Retail Business'),
@@ -144,6 +144,8 @@ class EMIPayment(models.Model):
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2)
     principal_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     interest_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    voucher = models.ForeignKey(Voucher, on_delete=models.SET_NULL, null=True, blank=True, related_name="emi_payments")
 
     def __str__(self):
         return f"Payment of {self.amount_paid} for {self.loan}"
