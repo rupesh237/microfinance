@@ -5,49 +5,53 @@
 {% block corecss %}
     <link rel="stylesheet" href="{% static 'css/loans.css' %}">
 {% endblock corecss %}
+
 {% block title %}
     <title>Member Loans</title>
 {% endblock title %}
 
 {% block content %}
     <h1>Loans for {{ member.personalInfo.first_name }} {{ member.personalInfo.middle_name }} {{ member.personalInfo.last_name }}</h1>
-    <h3><a href="{% url 'cleared_loans' member.id %}">Loan History</a></h3>
+    <h3>
+        <a href="{% url 'cleared_loans' member.id %}">Loan History</a>
+    </h3>
+
     <ul>
         {% for loan in loans %}
         <li class="loan-item">
             <strong>{{ loan.loan_type }}</strong> - {{ loan.amount }} - {{ loan.interest_rate }}% - {{ loan.duration_months }} months
             - Monthly Repayment: {{ loan.calculate_emi|floatformat:2 }}
 
-            <!-- Check if the loan is cleared -->
             {% if loan.is_cleared %}
                 <p><em>Loan Cleared</em></p>
             {% else %}
-                <!-- EMI Payment Form -->
-                <h3>Pay EMI</h3>
-                <form method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="loan" value="{{ loan.id }}">
-                    <label for="amount_paid">Amount to Pay:</label>
-                    <input type="number" id="amount_{{ loan.id }}" name="amount_paid" step="0.01" required oninput="checkEMIAmount({{ loan.id }}, {{ loan.calculate_emi|floatformat:2 }})">
-                    <button type="submit" id="pay_button_{{ loan.id }}" disabled>Pay EMI</button>
-                </form>
-
-                <!-- Link for clearing the loan -->
-                <a href="{% url 'confirm_clear_loan' loan.id %}">Clear Loan</a>
+                <div>
+                    <h4>Pay EMI</h4>
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="loan" value="{{ loan.id }}">
+                        <label for="amount_paid_{{ loan.id }}">Amount to Pay:</label>
+                        <input 
+                            type="number" 
+                            id="amount_{{ loan.id }}" 
+                            name="amount_paid" 
+                            step="0.01" 
+                            required 
+                            oninput="checkEMIAmount({{ loan.id }})">
+                        <button type="submit" id="pay_button_{{ loan.id }}" disabled>Pay EMI</button>
+                    </form>
+                    <a href="{% url 'confirm_clear_loan' loan.id %}">Clear Loan</a>
+                </div>
             {% endif %}
 
             <script>
                 function checkEMIAmount(loanId) {
                     const amountInput = document.getElementById('amount_' + loanId);
                     const payButton = document.getElementById('pay_button_' + loanId);
-                    
-                    // Get all rows for this loan's EMI schedule
-                    const emiRows = document.querySelectorAll(`#emi_schedule_${loanId} tbody tr`);
-                    
-                    // Parse the entered amount
+
                     const enteredAmount = parseFloat(amountInput.value);
-                    
-                    // Check if the entered amount matches any EMI amount in the schedule
+                    const emiRows = document.querySelectorAll(`#emi_schedule_${loanId} tbody tr`);
+
                     let isMatch = false;
                     emiRows.forEach(row => {
                         const emiAmount = parseFloat(row.querySelector('.emi-amount').textContent);
@@ -55,19 +59,19 @@
                             isMatch = true;
                         }
                     });
-                
-                    // Enable or disable the pay button based on the match
+
                     payButton.disabled = !isMatch;
-                }                                                                
+                }
             </script>
 
-            <!-- EMI Payment History -->
-            <div> 
+            <div>
                 <h4>EMI Payment History</h4>
-                <li>Opening Balance: {{ loan.amount }}</li>
-                <li>With Interest: {{ loan.interest_rate }}%</li>
-                <li>For {{ loan.duration_months }} EMIs</li>
-                <table class="table table-bordered table-hover table-striped" id="emi-schedule-table">
+                <ul>
+                    <li>Opening Balance: {{ loan.amount }}</li>
+                    <li>With Interest: {{ loan.interest_rate }}%</li>
+                    <li>For {{ loan.duration_months }} EMIs</li>
+                </ul>
+                <table id="emi-schedule-table">
                     <thead>
                         <tr>
                             <th>Date</th>
@@ -97,7 +101,7 @@
                             <td>{{ payment.dr|floatformat:2 }}</td>
                             <td>{{ payment.interest_paid|floatformat:2 }}</td>
                             <td>{{ payment.principal_paid|floatformat:2 }}</td>
-                            <td>- {{ payment.closing_balance|floatformat:2 }}</td>
+                            <td>-{{ payment.closing_balance|floatformat:2 }}</td>
                         </tr>
                         {% empty %}
                         <tr>
@@ -108,10 +112,9 @@
                 </table>
             </div>
 
-            <!-- EMI Schedule -->
             <h5>EMI Schedule</h5>
-            <div class="loan-container" style="border: 1px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); align-items: center; margin-top:8px; margin-bottom:8px; overflow-x: auto;">
-                <table class="table table-bordered table-hover table-striped"  id="emi_schedule_{{ loan.id }}"> 
+            <div class="loan-container">
+                <table id="emi_schedule_{{ loan.id }}">
                     <thead>
                         <tr>
                             <th>Month</th>
@@ -133,8 +136,7 @@
                         {% endfor %}
                     </tbody>
                 </table>
-            </div> 
-
+            </div>
         </li>
         {% endfor %}
     </ul>

@@ -1,0 +1,26 @@
+{% extends 'base/index.html' %}
+{% block title %}
+<title>Update House Information</title>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">Update House Information for {{ member.personalInfo.first_name }} {{ member.personalInfo.last_name }}</h2>
+        </div>
+        <div class="card-body">
+        <form method="post">
+        {% csrf_token %}
+            {{ form.as_p }}
+
+            <div class="d-flex justify-content-between mt-4">
+                <button class="btn btn-secondary" type="button" onclick="window.history.back()">Back</button>
+                <button class="btn btn-primary" type="submit">Next</button>
+            </div>
+        </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

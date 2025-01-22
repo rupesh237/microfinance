@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.http import JsonResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -9,12 +9,13 @@ from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 
+import nepali_datetime
 from django.db import transaction
 
 from django.views.generic import (
     CreateView, ListView, UpdateView, DeleteView )
 
-from dashboard.models import Employee, District, Municipality, Branch, GRoup, Member, Center,AddressInformation, PersonalInformation, FamilyInformation, LivestockInformation, HouseInformation, LandInformation, IncomeInformation, ExpensesInformation
+from dashboard.models import Employee, Province, District, Municipality, Branch, GRoup, Member, Center,AddressInformation, PersonalInformation, FamilyInformation, LivestockInformation, HouseInformation, LandInformation, IncomeInformation, ExpensesInformation
 from savings.models import SavingsAccount, INITIAL_SAVING_ACCOUNT_TYPE, Statement
 
 from dashboard.forms import BranchForm, EmployeeForm, CenterForm, GroupForm
@@ -66,6 +67,12 @@ def dashboard(request):
 @login_required
 def admin_dashboard(request):
     members =Member.objects.all().select_related('personalInfo')
+    address_info= None
+    try:
+        for member in members:
+            address_info = member.address_info.filter(address_type='current').first()
+    except:
+        address_info = 'No Address Found!'
     groups = GRoup.objects.all()
     centers = Center.objects.all()
     employees = Employee.objects.all()
@@ -74,7 +81,8 @@ def admin_dashboard(request):
         'groups': groups,
         'centers': centers,
         'employees': employees,
-        'members': members
+        'members': members,
+        'address_info': address_info
     })
 
 @login_required
@@ -300,166 +308,13 @@ class GroupDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
     success_url = reverse_lazy('group_list')
     template_name = 'group/delete_group.html'
 
-
-
-from .forms import (
-    CenterSelectionForm, AddressInformationForm, PersonalInformationForm, FamilyInformationForm, 
-    LivestockInformationForm, HouseInformationForm, LandInformationForm, 
-    IncomeInformationForm, ExpensesInformationForm
-)
-from formtools.wizard.views import SessionWizardView
-from django.shortcuts import redirect
-
-FORMS = [
-    ("address", AddressInformationForm),
-    ("personal", PersonalInformationForm),
-    ("family", FamilyInformationForm),
-    ("livestock", LivestockInformationForm),
-    ("house", HouseInformationForm),
-    ("land", LandInformationForm),
-    ("income", IncomeInformationForm),
-    ("expenses", ExpensesInformationForm),
-]
-
-TEMPLATES = {
-    "address": "member/add_member/address_info.html",
-    "personal": "member/add_member/personal_info.html",
-    "family": "member/add_member/family_info.html",
-    "livestock": "member/add_member/livestock_info.html",
-    "house": "member/add_member/house_info.html",
-    "land": "member/add_member/land_info.html",
-    "income": "member/add_member/income_info.html",
-    "expenses": "member/add_member/expenses_info.html",
-}
-
-
-class MemberWizard(SessionWizardView):
-    form_list = FORMS
-    predefined_relationships = ["Husband", "Father", "Father-In-Law"]
-
-    def get_template_names(self):
-        return [TEMPLATES.get(self.steps.current, "member/add_member/address_info.html")]
-
-    def get_form_initial(self, step):
-        if step == "family":
-            form_count = sum(1 for key in self.storage.data.get('step_data', {}) if 'family' in key)
-            if form_count < len(self.predefined_relationships):
-                return {'relationship': self.predefined_relationships[form_count]}
-        return super().get_form_initial(step)
-
-    def get_context_data(self, form, **kwargs):
-        context = super().get_context_data(form=form, **kwargs)
-        if self.steps.current == 'family':
-            family_forms = [
-                FamilyInformationForm(initial={'relationship': rel}, prefix=f'form-{i}')
-                for i, rel in enumerate(self.predefined_relationships)
-            ]
-            context.update({'family_forms': family_forms, 'form_count': len(family_forms)})
-        return context
-
-    def get_form_step_data(self, step):
-        data = super().get_form_step_data(step)
-        # Convert any date fields to string format
-        for key, value in data.items():
-            if isinstance(value, date):
-                data[key] = value.isoformat()  # Convert date to ISO string
-        return data
-
-    def post(self, *args, **kwargs):
-        form = self.get_form(data=self.request.POST, files=self.request.FILES)
-        if self.steps.current == 'family':
-            family_forms = [
-                FamilyInformationForm(self.request.POST, prefix=f'form-{i}')
-                for i in range(int(self.request.POST.get('form_count', 0)))
-            ]
-
-            if self.validate_family_forms(family_forms):
-                self.storage.extra_data['family_forms_data'] = [
-                    {key: (value.isoformat() if isinstance(value, date) else value) 
-                     for key, value in form.cleaned_data.items()}
-                    for form in family_forms
-                ]
-            else:
-                return self.render_to_response(
-                    self.get_context_data(form=form, family_forms=family_forms)
-                )
-
-        return super().post(*args, **kwargs)
-
-    def validate_family_forms(self, family_forms):
-        all_valid = True
-        for form in family_forms:
-            if not form.is_valid():
-                all_valid = False
-        return all_valid
-
-    def done(self, form_list, **kwargs):
-        """This method is called when all the forms are completed successfully."""
-        try:
-            with transaction.atomic():
-                # Retrieve center and group info from the session
-                center_id = self.request.session.get('center_id')
-                group_id = self.request.session.get('group_id')
-                member_code = self.request.session.get('member_code')
-                member_category = self.request.session.get('member_category')
-                code = self.request.session.get('code')
-                position = self.request.session.get('position')
-                print(f"{center_id} {group_id} {member_code} {member_category} {code} {position}")
-
-                # Create the Member object now that we have all necessary information
-                member = Member.objects.create(
-                    center_id=center_id,
-                    group_id=group_id,
-                    member_code=member_code,
-                    member_category=member_category,
-                    code=code,
-                    position=position,
-                )
-
-                # Save each form's data linked to this new Member
-                for form in form_list:
-                    form_instance = form.save(commit=False)  # Don't commit yet
-                    form_instance.member = member  # Link form data to the member
-                    form_instance.save()  # Save the form instance data
-
-                messages.success(self.request, "Member created successfully.")
-
-                # Clear session data after creating member
-                self.request.session.pop('center_id', None)
-                self.request.session.pop('group_id', None)
-                self.request.session.pop('member_code', None)
-                self.request.session.pop('member_category', None)
-                self.request.session.pop('code', None)
-                self.request.session.pop('position', None)
-                return redirect('member_list') 
-        except Exception as e:
-            # Handle exception if saving fails
-            messages.error(self.request, f"Error saving member: {e}")
-            return redirect('member_list')
-
-def load_groups(request):
-    center_id = request.GET.get('center')
-    groups = GRoup.objects.filter(center_id=center_id).values('id', 'name', 'code')
-    return JsonResponse(list(groups), safe=False)
-
-def load_member_codes(request):
-    center_id = request.GET.get('center')
-    try:
-        center = Center.objects.get(id=center_id)
-        max_member_code = center.no_of_group * center.no_of_members
-        member_codes = list(range(1, max_member_code + 1))
-    except Center.DoesNotExist:
-        member_codes = []
-    
-    return JsonResponse(member_codes, safe=False)
-
+from .forms import CenterSelectionForm
 class SelectCenterView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
     model = Member
     form_class = CenterSelectionForm
-    template_name = 'dashboard/select_center.html'
-    success_url = reverse_lazy('add_member')
+    # template_name = 'dashboard/select_center.html'
     template_name = 'member/add_member/select_center.html'
-    success_url = reverse_lazy('add_member') 
+    success_url = reverse_lazy('address_info') 
 
     def form_valid(self, form):
         # Store center and group information in the session instead of saving the Member
@@ -494,299 +349,707 @@ class SelectCenterView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
                 form.fields['member_code'].choices = []
         return super().form_invalid(form)
 
+from django.views.generic.edit import FormView
+import json
+
+from .forms import (
+    CenterSelectionForm, AddressInformationForm, PersonalInformationForm, FamilyInformationForm, 
+    LivestockInformationForm, HouseInformationForm, LandInformationForm, 
+    IncomeInformationForm, ExpensesInformationForm
+)
+
+class AddressInfoView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
+    model = AddressInformation
+    form_class = AddressInformationForm
+    template_name = 'member/add_member/address_info.html'
+    success_url = reverse_lazy('personal_info')
+
+    def form_valid(self, form):
+        # Extract data for all address types
+        address_types = ['current', 'permanent', 'old']
+        session_data = {}
+
+        for address_type in address_types:
+            province = form.cleaned_data.get(f"{address_type}_province").id
+            district = form.cleaned_data.get(f"{address_type}_district").id
+            municipality = form.cleaned_data.get(f"{address_type}_municipality").id
+            ward_no = form.cleaned_data.get(f"{address_type}_ward_no")
+            tole = form.cleaned_data.get(f"{address_type}_tole")
+            house_no = form.cleaned_data.get(f"{address_type}_house_no")
+
+            # Store data for this address type in session
+            session_data[address_type] = {
+                'province': province,
+                'district': district,
+                'municipality': municipality,
+                'ward_no': ward_no,
+                'tole': tole,
+                'house_no': house_no,
+            }
+
+            # Print debug information
+            print(f"{address_type.capitalize()} Address - Province: {province}, District: {district}, Municipality: {municipality}, Ward: {ward_no}, Tole: {tole}, House: {house_no}")
+
+        # Save all address data into session
+        self.request.session['address_info'] = session_data
+
+        # After saving data to session, proceed to the next URL
+        return redirect(self.success_url)
+
+    def form_invalid(self, form):
+        # Re-populate `district` and `municipality` queryset for all address types if the form is invalid
+        address_types = ['current', 'permanent', 'old']
+
+        for address_type in address_types:
+            province_id = self.request.POST.get(f"{address_type}_province")
+            district_id = self.request.POST.get(f"{address_type}_district")
+
+            if province_id:
+                form.fields[f"{address_type}_district"].queryset = District.objects.filter(province_id=province_id)
+            else:
+                form.fields[f"{address_type}_district"].queryset = District.objects.none()
+
+            if district_id:
+                form.fields[f"{address_type}_municipality"].queryset = Municipality.objects.filter(district_id=district_id)
+            else:
+                form.fields[f"{address_type}_municipality"].queryset = Municipality.objects.none()
+
+        return super().form_invalid(form)
+
+class PersonalInfoView(FormView):
+    form_class = PersonalInformationForm
+    template_name = 'member/add_member/personal_info.html'
+
+    def get_initial(self):
+        """Populate initial data for the form from session."""
+        initial_data = self.request.session.get('personal_info', {})
+  # Reset invalid date
+        return initial_data
+
+    def form_valid(self, form):
+        personal_info = form.cleaned_data
+
+        # Debugging: Print cleaned data
+        # print("Cleaned data from form:", personal_info)
+
+        # Serialize only the specific fields
+        try:
+            # Handle date_of_birth (Nepali date)
+            if isinstance(personal_info.get('date_of_birth'), nepali_datetime.date):
+                personal_info['date_of_birth'] = personal_info['date_of_birth'].isoformat()
+            if isinstance(personal_info.get('issued_date'), nepali_datetime.date):
+                personal_info['issued_date'] = personal_info['issued_date'].isoformat()
+            if isinstance(personal_info.get('voter_id_issued_on'), nepali_datetime.date):
+                personal_info['voter_id_issued_on'] = personal_info['voter_id_issued_on'].isoformat()
+            if isinstance(personal_info.get('marriage_regd_date'), nepali_datetime.date):
+                personal_info['marriage_regd_date'] = personal_info['marriage_regd_date'].isoformat()
+            if isinstance(personal_info.get('registered_date'), nepali_datetime.date):
+                personal_info['registered_date'] = personal_info['registered_date'].isoformat()
+
+            # Handle registered_by (ForeignKey) -> Ensure always serialized from form
+            registered_by = personal_info.get('registered_by', self.request.user)
+            if registered_by and hasattr(registered_by, 'pk'):
+                personal_info['registered_by'] = registered_by.pk
+            else:
+                raise ValueError("Registered user is invalid")
+
+        except Exception as e:
+            print(f"Serialization error: {e}")
+            form.add_error(None, "An error occurred while saving personal information.")
+            return self.form_invalid(form)
+
+        # Save the cleaned data to session
+        self.request.session['personal_info'] = personal_info
+        self.request.session.modified = True
+
+        # Debugging: Check session data
+        # print("Session data saved:", self.request.session['personal_info'])
+
+        return redirect('family_info')  # Redirect to the next step
+
+    def form_invalid(self, form):
+        """Handle invalid forms."""
+        return self.render_to_response(self.get_context_data(form=form))
+
+class FamilyInfoView(FormView):
+    template_name = "member/add_member/family_info.html"
+    form_class = FamilyInformationForm
+
+    def get_predefined_relationships(self):
+        """Determine predefined relationships based on personal info."""
+        personal_info = self.request.session.get("personal_info", {})
+        gender = personal_info.get("gender")
+        marital_status = personal_info.get("marital_status")
+
+        if gender == "Male" or (gender == "Female" and marital_status == "Single"):
+            return ["Grandfather", "Father", "Mother"]
+        return ["Father", "Husband", "Father-In-Law"]
+
+    def get_initial(self):
+        """Populate initial data for the forms from session if available."""
+        family_info = self.request.session.get("family_info", [])
+        predefined_relationships = self.get_predefined_relationships()
+
+        initial_data = {}
+        for i, rel in enumerate(predefined_relationships):
+            if i < len(family_info):
+                initial_data[f"form-{i}"] = family_info[i]
+            else:
+                initial_data[f"form-{i}"] = {"relationship": rel}
+
+        return initial_data
+
+    def get(self, request, *args, **kwargs):
+        """Handle GET requests to display initial forms."""
+        if "personal_info" not in request.session or "address_info" not in request.session:
+            return redirect("address_info")
+        
+        request.session["current_step"] = 3
+        initial_data = self.get_initial()
+        predefined_relationships = self.get_predefined_relationships()
+
+        # Create forms for predefined relationships
+        forms = [
+            FamilyInformationForm(initial=initial_data.get(f"form-{i}", {}), prefix=f"form-{i}")
+            for i in range(len(predefined_relationships))
+        ]
+
+        return self.render_to_response({"forms": forms})
+
+    def process_forms(self, request):
+        """Process forms submitted via POST."""
+        predefined_relationships = self.get_predefined_relationships()
+        forms = []
+        valid = True
+
+        # Validate predefined forms
+        for i in range(len(predefined_relationships)):
+            form = FamilyInformationForm(request.POST, prefix=f"form-{i}")
+            forms.append(form)
+            if not form.is_valid():
+                valid = False
+
+        # Validate additional forms dynamically
+        prefixes = set(
+            key.split("-")[0]
+            for key in request.POST.keys()
+            if key.startswith("form-") and "-family_member_name" in key
+        )
+
+        for prefix in prefixes:
+            if prefix not in [f"form-{i}" for i in range(len(predefined_relationships))]:
+                form = FamilyInformationForm(request.POST, prefix=prefix)
+                forms.append(form)
+                if not form.is_valid():
+                    valid = False
+
+        return forms, valid
+
+    def post(self, request, *args, **kwargs):
+        """Handle POST requests for form submission."""
+        forms, valid = self.process_forms(request)
+        print(forms)
+        print(request.POST)
+        if valid:
+            family_info_list = []
+            for form in forms:
+                form_data = form.cleaned_data.copy()
+
+                # Serialize Nepali dates
+                for key, value in form_data.items():
+                    if isinstance(value, (date, nepali_datetime.date)):
+                        form_data[key] = value.isoformat()
+
+                family_info_list.append(form_data)
+
+            # Save to session
+            request.session["family_info"] = family_info_list
+            request.session.modified = True
+            return redirect("livestock_info")
+
+        return self.render_to_response({"forms": forms})
+
+    def render_to_response(self, context, **response_kwargs):
+        """Ensure proper context rendering."""
+        response_kwargs.setdefault("content_type", self.content_type)
+        return super().render_to_response(context, **response_kwargs)
+
+
+from django.template.loader import render_to_string
+def get_new_family_form(request):
+    """
+    AJAX view to dynamically add a new family member form.
+    """
+    existing_count = int(request.GET.get('count', 0))
+    new_form = FamilyInformationForm(prefix=f'form-{existing_count}')
+    form_html = render_to_string('member/add_member/family_info_form.html', {'form': new_form})
+    return JsonResponse({'form_html': form_html})
+
+
+def livestock_info_view(request):
+    if 'address_info' not in request.session or 'personal_info' not in request.session or 'family_info' not in request.session:
+        return redirect('address_info')
+
+    request.session['current_step'] = 4
+    form = LivestockInformationForm(request.POST or None)
+
+    if request.method == 'POST' and form.is_valid():
+        livestock_info = form.cleaned_data
+        request.session['livestock_info'] = livestock_info
+        return redirect('house_info')
+
+    return render(request, 'member/add_member/livestock_info.html', {'form': form})
+
+def house_info_view(request):
+    if 'address_info' not in request.session or 'personal_info' not in request.session or 'family_info' not in request.session or 'livestock_info' not in request.session:
+        return redirect('address_info')
+
+    request.session['current_step'] = 5
+    form = HouseInformationForm(request.POST or None)
+
+    if request.method == 'POST' and form.is_valid():
+        house_info = form.cleaned_data
+        request.session['house_info'] = house_info
+        return redirect('land_info')
+
+    return render(request, 'member/add_member/house_info.html', {'form': form})
+
+def land_info_view(request):
+    if 'address_info' not in request.session or 'personal_info' not in request.session or 'family_info' not in request.session or 'livestock_info' not in request.session or 'house_info' not in request.session:
+        return redirect('address_info')
+
+    request.session['current_step'] = 6
+    form = LandInformationForm(request.POST or None)
+
+    if request.method == 'POST' and form.is_valid():
+        land_info = form.cleaned_data
+        request.session['land_info'] = land_info
+        return redirect('income_info')
+
+    return render(request, 'member/add_member/land_info.html', {'form': form})
+
+def income_info_view(request):
+    if 'address_info' not in request.session or 'personal_info' not in request.session or 'family_info' not in request.session or 'livestock_info' not in request.session or 'house_info' not in request.session or 'land_info' not in request.session:
+        return redirect('address_info')
+
+    request.session['current_step'] = 7
+    form = IncomeInformationForm(request.POST or None)
+
+    if request.method == 'POST' and form.is_valid():
+        income_info = form.cleaned_data
+        request.session['income_info'] = income_info
+        return redirect('expenses_info')
+
+    return render(request, 'member/add_member/income_info.html', {'form': form})
+
+
+def expenses_info_view(request):
+    required_sessions = [
+        'address_info', 'personal_info', 'family_info',
+        'livestock_info', 'house_info', 'land_info',
+        'income_info', 'expenses_info'
+    ]
+
+    if not all(key in request.session for key in required_sessions[:-1]):  # Exclude 'expenses_info'
+        return redirect('address_info')
+
+    request.session['current_step'] = 8
+    initial_data = request.session.get('expenses_info', {})
+    form = ExpensesInformationForm(request.POST or None, initial=initial_data)
+
+    if request.method == 'POST' and form.is_valid():
+        expenses_info = form.cleaned_data
+        request.session['expenses_info'] = expenses_info
+
+        # Retrieve all session data
+        address_info = request.session.get('address_info')
+        personal_info = request.session.get('personal_info')
+        family_info = request.session.get('family_info')
+        livestock_info = request.session.get('livestock_info')
+        house_info = request.session.get('house_info')
+        land_info = request.session.get('land_info')
+        income_info = request.session.get('income_info')
+
+        try:
+            with transaction.atomic():
+                # Retrieve additional information
+                center_id = request.session.get('center_id')
+                group_id = request.session.get('group_id')
+                member_code = request.session.get('member_code')
+                member_category = request.session.get('member_category')
+                code = request.session.get('code')
+                position = request.session.get('position')
+
+                print(f'Center_id: {center_id}, Group_id: {group_id}, Member_code: {member_code}, '
+                      f'Member_category: {member_category}, Code: {code}, Position: {position}')
+                member = Member.objects.create(
+                    center_id=center_id,
+                    group_id=group_id,
+                    member_code=member_code,
+                    member_category=member_category,
+                    code=code,
+                    position=position,
+                )
+
+                # Create AddressInformation objects for each type
+                for address_type, address_data in zip(['current', 'permanent', 'old'],
+                                                       [address_info.get('current', {}),
+                                                        address_info.get('permanent', {}),
+                                                        address_info.get('old', {})]):
+                    AddressInformation.objects.create(
+                        member=member,
+                        province=Province.objects.get(id=address_data['province']),
+                        district=District.objects.get(id=address_data['district']),
+                        municipality=Municipality.objects.get(id=address_data['municipality']),
+                        ward_no=address_data['ward_no'],
+                        tole=address_data['tole'],
+                        house_no=address_data['house_no'],
+                        address_type=address_type
+                    )
+                if 'registered_by' in personal_info:
+                    del personal_info['registered_by']
+
+                user = request.user
+                PersonalInformation.objects.create(
+                    member=member,
+                    registered_by=user,
+                    **personal_info
+                )
+                for family_data in family_info:
+                    FamilyInformation.objects.create(member=member, **family_data)
+                LivestockInformation.objects.create(member=member, **livestock_info)
+                HouseInformation.objects.create(member=member, **house_info)
+                LandInformation.objects.create(member=member, **land_info)
+                IncomeInformation.objects.create(member=member, **income_info)
+                ExpensesInformation.objects.create(member=member, **expenses_info)
+
+                # Clear session data
+                for key in required_sessions:
+                    del request.session[key]
+
+            return redirect('member_list')
+
+        except Exception as e:
+            print(f"Error creating member: {e}")
+            form.add_error(None, "An error occurred while creating the member. Please try again.")
+
+    return render(request, 'member/add_member/expenses_info.html', {'form': form})
+
+
+# Helper function to get member
+def get_member(member_id):
+    return get_object_or_404(Member, id=member_id)
+
+# Step 1: Address Information Update
+def update_address_info(request, member_id):
+    member = get_object_or_404(Member, id=member_id)
+    address_info = AddressInformation.objects.filter(member=member)
+
+    if request.method == "POST":
+        form = AddressInformationForm(request.POST, instance=address_info.first())
+        if form.is_valid():
+            # Save current address
+            current_address, _ = AddressInformation.objects.update_or_create(
+                member=member,
+                address_type="current",
+                defaults={
+                    "province": form.cleaned_data["current_province"],
+                    "district": form.cleaned_data["current_district"],
+                    "municipality": form.cleaned_data["current_municipality"],
+                    "ward_no": form.cleaned_data["current_ward_no"],
+                    "tole": form.cleaned_data["current_tole"],
+                    "house_no": form.cleaned_data["current_house_no"],
+                },
+            )
+
+            # Save permanent address
+            permanent_address, _ = AddressInformation.objects.update_or_create(
+                member=member,
+                address_type="permanent",
+                defaults={
+                    "province": form.cleaned_data["permanent_province"],
+                    "district": form.cleaned_data["permanent_district"],
+                    "municipality": form.cleaned_data["permanent_municipality"],
+                    "ward_no": form.cleaned_data["permanent_ward_no"],
+                    "tole": form.cleaned_data["permanent_tole"],
+                    "house_no": form.cleaned_data["permanent_house_no"],
+                },
+            )
+
+            # Save old address (if provided)
+            if form.cleaned_data["old_province"]:
+                old_address, _ = AddressInformation.objects.update_or_create(
+                    member=member,
+                    address_type="old",
+                    defaults={
+                        "province": form.cleaned_data["old_province"],
+                        "district": form.cleaned_data["old_district"],
+                        "municipality": form.cleaned_data["old_municipality"],
+                        "ward_no": form.cleaned_data["old_ward_no"],
+                        "tole": form.cleaned_data["old_tole"],
+                        "house_no": form.cleaned_data["old_house_no"],
+                    },
+                )
+
+            messages.success(request, "Address information updated successfully!")
+            return redirect("update_personal_info", member_id=member.id)
+
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        initial_data = {}
+        for address_type in ["current", "permanent", "old"]:
+            address_instance = address_info.filter(address_type=address_type).first()
+            if address_instance:
+                initial_data.update({
+                    f"{address_type}_province": address_instance.province,
+                    f"{address_type}_district": address_instance.district,
+                    f"{address_type}_municipality": address_instance.municipality,
+                    f"{address_type}_ward_no": address_instance.ward_no,
+                    f"{address_type}_tole": address_instance.tole,
+                    f"{address_type}_house_no": address_instance.house_no,
+                })
+
+        form = AddressInformationForm(initial=initial_data)
+
+    return render(request, "member/add_member/address_info.html", {
+        "form": form,
+        "member": member,
+    })
+
+# Step 2: Personal Information Update
+class UpdatePersonalInfoView(UpdateView):
+    model = PersonalInformation
+    form_class = PersonalInformationForm
+    template_name = 'member/add_member/personal_info.html'
+
+    def get_object(self):
+        """Retrieve the PersonalInformation object for the given member."""
+        member_id = self.kwargs.get('member_id')
+        return get_object_or_404(PersonalInformation, member_id=member_id)
+
+    def form_valid(self, form):
+        # Update the registered_by and registered_date fields
+        personal_info = form.save(commit=False)
+        personal_info.registered_by = self.request.user
+        personal_info.registered_date = nepali_datetime.date.today()  # Assuming Nepali date is needed
+        member_id = self.object.member_id
+        personal_info.save()
+
+        # Redirect to the member detail view with the correct URL argument
+        return redirect(reverse('update_family_info', kwargs={'member_id': member_id}))
+
+    def form_invalid(self, form):
+        """Handle invalid forms."""
+        return self.render_to_response(self.get_context_data(form=form))
+
+def update_family_info_view(request, member_id):
+    member = get_object_or_404(Member, id=member_id)
+
+    # Define relationships that should not be modified
+    personal_info = get_object_or_404(PersonalInformation, id=member_id)
+    gender = personal_info.gender
+    marital_status = personal_info.marital_status
+    print(f'Gender: {gender}')
+    print(f'Marital Status: {marital_status}')
+    if gender == 'Male' or (gender == 'Female' and marital_status == 'Single'):
+        predefined_relationships = ['Grandfather', 'Father', 'Mother']
+    else:
+        predefined_relationships = ['Father', 'Husband', 'Father-In-Law']
+    
+    # Fetch all existing FamilyInformation for the member
+    existing_family_info = FamilyInformation.objects.filter(member=member)
+
+    # Split forms into predefined and dynamic based on relationship
+    predefined_forms = []
+    dynamic_forms = []
+
+    if request.method == 'POST':
+        valid = True
+
+        # Handle predefined relationships
+        for relationship in predefined_relationships:
+            instance = existing_family_info.filter(relationship=relationship).first()
+            form = FamilyInformationForm(
+                request.POST,
+                instance=instance,
+                prefix=f'predefined-{relationship}'
+            )
+            predefined_forms.append(form)
+            if not form.is_valid():
+                valid = False
+
+        # Handle dynamically added relationships
+        i = 0
+        while f'dynamic-form-{i}-family_member_name' in request.POST:
+            instance = existing_family_info.exclude(relationship__in=predefined_relationships).order_by('id')[i] if i < existing_family_info.exclude(relationship__in=predefined_relationships).count() else None
+            form = FamilyInformationForm(
+                request.POST,
+                instance=instance,
+                prefix=f'dynamic-form-{i}'
+            )
+            dynamic_forms.append(form)
+            if not form.is_valid():
+                valid = False
+            i += 1
+
+        if valid:
+            # Save predefined forms
+            for form in predefined_forms:
+                family_info = form.save(commit=False)
+                family_info.member = member
+                family_info.save()
+
+            # Save dynamic forms
+            for form in dynamic_forms:
+                family_info = form.save(commit=False)
+                family_info.member = member
+                family_info.save()
+
+            return redirect('update_livestock_info', member_id=member.id)
+    else:
+        # Initialize predefined forms
+        for relationship in predefined_relationships:
+            instance = existing_family_info.filter(relationship=relationship).first()
+            form = FamilyInformationForm(
+                instance=instance,
+                initial={'relationship': relationship},
+                prefix=f'predefined-{relationship}'
+            )
+            predefined_forms.append(form)
+
+        # Initialize dynamic forms
+        dynamic_family_info = existing_family_info.exclude(relationship__in=predefined_relationships)
+        for i, instance in enumerate(dynamic_family_info):
+            form = FamilyInformationForm(instance=instance, prefix=f'dynamic-form-{i}')
+            dynamic_forms.append(form)
+
+    return render(request, 'member/update_family_info.html', {
+        'member': member,
+        'predefined_forms': predefined_forms,
+        'dynamic_forms': dynamic_forms,
+    })
+
+def update_livestock_info_view(request, member_id):
+    member = get_object_or_404(Member, id=member_id)
+    livestock_info = LivestockInformation.objects.filter(member=member).first()
+
+    if request.method == 'POST':
+        form = LivestockInformationForm(request.POST, instance=livestock_info)
+        if form.is_valid():
+            livestock_info = form.save(commit=False)
+            livestock_info.member = member
+            livestock_info.save()
+            return redirect('update_house_info', member_id=member.id)
+    else:
+        form = LivestockInformationForm(instance=livestock_info)
+
+    return render(request, 'member/add_member/livestock_info.html', {'form': form, 'member': member})
+
+def update_house_info_view(request, member_id):
+    member = get_object_or_404(Member, id=member_id)
+    house_info = HouseInformation.objects.filter(member=member).first()
+
+    if request.method == 'POST':
+        form = HouseInformationForm(request.POST, instance=house_info)
+        if form.is_valid():
+            house_info = form.save(commit=False)
+            house_info.member = member
+            house_info.save()
+            return redirect('update_land_info', member_id=member.id)
+    else:
+        form = HouseInformationForm(instance=house_info)
+
+    return render(request, 'member/add_member/house_info.html', {'form': form, 'member': member})
+
+def update_land_info_view(request, member_id):
+    member = get_object_or_404(Member, id=member_id)
+    land_info = LandInformation.objects.filter(member=member).first()
+
+    if request.method == 'POST':
+        form = LandInformationForm(request.POST, instance=land_info)
+        if form.is_valid():
+            land_info = form.save(commit=False)
+            land_info.member = member
+            land_info.save()
+            return redirect('update_income_info', member_id=member.id)
+    else:
+        form = LandInformationForm(instance=land_info)
+
+    return render(request, 'member/add_member/land_info.html', {'form': form, 'member': member})
+
+def update_income_info(request, member_id):
+    # Fetch the member and their existing IncomeInformation if it exists
+    member = get_object_or_404(Member, id=member_id)
+    income_info = IncomeInformation.objects.filter(member=member).first()
+
+    if request.method == 'POST':
+        # Bind the form with the existing instance if available, otherwise create a new one
+        form = IncomeInformationForm(request.POST, instance=income_info)
+        if form.is_valid():
+            # Save the form and associate it with the member
+            income_info = form.save(commit=False)
+            income_info.member = member
+            income_info.save()
+            return redirect('update_expenses_info', member_id=member.id)
+    else:
+        # Initialize the form with the existing data if available
+        form = IncomeInformationForm(instance=income_info)
+
+    return render(request, 'member/add_member/income_info.html', {'form': form, 'member': member})
+
+# Step 4: Expenses Information Update
+def update_expenses_info(request, member_id):
+    # Fetch the member and their existing ExpensesInformation if it exists
+    member = get_object_or_404(Member, id=member_id)
+    expenses_info = ExpensesInformation.objects.filter(member=member).first()
+
+    if request.method == 'POST':
+        # Bind the form with the existing instance if available, otherwise create a new one
+        form = ExpensesInformationForm(request.POST, instance=expenses_info)
+        if form.is_valid():
+            # Save the form and associate it with the member
+            expenses_info = form.save(commit=False)
+            expenses_info.member = member
+            expenses_info.save()
+            return redirect('member_detail', member_id=member.id)
+    else:
+        # Initialize the form with the existing data if available
+        form = ExpensesInformationForm(instance=expenses_info)
+
+    return render(request, 'member/add_member/expenses_info.html', {'form': form, 'member': member})
+
+# Final Step: Save all information atomically
+
+def load_groups(request):
+    center_id = request.GET.get('center')
+    groups = GRoup.objects.filter(center_id=center_id).values('id', 'name', 'code')
+    return JsonResponse(list(groups), safe=False)
+
+def load_member_codes(request):
+    center_id = request.GET.get('center')
+    try:
+        center = Center.objects.get(id=center_id)
+        max_member_code = center.no_of_group * center.no_of_members
+        member_codes = list(range(1, max_member_code + 1))
+    except Center.DoesNotExist:
+        member_codes = []
+    
+    return JsonResponse(member_codes, safe=False)
+
+
    
 class MemberDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
     model = Member
     success_url = reverse_lazy('member_list')
     template_name = 'member/delete_member.html'
     
-FORMSS = [
-    ("personal", PersonalInformationForm),
-    ("address", AddressInformationForm),
-    ("family", FamilyInformationForm),
-    ("livestock", LivestockInformationForm),
-    ("house", HouseInformationForm),
-    ("land", LandInformationForm),
-    ("income", IncomeInformationForm),
-    ("expenses", ExpensesInformationForm),
-]
-
-TEMPLATES = {
-    "personal": "member/update_member/personal_info.html",
-    "address": "member/update_member/address_info.html",
-    "family": "member/update_member/family_info.html",
-    "livestock": "member/update_member/livestock_info.html",
-    "house": "member/update_member/house_info.html",
-    "land": "member/update_member/land_info.html",
-    "income": "member/update_member/income_info.html",
-    "expenses": "member/update_member/expenses_info.html",
-}
-class MemberUpdateWizard(LoginRequiredMixin, RoleRequiredMixin, SessionWizardView):
-    """
-    View for updating member information across multiple steps
-    """
-    def get_template_names(self):
-        return [TEMPLATES[self.steps.current]]
-
-    def get_form_initial(self, step):
-        member_id = self.kwargs.get('member_id')
-        member = get_object_or_404(Member, pk=member_id)
-        
-        # Fetch related models for the member
-        personal_info = get_object_or_404(PersonalInformation, member=member)
-        address_info = get_object_or_404(AddressInformation, member=member)
-        family_info = get_object_or_404(FamilyInformation, member=member)
-        livestock_info = get_object_or_404(LivestockInformation, member=member)
-        house_info = get_object_or_404(HouseInformation, member=member)
-        land_info = get_object_or_404(LandInformation, member=member)
-        income_info = get_object_or_404(IncomeInformation, member=member)
-        expenses_info = get_object_or_404(ExpensesInformation, member=member)
-
-        initial = super().get_form_initial(step)
-
-        if step == "personal":
-            initial.update({
-                'first_name': personal_info.first_name,
-                'middle_name': personal_info.middle_name,
-                'last_name': personal_info.last_name,
-                'phone_number': personal_info.phone_number,
-                'gender': personal_info.gender,
-                'marital_status': personal_info.marital_status,
-                'family_status': personal_info.family_status,
-                'education': personal_info.education,
-                'religion': personal_info.religion,
-                'occupation': personal_info.occupation,
-                'family_member_no': personal_info.family_member_no,
-                'date_of_birth': personal_info.date_of_birth,
-                'voter_id': personal_info.voter_id,
-                'voter_id_issued_on': personal_info.voter_id_issued_on,
-                'citizenship_no': personal_info.citizenship_no,
-                'issued_from': personal_info.issued_from,
-                'issued_date': personal_info.issued_date,
-                'marriage_reg_no': personal_info.marriage_reg_no,
-                'registered_vdc': personal_info.registered_vdc,
-                'marriage_regd_date': personal_info.marriage_regd_date,
-                'file_no': personal_info.file_no,
-            })
-        elif step == "address":
-            initial.update({
-                'permanent_province': address_info.permanent_province,
-                'permanent_district': address_info.permanent_district,
-                'permanent_municipality': address_info.permanent_municipality,
-                'permanent_ward_no': address_info.permanent_ward_no,
-                'permanent_tole': address_info.permanent_tole,
-                'permanent_house_no': address_info.permanent_house_no,
-                'current_province': address_info.current_province,
-                'current_district': address_info.current_district,
-                'current_municipality': address_info.current_municipality,
-                'current_ward_no': address_info.current_ward_no,
-                'current_tole': address_info.current_tole,
-                'current_house_no': address_info.current_house_no,
-                'old_province': address_info.old_province,
-                'old_district': address_info.old_district,
-                'old_municipality': address_info.old_municipality,
-                'old_ward_no': address_info.old_ward_no,
-                'old_tole': address_info.old_tole,
-                'old_house_no': address_info.old_house_no,
-            })
-        elif step == "family":
-            initial.update({
-                'family_member_name': family_info.family_member_name,
-                'relationship': family_info.relationship,
-                'date_of_birth': family_info.date_of_birth,
-                'citizenship_no': family_info.citizenship_no,
-                'issued_from': family_info.issued_from,
-                'issued_date': family_info.issued_date,
-                'education': family_info.education,
-                'occupation': family_info.occupation,
-                'monthly_income': family_info.monthly_income,
-                'phone_number': family_info.phone_number,
-            })
-        elif step == "livestock":
-            initial.update({
-                'cows': livestock_info.cows,
-                'buffalo': livestock_info.buffalo,
-                'goat': livestock_info.goat,
-                'sheep': livestock_info.sheep,
-            })
-        elif step == "house":
-            initial.update({
-                'concrete': house_info.concrete,
-                'mud': house_info.mud,
-                'iron': house_info.iron,
-            })
-        elif step == "land":
-            initial.update({
-                'farming_land': land_info.farming_land,
-                'other_land': land_info.other_land,
-            })
-        elif step == "income":
-            initial.update({
-                'agriculture_income': income_info.agriculture_income,
-                'animal_farming_income': income_info.animal_farming_income,
-                'business_income': income_info.business_income,
-                'abroad_employment_income': income_info.abroad_employment_income,
-                'wages_income': income_info.wages_income,
-                'personal_job_income': income_info.personal_job_income,
-                'government_post': income_info.government_post,
-                'pension': income_info.pension,
-                'other': income_info.other,
-            })
-        elif step == "expenses":
-            initial.update({
-                'house_expenses': expenses_info.house_expenses,
-                'education_expenses': expenses_info.education_expenses,
-                'health_expenses': expenses_info.health_expenses,
-                'festival_expenses': expenses_info.festival_expenses,
-                'clothes_expenses': expenses_info.clothes_expenses,
-                'communication_expenses': expenses_info.communication_expenses,
-                'fuel_expenses': expenses_info.fuel_expenses,
-                'entertaiment_expenses': expenses_info.entertaiment_expenses,
-                'other_expenses': expenses_info.other_expenses,
-            })
-
-        return initial
-
-    def done(self, form_list, **kwargs):
-        member_id = self.kwargs.get('member_id')
-        member = get_object_or_404(Member, pk=member_id)
-
-        with transaction.atomic():
-            for form in form_list:
-                form_instance = form.save(commit=False)
-                
-                if isinstance(form_instance, PersonalInformation):
-                    personal_info, created = PersonalInformation.objects.update_or_create(
-                        member=member,
-                        defaults={
-                            'first_name': form_instance.first_name,
-                            'middle_name': form_instance.middle_name,
-                            'last_name': form_instance.last_name,
-                            'phone_number': form_instance.phone_number,
-                            'gender': form_instance.gender,
-                            'marital_status': form_instance.marital_status,
-                            'family_status': form_instance.family_status,
-                            'education': form_instance.education,
-                            'religion': form_instance.religion,
-                            'occupation': form_instance.occupation,
-                            'family_member_no': form_instance.family_member_no,
-                            'date_of_birth': form_instance.date_of_birth,
-                            'voter_id': form_instance.voter_id,
-                            'voter_id_issued_on': form_instance.voter_id_issued_on,
-                            'citizenship_no': form_instance.citizenship_no,
-                            'issued_from': form_instance.issued_from,
-                            'issued_date': form_instance.issued_date,
-                            'marriage_reg_no': form_instance.marriage_reg_no,
-                            'registered_vdc': form_instance.registered_vdc,
-                            'marriage_regd_date': form_instance.marriage_regd_date,
-                            'file_no': form_instance.file_no,
-                        }
-                    )
-                elif isinstance(form_instance, AddressInformation):
-                    AddressInformation.objects.update_or_create(
-                        member=member,
-                        defaults={
-                            'permanent_province': form_instance.permanent_province,
-                            'permanent_district': form_instance.permanent_district,
-                            'permanent_municipality': form_instance.permanent_municipality,
-                            'permanent_ward_no': form_instance.permanent_ward_no,
-                            'permanent_tole': form_instance.permanent_tole,
-                            'permanent_house_no': form_instance.permanent_house_no,
-                            'current_district': form_instance.current_district,
-                            'current_municipality': form_instance.current_municipality,
-                            'current_province': form_instance.current_province,
-                            'current_ward_no': form_instance.current_ward_no,
-                            'current_tole': form_instance.current_tole,
-                            'current_house_no': form_instance.current_house_no,
-                            'old_province': form_instance.old_province,
-                            'old_district': form_instance.old_district,
-                            'old_municipality': form_instance.old_municipality,
-                            'old_ward_no': form_instance.old_ward_no,
-                            'old_tole': form_instance.old_tole,
-                            'old_house_no': form_instance.old_house_no,
-                        }
-                    )
-                elif isinstance(form_instance, FamilyInformation):
-                    FamilyInformation.objects.update_or_create(
-                        member=member,
-                        defaults={
-                            'family_member_name': form_instance.family_member_name,
-                            'relationship': form_instance.relationship,
-                            'date_of_birth': form_instance.date_of_birth,
-                            'citizenship_no': form_instance.citizenship_no,
-                            'issued_from': form_instance.issued_from,
-                            'issued_date': form_instance.issued_date,
-                            'education': form_instance.education,
-                            'occupation': form_instance.occupation,
-                            'monthly_income': form_instance.monthly_income,
-                            'phone_number': form_instance.phone_number,
-                        }
-                    )
-                elif isinstance(form_instance, LivestockInformation):
-                    LivestockInformation.objects.update_or_create(
-                        member=member,
-                        defaults={
-                            'cows': form_instance.cows,
-                            'buffalo': form_instance.buffalo,
-                            'goat': form_instance.goat,
-                            'sheep': form_instance.sheep,
-                        }
-                    )
-                elif isinstance(form_instance, HouseInformation):
-                    HouseInformation.objects.update_or_create(
-                        member=member,
-                        defaults={
-                            'concrete': form_instance.concrete,
-                            'mud': form_instance.mud,
-                            'iron': form_instance.iron,
-                        }
-                    )
-                elif isinstance(form_instance, LandInformation):
-                    LandInformation.objects.update_or_create(
-                        member=member,
-                        defaults={
-                            'farming_land': form_instance.farming_land,
-                            'other_land': form_instance.other_land,
-                        }
-                    )
-                elif isinstance(form_instance, IncomeInformation):
-                    IncomeInformation.objects.update_or_create(
-                        member=member,
-                        defaults={
-                            'agriculture_income': form_instance.agriculture_income,
-                            'animal_farming_income': form_instance.animal_farming_income,
-                            'business_income': form_instance.business_income,
-                            'abroad_employment_income': form_instance.abroad_employment_income,
-                            'wages_income': form_instance.wages_income,
-                            'personal_job_income': form_instance.personal_job_income,
-                            'government_post': form_instance.government_post,
-                            'pension': form_instance.pension,
-                            'other': form_instance.other,
-                        }
-                    )
-                elif isinstance(form_instance, ExpensesInformation):
-                    ExpensesInformation.objects.update_or_create(
-                        member=member,
-                        defaults={
-                            'house_expenses': form_instance.house_expenses,
-                            'education_expenses': form_instance.education_expenses,
-                            'health_expenses': form_instance.health_expenses,
-                            'festival_expenses': form_instance.festival_expenses,
-                            'clothes_expenses': form_instance.clothes_expenses,
-                            'communication_expenses': form_instance.communication_expenses,
-                            'fuel_expenses': form_instance.fuel_expenses,
-                            'entertaiment_expenses': form_instance.entertaiment_expenses,
-                            'other_expenses': form_instance.other_expenses,
-                        }
-                    )
-
-        return redirect('member_detail', member_id = member.id)
-
 
 def member_detail_view(request, member_id):
     member = get_object_or_404(Member, id=member_id)
     personal_info = member.personalInfo
-    address_info = member.addressInfo
+    address_info = member.address_info.filter(address_type='current').first()
+    print(address_info)
     family_info = FamilyInformation.objects.filter(member=member).all()
     livestock_info = member.livestockInfo
     house_info = member.houseInfo
@@ -830,6 +1093,7 @@ def get_saving_accounts(request, member_id):
         })
     return JsonResponse({'accounts': account_data})
 
+from django.db.models import Prefetch
 class MemberListView(ListView):
     model = Member
     template_name = 'member/member_list.html'
@@ -843,12 +1107,18 @@ class MemberListView(ListView):
 
 
     def get_queryset(self):
-        queryset = Member.objects.all().select_related('personalInfo').filter(status='A')
+        # Prefetch only current addresses
+        current_address_prefetch = Prefetch(
+            'address_info', 
+            queryset=AddressInformation.objects.filter(address_type='current'),
+            to_attr='current_address'
+        )
+        queryset = Member.objects.all().select_related('personalInfo').prefetch_related(current_address_prefetch).filter(status='A')
         status_filter = self.request.GET.get('status')
         # Ensure the filter value is one of the valid status codes
         valid_status_codes = [code for code, label in Member.MEMBER_STATUS]
         if status_filter in valid_status_codes:
-           queryset = Member.objects.all().select_related('personalInfo').filter(status__iexact=status_filter)
+           queryset = Member.objects.all().select_related('personalInfo').prefetch_related(current_address_prefetch).filter(status__iexact=status_filter)
         return queryset
     
 def change_member_status(request):
@@ -890,7 +1160,13 @@ def branch_list_view(request):
     paginator = Paginator(branches, 10)  # Show 10 centers per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    return render(request, 'branch/branch_list.html', {'branches': page_obj})
+
+    # managers = {}
+    # for branch in branches:
+    #     manager = Employee.objects.filter(branch=branch, role='manager').first()
+    #     managers = branch.id[manager]
+    managers = {branch.id: Employee.objects.filter(branch=branch, role='manager').all() for branch in branches}
+    return render(request, 'branch/branch_list.html', {'branches': page_obj, 'managers': managers})
 
 
 @login_required

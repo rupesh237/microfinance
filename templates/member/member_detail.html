@@ -2,53 +2,56 @@
 {% load static %}
 
 {% block title %}
-    <title>Member details</title>
+    <title>Member Details</title>
 {% endblock title %}
 
 {% block corecss %}
-    {% comment %} <link rel="stylesheet" href="{% static 'css/vertical_nav.css' %}"> {% endcomment %}
-    <link rel="stylesheet" href="{% static 'css/member_detail.css' %}">
-{% endblock corecss%}
+    {% comment %} <link rel="stylesheet" href="{% static 'css/member_detail.css' %}"> {% endcomment %}
+{% endblock corecss %}
 
-{% block content%}
+{% block content %}
+<div class="container my-8">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Member Details</h1>
+    </div>
 
-{% comment %} <div class="navbar1">
-    <ul>
-        <li><a href="#home">Home</a></li>
-        <li><a href="#about">About</a></li>
-        <li><a href="#services">Services</a></li>
-        <li><a href="#contact">Contact</a></li>
-    </ul>
-</div> {% endcomment %}
+    <div class="mb-4">
+        <a href="{% url 'member_savings' member.id %}" class="btn btn-outline-primary me-2">Savings</a>
+        <a href="{% url 'loan_demand_list' member.id %}" class="btn btn-outline-primary me-2">Demand Loans</a>
+        <a href="{% url 'member_loans' member.id %}" class="btn btn-outline-primary me-2">View Loans</a>
+        <a href="{% url 'add_fixed_deposit' member_id=member.id %}" class="btn btn-outline-primary me-2">Fixed Deposit</a>
+        <a href="{% url 'add_fixed_deposit' member_id=member.id %}" class="btn btn-outline-primary me-2">Recurring Deposits</a>
+        <a href="{% url 'update_member' member.id %}" class="btn btn-outline-primary me-2">Update Profile</a>
+        <a href="{% url 'delete_member' member.id %}" class="btn btn-danger me-2">Delete</a>
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary">Go Back</a>
+    </div>
 
-    <a href="{% url 'member_savings' member.id %}">Savings</a>
-    <a href="{% url 'take_loan' member.id %}"> Take loans</a>
-    <a href="{% url 'member_loans' member.id %}">View loans</a>
-    <a href="{% url 'add_fixed_deposit' member_id=member.id %}">fixed deposit</a>
-    <a href="{% url 'add_fixed_deposit' member_id=member.id %}">Recurring Deposits</a>
-    <a href="{% url 'update_member' member.id %}">update profile</a>
-    <div class="container">
-        <header>
-            <h1>Member Details</h1>
-        </header>
-
-        <section class="member-info">
-            <div class="profile-image">
-                <img src="rupesh.jpg" alt="Profile">
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            Personal Information
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <img src="rupesh.jpg" alt="Profile" class="img-fluid rounded-circle mb-3">
+                </div>
+                <div class="col-md-9">
+                    <p><strong>Name:</strong> {{ personal_info.first_name }} {{ personal_info.middle_name }} {{ personal_info.last_name }}</p>
+                    <p><strong>Member Code No:</strong> {{ member.code }}</p>
+                    <p><strong>Phone:</strong> {{ personal_info.phone_number }}</p>
+                    <p><strong>Email:</strong> email@gmail.com</p>
+                </div>
             </div>
-            <div class="personal-info">
-                <h2>Personal Information</h2>
-                <p><strong>Name:</strong> {{personal_info.first_name}} {{personal_info.middle_name}} {{personal_info.last_name}}</p>
-                <p><strong>Member Code No:</strong> {{member.code}}</p>
-                <p><strong>Phone:</strong> {{personal_info.phone_number}}</p>
-                <p><strong>Email:</strong> email@gmail.com</p>
-            </div>
-        </section>
+        </div>
+    </div>
 
-        <section class="savings">
-            <h2>Savings Account</h2>
-            <table>
-                <thead>
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            Savings Account
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered table-hover">
+                <thead class="table-secondary">
                     <tr>
                         <th>Account No</th>
                         <th>Type</th>
@@ -63,22 +66,26 @@
                         <td>{{ account.account_number }}</td>
                         <td>{{ account.account_type_display }}</td>
                         <td>{{ account.balance }}</td>
-                        <td>{{ account.created_on|date:"Y/m/d"  }}</td>
+                        <td>{{ account.created_on|date:"Y/m/d" }}</td>
                     </tr>
                     {% endfor %}
                     {% else %}
                     <tr>
-                        <td colspan="4">No record found.</td>
+                        <td colspan="4" class="text-center">No record found.</td>
                     </tr>
                     {% endif %}
                 </tbody>
             </table>
-        </section>
+        </div>
+    </div>
 
-        <section class="loans">
-            <h2>Loans</h2>
-            <table>
-                <thead>
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            Loans
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered table-hover">
+                <thead class="table-secondary">
                     <tr>
                         <th>Loan No</th>
                         <th>Loan Type</th>
@@ -90,28 +97,49 @@
                     {% for loan in loans %}
                     <tr>
                         <td>{{ forloop.counter }}</td>
-                        <td>{{loan.loan_type}}</td>
-                        <td>{{loan.amount}}</td>
-                        <td>{{loan.status}}</td>
+                        <td>{{ loan.loan_type }}</td>
+                        <td>{{ loan.amount }}</td>
+                        <td>{{ loan.status }}</td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="4" style="text-align: center;">No records found</td>
+                        <td colspan="4" class="text-center">No records found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
-        </section>
-        <section class="other-details">
-            <h2>Other Details</h2>
-            <p><strong>Address:</strong> 123 Main St, City, Country</p>
-            <p><strong>Family Status:</strong> Married</p>
-            <p><strong>Livestock:</strong> 2 Cows</p>
-        </section>
-        
-
-        <a href="{% url 'dashboard' %}">Go Back</a>
-        <a href="{% url 'delete_member'  member.id %}">Delete</a>
+        </div>
     </div>
-{% endblock %}
 
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            Other Details
+        </div>
+        <div class="card-body">
+            <p><strong>Citizenship No:</strong> {{ member.personalInfo.citizenship_no }}</p>
+            <p><strong>Date Of Birth:</strong> {{ member.personalInfo.date_of_birth }}</p>
+            <p><strong>Address:</strong> {{ address_info.tole }}, {{ address_info.municipality }}-{{ address_info.ward_no }}</p>
+            <p><strong>Marital Status:</strong> {{ member.personalInfo.marital_status }}</p>
+            <p><strong>Income:</strong> 
+                {{ member.incomeInfo.agriculture_income }} Agriculture (Yearly), 
+                {{ member.incomeInfo.animal_farming_income }} Livestock (Yearly), 
+                {{ member.incomeInfo.business_income }} Business, 
+                {{ member.incomeInfo.abroad_employment_income }} Abroad Employment, 
+                {{ member.incomeInfo.wages_income }} Wages (Daily), 
+                {{ member.incomeInfo.personal_job_income }} Job (Monthly), 
+                {{ member.incomeInfo.pension }} Pension.
+            </p>
+            <p><strong>Livestock:</strong> 
+                {{ member.livestockInfo.cows }} Cows, 
+                {{ member.livestockInfo.buffalo }} Buffalo, 
+                {{ member.livestockInfo.goat }} Goats, 
+                {{ member.livestockInfo.sheep }} Sheep.
+            </p>
+            <p><strong>Land:</strong> 
+                {{ member.landInfo.farming_land }} Farming Land (Dhur), 
+                {{ member.landInfo.other_land }} Other Land (Dhur).
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

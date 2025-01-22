@@ -5,16 +5,53 @@
 {% endblock %}
 
 {% block content %}
-    <h2>Confirm Clearance of Loan: {{ loan.loan_type }}</h2>
-    <p>Outstanding Principal Amount: {{ remaining_principal|floatformat:2 }}</p>
+<div class="container py-5">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">Confirm Clearance of Loan: ({{ loan.loan_type }}) of {{ loan.member.personalInfo.first_name }}  </h2>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">Please review the loan details carefully before proceeding.</p>
+            <table class="table table-bordered">
+                <tbody>
+                    <tr>
+                        <th scope="row">Outstanding Principal</th>
+                        <td class="text-end">{{ remaining_principal|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Days Since Last Payment</th>
+                        <td class="text-end">{{ days_since_last_payment }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Accrued Interest</th>
+                        <td class="text-end">{{ accrued_interest|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Outstanding Amount</th>
+                        <td class="text-end text-danger fw-bold">{{ total_due|floatformat:2 }}</td>
+                    </tr>
+                </tbody>
+            </table>
 
-    <form method="post">
-        {% csrf_token %}
-        <label for="amount_paid">Enter Amount to Pay:</label>
-        <input type="number" id="amount_paid" name="amount_paid" step="0.01" required>
-
-        <button type="submit">Confirm Payment and Clear Loan</button>
-    </form>
-
-    <a href="{% url 'member_loans' loan.member.id %}">Back to Member Loans</a>
+            <form method="post" class="mt-4">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="amount_paid" class="form-label">Enter Amount to Pay:</label>
+                    <input 
+                        type="number" 
+                        id="amount_paid" 
+                        name="amount_paid" 
+                        step="0.01" 
+                        class="form-control" 
+                        placeholder="Enter the total due amount" 
+                        required>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'member_loans' loan.member.id %}" class="btn btn-secondary">Back to Member Loans</a>
+                    <button type="submit" class="btn btn-success">Confirm Payment and Clear Loan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}

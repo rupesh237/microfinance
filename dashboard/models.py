@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
-
+from nepali_datetime_field.models import NepaliDateField
 # Create your models here.
 # class Nepal(models.MOdel):
 #     name = 'Nepal'
@@ -43,6 +43,7 @@ class AccountStatus(models.TextChoices):
 class InterestTypes(models.TextChoices):
     FLAT  = 'Flat', _('Flat')
     DECLINING = 'Declining', _('Declining')
+    INTEREST_ONLY = 'Interest Only', _('Interest Only')
 
 
 class ReceiptTypes(models.TextChoices):
@@ -115,9 +116,17 @@ RELIGION_CHOICES = [
 ]
 OCCUPATION_CHOICES = [
     ('Agriculture', 'Agriculture'),
+    ('Engineer', 'Engineer'),
+    ('Teacher', 'Teacher'),
+    ('Student', 'Student'),
+    ('Doctor', 'Doctor'),
     ('Business', 'Business'),
     ('Housewife', 'Housewife'),
+    ('Government Job', 'Government Job'),
+    ('Private Job', 'Private Job'),
+    ('Retired', 'Retired'),
     ('Foreign Employment', 'Foreign Employment'),
+    ('Other', 'Other'),
 ]
 
 class Province(models.Model):
@@ -209,7 +218,7 @@ class Center(models.Model):
     category = models.CharField(max_length=15, choices=CATEGORY_CHOICES, default='general')
 
     no_of_group = models.IntegerField( default=1, null=True)
-    no_of_members = models.IntegerField( default=4, null=True)
+    no_of_members = models.IntegerField( default=5, null=True)
     meeting_place = models.CharField(max_length=50, null=True)
     meeting_distance = models.IntegerField(default=0, null=True)
     formed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="formed_by", null=True)
@@ -218,7 +227,7 @@ class Center(models.Model):
     meeting_start_date = models.DateTimeField(null=True)
     meeting_start_time = models.TimeField(null=True)
     meeting_end_time = models.TimeField(null=True)
-    walking_time = models.TimeField(null=True)
+    walking_time = models.CharField(max_length=20, null=True)
     meeting_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name="meeting_by") #optional
 
     meeting_repeat_type = models.CharField(max_length=25, choices=MEETING_REPEAT_TYPE_CHOICES, null=True)
@@ -283,38 +292,31 @@ class Member(models.Model):
 
 # Member information from here on:
 class AddressInformation(models.Model):
-    member = models.OneToOneField(Member, on_delete=models.CASCADE, related_name='addressInfo')
-    # permanent address
-    permanent_province = models.ForeignKey(Province, on_delete=models.CASCADE, related_name="member_permanent_province", null=True)
-    permanent_district = models.ForeignKey(District, on_delete=models.CASCADE, related_name="member_permanent_district", null=True)
-    permanent_municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE, related_name="member_permanent_municipality", null=True)
-    permanent_ward_no = models.IntegerField(default=1)
-    permanent_tole = models.CharField(max_length=50)
-    permanent_house_no = models.CharField(max_length=50, blank=True, null=True)
-
-    # current address
-    current_province = models.ForeignKey(Province, on_delete=models.CASCADE, related_name="member_current_province", null=True)
-    current_district = models.ForeignKey(District, on_delete=models.CASCADE, related_name="member_current_district", null=True)
-    current_municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE, related_name="member_current_municipality", null=True)
-    current_ward_no = models.IntegerField(default=1)
-    current_tole = models.CharField(max_length=50)
-    current_house_no = models.CharField(max_length=50, blank=True, null=True)
-
-    # old address
-    old_province = models.ForeignKey(Province, on_delete=models.CASCADE, related_name="member_old_province", null=True)
-    old_district = models.ForeignKey(District, on_delete=models.CASCADE, related_name="member_old_district", null=True)
-    old_municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE, related_name="member_old_municipality", null=True)
-    old_ward_no = models.IntegerField(default=1)
-    old_tole = models.CharField(max_length=50)
-    old_house_no = models.CharField(max_length=50, blank=True, null=True)
+    ADDRESS_TYPE_CHOICES = [
+        ('current', 'Current Address'),
+        ('permanent', 'Permanent Address'),
+        ('old', 'Old Address'),
+    ]
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='address_info')  # Changed to ForeignKey
+    province = models.ForeignKey(Province, on_delete=models.CASCADE, related_name="member_permanent_province", null=True)
+    district = models.ForeignKey(District, on_delete=models.CASCADE, related_name="member_permanent_district", null=True)
+    municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE, related_name="member_permanent_municipality", null=True)
+    ward_no = models.IntegerField(default=1)
+    tole = models.CharField(max_length=50)
+    house_no = models.CharField(max_length=50, blank=True, null=True)
+    address_type = models.CharField(choices=ADDRESS_TYPE_CHOICES, max_length=20)
 
     def __str__(self):
-        return f"{self.member}"
+        return f"{self.member.personalInfo.first_name} {self.member.personalInfo.middle_name} {self.member.personalInfo.last_name} - {self.address_type}"
+
+    class Meta:
+        verbose_name = 'Address Information'
+        verbose_name_plural = 'Address Information'
 
 class PersonalInformation(models.Model):
     member = models.OneToOneField(Member, on_delete=models.CASCADE, related_name='personalInfo')
     first_name = models.CharField(max_length=50)
-    middle_name = models.CharField(max_length=50)
+    middle_name = models.CharField(max_length=50, blank=True)
     last_name = models.CharField(max_length=50)
     phone_number = models.CharField(max_length=15, null=True)
     gender = models.CharField(max_length=15, choices=GENDER_CHOICES, default='Female')
@@ -324,21 +326,21 @@ class PersonalInformation(models.Model):
     religion = models.CharField(max_length=30, choices=RELIGION_CHOICES)
     occupation = models.CharField(max_length=30, choices=OCCUPATION_CHOICES)
     family_member_no = models.IntegerField()
-    date_of_birth = models.DateField()
+    date_of_birth = NepaliDateField()
 
     voter_id = models.CharField(max_length=20, blank=True, null=True)
-    voter_id_issued_on = models.DateField(blank=True, null=True)
+    voter_id_issued_on = NepaliDateField(blank=True, null=True)
 
     citizenship_no = models.CharField(max_length=20)
     issued_from = models.CharField(max_length=20)
-    issued_date = models.DateField()
+    issued_date = NepaliDateField(blank=False,)
 
     marriage_reg_no = models.CharField(max_length=20, blank=True, null=True)
     registered_vdc = models.CharField(max_length=20, blank=True, null=True)
-    marriage_regd_date = models.DateField(blank=True, null=True)
+    marriage_regd_date = NepaliDateField(blank=True, null=True)
 
     registered_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
-    registered_date = models.DateField(auto_now_add=True)
+    registered_date = NepaliDateField(blank=True, null=True)
 
     file_no = models.IntegerField(blank=True, null=True)
 
@@ -349,23 +351,41 @@ RELATIONSHIP_CHOICES = [
     ('Father', 'Father'),
     ('Husband', 'Husband'),
     ('Father-In-Law', 'Father-In-Law'),
+    ('Wife', 'Wife'),
     ('Son', 'Son'),
     ('Daughter', 'Daughter'),
+    ('Mother', 'Mother'),
+    ('Mother-In-Law', 'Mother-In-Law'),
+    ('Brother', 'Brother'),
+    ('Sister', 'Sister'),
+    ('Grandfather', 'Grandfather'),
+    ('Grandmother', 'Grandmother'),
+    ('Uncle', 'Uncle'),
+    ('Aunt', 'Aunt'),
+    ('Grandson', 'Grandson'),
+    ('Granddaughter', 'Granddaughter'),
+    ('Nephew', 'Nephew'),
+    ('Niece', 'Niece'),
+    ('Cousin', 'Cousin'),
+    ('Other', 'Other'),
 ]
 class FamilyInformation(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='familyInfo')
 
     family_member_name = models.CharField(max_length=50)
     relationship = models.CharField(max_length=30, choices=RELATIONSHIP_CHOICES)
-    date_of_birth = models.DateField()
+    date_of_birth = NepaliDateField()
     citizenship_no = models.CharField(max_length=20, blank=True, null=True)
     issued_from = models.CharField(max_length=20, blank=True, null=True)
-    issued_date = models.DateField(blank=True, null=True)
+    issued_date = NepaliDateField(blank=True, null=True)
 
     education = models.CharField(max_length=30, choices=EDUCATION_CHOICES, null=True, blank=True)
     occupation = models.CharField(max_length=30, blank=True, null=True)
     monthly_income = models.FloatField(default=0.00, blank=True, null=True)
     phone_number = models.CharField(max_length=15)
+
+    def __str__(self):
+        return f"{self.member.personalInfo.first_name}'s {self.relationship}: {self.family_member_name}"
 
 class LivestockInformation(models.Model):
     member = models.OneToOneField(Member, on_delete=models.CASCADE, related_name='livestockInfo')
@@ -383,6 +403,8 @@ class HouseInformation(models.Model):
 class LandInformation(models.Model):
     member = models.OneToOneField(Member, on_delete=models.CASCADE, related_name='landInfo')
     farming_land = models.FloatField(default=0.0)
+    # animal_farming_land = models.FloatField(default=0.0)
+    # business_land = models.FloatField(default=0.0) 
     other_land = models.FloatField(default=0.0)
 
 class IncomeInformation(models.Model):

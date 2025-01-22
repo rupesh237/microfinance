@@ -1166,7 +1166,7 @@ def cash_management_view(request):
 
     # Teller Transaction
     teller_transactions = []
-    current_teller = Teller.objects.get(employee=current_user)
+    current_teller = Teller.objects.get(employee=current_user) 
     teller_teller_transactions = TellerToTellerTransaction.objects.filter(branch=branch, to_teller=current_teller).all()
     teller_vault_transactions = VaultTransaction.objects.filter(branch=branch, transaction_type="Withdraw", teller=current_teller).all()
     # Process TellerToTellerTransactions

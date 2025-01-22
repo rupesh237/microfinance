@@ -16,7 +16,10 @@ class LoanDemandForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(LoanDemandForm, self).__init__(*args, **kwargs)
+
+        for field in self.fields:
+            self.fields[field].widget.attrs['class'] = 'form-control'
         
         self.fields['loan_demand_date'].initial = now().date()  # Current date
         self.fields['loan_disburse_date'].initial = now().date()

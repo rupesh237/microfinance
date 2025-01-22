@@ -54,7 +54,7 @@ class Loan(models.Model):
         """
         Calculate EMI only for 'flat' type. Other types are handled in the breakdown.
         """
-        if self.loan_type == 'flat':
+        if self.loan_type == 'Flat':
             monthly_interest_rate = self.interest_rate / 12 / 100
             emi = (self.amount * monthly_interest_rate * (1 + monthly_interest_rate) ** self.duration_months) / \
                   ((1 + monthly_interest_rate) ** self.duration_months - 1)
@@ -68,7 +68,7 @@ class Loan(models.Model):
         breakdown = []
         remaining_principal = self.amount
 
-        if self.loan_type == 'flat':
+        if self.loan_type == 'Flat':
             emi = self.calculate_emi()
             for month in range(1, self.duration_months + 1):
                 monthly_interest = round(remaining_principal * (self.interest_rate / 12 / 100), 2)
@@ -89,7 +89,7 @@ class Loan(models.Model):
                 if remaining_principal <= 0:
                     break
 
-        elif self.loan_type == 'declining':
+        elif self.loan_type == 'Declining':
             principal_component = round(self.amount / self.duration_months, 2)
             for month in range(1, self.duration_months + 1):
                 monthly_interest = round(remaining_principal * (self.interest_rate / 12 / 100), 2)
@@ -112,7 +112,7 @@ class Loan(models.Model):
                 if remaining_principal <= 0:
                     break
 
-        elif self.loan_type == 'interest_only':
+        elif self.loan_type == 'Interest_Only':
             monthly_interest = round(self.amount * (self.interest_rate / 12 / 100), 2)
             for month in range(1, self.duration_months + 1):
                 if month == self.duration_months:

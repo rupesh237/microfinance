@@ -1,78 +1,65 @@
 {% extends "base/index.html" %}
 {% load static %}
+{% block corecss %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/member_list.css' %}">
+    <link rel="stylesheet" href="https://unpkg.com/nepali-date-picker@2.0.1/dist/nepaliDatePicker.min.css">
+{% endblock corecss %}
 
-{% block title %}
-    <title>Family Information</title>
-{% endblock title %}
+{% block title %}<title>Family Information</title>{% endblock title %}
 
 {% block content %}
-    <h2>Family Information</h2>
-    <form method="post" id="family-info-form">
-        {% csrf_token %}
-        {{ wizard.management_form }}
-        <input type="hidden" name="form_count" value="{{ form_count|default:0 }}">
-
-        <div id="form-container">
-            {% for form in family_forms %}
-            <div class="family-member-form">
-                <h4>{{ form.initial.relationship }}'s Information</h4>
-                {% for field in form %}
-                    {{ field.label_tag }} {{ field }}
-                    {% if field.errors %}
-                        <div class="error">{{ field.errors }}</div>
-                    {% endif %}
-                {% endfor %}
-            </div>
+<form method="post">
+    {% csrf_token %}
+    <table>
+        <thead>
+            <tr>
+                <th>Family Member Name</th>
+                <th>Relationship</th>
+                <th>Date of Birth</th>
+                <th>Citizenship Number</th>
+                <th>Issued From</th>
+                <th>Issued Date</th>
+                <th>Education</th>
+                <th>Occupation</th>
+                <th>Monthly Income</th>
+                <th>Phone Number</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for form in forms %}
+            <tr>{% include "member/add_member/family_info_form.html" %}</tr>
             {% endfor %}
-        </div>
+        </tbody>
+    </table>
+    <button type="button" id="add-member-btn" class="btn btn-secondary">Add Another Member</button>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
 
-        <!-- Button to add a new family member -->
-        <a href="#" id="add-family-member"><i class="bi bi-plus-square-fill"></i> Add another family member</a>
-        <button type="submit" name="wizard_goto_step" value="{{ wizard.steps.prev }}">Previous</button>
-        <button type="submit" name="wizard_goto_step" value="{{ wizard.steps.next }}">Next</button>
-    </form>
-{% endblock content %}
-
-    <script>
-        document.getElementById('add-family-member').addEventListener('click', function(event) {
-            event.preventDefault();
-
-            let formCount = document.querySelectorAll('.family-member-form').length;
-            let newForm = document.querySelector('.family-member-form').cloneNode(true);
-
-            newForm.querySelectorAll('input, select, textarea').forEach(function(input) {
-                let nameAttr = input.getAttribute('name');
-                if (nameAttr) {
-                    input.setAttribute('name', nameAttr.replace(/form-\d+/, `form-${formCount}`));
-                }
-                let idAttr = input.getAttribute('id');
-                if (idAttr) {
-                    input.setAttribute('id', idAttr.replace(/form-\d+/, `form-${formCount}`));
-                }
-                input.value = ''; 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://unpkg.com/nepali-date-picker@2.0.1/dist/jquery.nepaliDatePicker.min.js"></script>
+<script>
+    $(document).ready(function () {
+        function initializeNepaliDatePicker() {
+            $('.nepali-date-field').nepaliDatePicker({
+                dateFormat: '%y-%m-%d',
+                closeOnDateSelect: true,
+                minDate: '१९७५-१-१',
+                maxDate: '२१००-१२-३०'
             });
+        }
+        initializeNepaliDatePicker();
 
-            let removeLink = document.createElement('a');
-            removeLink.href = '#';
-            removeLink.className = 'remove-family-member';
-            removeLink.textContent = 'Remove';
-            newForm.appendChild(removeLink);
-
-            document.getElementById('form-container').appendChild(newForm);
-            document.querySelector('input[name="form_count"]').value = formCount + 1;
+        $('#add-member-btn').click(function () {
+            const formCount = $('tbody tr').length;
+            fetch(`/get_new_family_form/?count=${formCount}`)
+                .then(response => response.json())
+                .then(data => {
+                    $('tbody').append(data.form_html);
+                    initializeNepaliDatePicker();
+                })
+                .catch(error => console.error('Error fetching new form:', error));
         });
-
-        document.getElementById('form-container').addEventListener('click', function(e) {
-            if (e.target.classList.contains('remove-family-member')) {
-                e.preventDefault();
-                const formToRemove = e.target.closest('.family-member-form');
-                if (formToRemove) {
-                    formToRemove.remove();
-                    let formCount = document.querySelectorAll('.family-member-form').length;
-                    document.querySelector('input[name="form_count"]').value = formCount;
-                }
-            }
-        });
-    </script>
-</body>
-</html>
+    });
+</script>
+{% endblock content %}

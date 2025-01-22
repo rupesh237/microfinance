@@ -3,103 +3,86 @@
 
 {% block corecss %}
     <link rel="stylesheet" href="{% static 'css/branch.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 {% endblock corecss %}
-{% block title %}
-    <title>Select center and group!</title>
-{% endblock title %}
-{% block content %}
-<h3>You are adding member to following center and group!!!</h3>
-{% if messages %}
-{% for message in messages %}
-<div class="alert alert-danger" role="alert">
-    {{ message }}
-</div>
-{% endfor %}
-{% endif %}
 
-<form method="post" action="{% url 'select_center' %}">
-    {% csrf_token %}
-    {% if form.non_field_errors %}
-        <div class="alert alert-danger" role="alert">
-            {{ form.non_field_errors|join:"" }}
-        </div>
-    {% endif %}
-    
-    <div class="container">
-        {% for field in form %}
-                <div class="grid-item">
-                    {{ field.label_tag }}
-                    {{ field }}
-                    {% for error in field.errors %}
-                        <div class="error">{{ error }}</div>
-                    {% endfor %}
-                </div>
+{% block title %}
+    <title>Select Center and Group</title>
+{% endblock title %}
+
+{% block content %}
+<div class="container mt-5">
+    <h3 class="text-center text-primary mb-4">Add Member to the following Center and Group</h3>
+    {% if messages %}
+    <div class="alert alert-danger">
+        {% for message in messages %}
+            {{ message }}
         {% endfor %}
     </div>
-    <button type="submit">Next</button>
-</form>
+    {% endif %}
+
+    <form method="post" action="{% url 'select_center' %}" class="p-4 border rounded shadow-sm">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ form.non_field_errors|join:"" }}
+            </div>
+        {% endif %}
+
+        <div class="row">
+            {% for field in form %}
+                <div class="col-md-6 mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label">
+                        {{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}
+                    </label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+        <div class="d-flex justify-content-between mt-4">
+            <button class="btn btn-secondary" type="button" onclick="window.history.back()">Back</button>
+            <button class="btn btn-primary" type="submit">Next</button>
+        </div>
+    </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script type="text/javascript">
     $(document).ready(function () {
         function updateCodeField() {
-            var groupCode = $('#id_group').find('option:selected').text();;  // Get the selected group code from the dropdown
-            var memberCode = $('#id_member_code').val();  // Get the selected member code
-            
-            // Check if both group and member code have selected values
-            if (groupCode && memberCode) {
-                var codeValue = groupCode + '.' + memberCode;
-                $('#id_code').val(codeValue);  // Update the code field
-                $('#id_code').prop('readonly', true);  // Make the code field readonly
-            } else {
-                $('#id_code').val('');  // Clear the code field if any value is missing
-                $('#id_code').prop('readonly', false);  // Make the code field editable again
-            }
+            const groupCode = $('#id_group option:selected').text();
+            const memberCode = $('#id_member_code').val();
+            const codeValue = groupCode && memberCode ? `${groupCode}.${memberCode}` : '';
+
+            $('#id_code').val(codeValue).prop('readonly', Boolean(codeValue));
         }
 
         $('#id_center').change(function () {
-            var centerId = $(this).val();  // Get the selected center ID
+            const centerId = $(this).val();
             
-            // Load Groups based on Center
-            var groupUrl = "{% url 'load_groups' %}";  
-            $.ajax({
-                url: groupUrl,
-                data: {
-                    'center': centerId
-                },
-                success: function (data) {
-                    $('#id_group').empty();
-                    $('#id_group').append('<option value="">Select Group...</option>');
-                    $.each(data, function (key, value) {
-                        // Use value.id to store the group ID in the dropdown
-                        $('#id_group').append('<option value="' + value.id + '">' + value.code + '</option>');
-                    });
-                }
+            $.get("{% url 'load_groups' %}", { center: centerId }, function (data) {
+                $('#id_group').html('<option value="">Select Group...</option>');
+                $.each(data, function (key, value) {
+                    $('#id_group').append(`<option value="${value.id}">${value.code}</option>`);
+                });
             });
-    
-            // Load Member Codes based on Center
-            var memberCodeUrl = "{% url 'load_member_codes' %}";  
-            $.ajax({
-                url: memberCodeUrl,
-                data: {
-                    'center': centerId
-                },
-                success: function (data) {
-                    $('#id_member_code').empty();
-                    $('#id_member_code').append('<option value="">Select Member Code...</option>');
-                    $.each(data, function (index, value) {
-                        // Ensure value is treated as an integer
-                        $('#id_member_code').append('<option value="' + value + '">' + value + '</option>');
-                    });
-                },
-                error: function(xhr, status, error) {
-                    console.log("Error: " + error);
-                }
+
+            $.get("{% url 'load_member_codes' %}", { center: centerId }, function (data) {
+                $('#id_member_code').html('<option value="">Select Member Code...</option>');
+                $.each(data, function (index, value) {
+                    $('#id_member_code').append(`<option value="${value}">${value}</option>`);
+                });
             });
         });
 
-        // Update the code field when group or member code is selected
-        $('#id_group, #id_member_code').change(function () {
-            updateCodeField();
-        });
-    });        
+        $('#id_group, #id_member_code').change(updateCodeField);
+    });
 </script>
 {% endblock %}

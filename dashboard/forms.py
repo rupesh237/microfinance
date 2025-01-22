@@ -6,8 +6,12 @@ from . models import Branch, Employee, District, Municipality, Center, Member
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from .models import AddressInformation, PersonalInformation, FamilyInformation, LivestockInformation, LandInformation, HouseInformation, IncomeInformation, ExpensesInformation, GRoup
-
+from .models import Province, District, Municipality
 class BranchForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(BranchForm, self).__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
     class Meta:
         model = Branch
         fields = '__all__'
@@ -32,7 +36,7 @@ class BranchForm(forms.ModelForm):
 
                 except (ValueError, TypeError):
                     pass
-
+    
 
 class EmployeeForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput)
@@ -54,6 +58,13 @@ class EmployeeForm(forms.ModelForm):
             self.add_error('confirm_password', "Passwords do not match")
 
         return cleaned_data
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super(EmployeeForm, self).__init__(*args, **kwargs)
+
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
+    
     
 
 class CenterForm(forms.ModelForm):
@@ -66,9 +77,9 @@ class CenterForm(forms.ModelForm):
             'meeting_start_date': DateInput(attrs={'type': 'date'}),
             'meeting_start_time': TimeInput(attrs={'type': 'time'}),
             'meeting_end_time': TimeInput(attrs={'type': 'time'}),
-            'walking_time': TimeInput(attrs={'type': 'time'}),
             'from_date': DateInput(attrs={'type': 'date'}),
             'to_date': DateInput(attrs={'type': 'date'}),
+            # 'walking_time': TimeInput(attrs={'type': 'time'}),
             'meeting_repeat_type': forms.Select(attrs={'id': 'id_meeting_repeat_type'}),
             'meeting_interval': forms.Select(attrs={'id': 'id_meeting_interval'}),
             'meeting_date': forms.NumberInput(attrs={'id': 'id_meeting_date'}),
@@ -79,6 +90,9 @@ class CenterForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super(CenterForm, self).__init__(*args, **kwargs)
+
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
         # Disable only the 'every' field
         self.fields['every'].disabled = True
         self.fields['formed_date_display'].disabled = True
@@ -209,6 +223,9 @@ class GroupForm(forms.ModelForm):
                     self.fields['position'].choices = []
             else:
                 self.fields['position'].choices = []
+            
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
 
 
     def clean(self):
@@ -246,45 +263,121 @@ class CenterSelectionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(CenterSelectionForm, self).__init__(*args, **kwargs)
 
-        # If editing an existing instance, populate the group field with groups from the selected center
+        # Add 'form-control' class to all fields
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
+
+        center = None
         if 'center' in self.data:
             try:
                 center_id = int(self.data.get('center'))
-                self.fields['group'].queryset = GRoup.objects.filter(center_id=center_id)
-                
                 center = Center.objects.get(id=center_id)
-                max_member_code = center.no_of_group * center.no_of_members
-                self.fields['member_code'].choices = [(i, i) for i in range(1, max_member_code + 1)]
             except (ValueError, TypeError, Center.DoesNotExist):
-                self.fields['group'].queryset = GRoup.objects.none()
-                self.fields['member_code'].choices = []
+                pass
         elif self.instance.pk:
             center = self.instance.center
-            self.fields['group'].queryset = GRoup.objects.filter(center=center)
-            max_member_code = center.no_of_group * center.no_of_members
-            self.fields['member_code'].choices = [(i, i) for i in range(1, max_member_code + 1)]
-        else:
-            self.fields['group'].queryset = GRoup.objects.none()
-            self.fields['member_code'].choices = []
+
+        if center:
+            self.populate_fields(center)
+
+    def populate_fields(self, center):
+        """Helper method to populate group and member_code fields based on the center."""
+        self.fields['group'].queryset = GRoup.objects.filter(center=center)
+        max_member_code = center.no_of_group * center.no_of_members if center.no_of_group and center.no_of_members else 0
+        self.fields['member_code'].choices = [(i, i) for i in range(1, max_member_code + 1)]
 
     def clean_member_code(self):
         member_code = self.cleaned_data.get('member_code')
         center = self.cleaned_data.get('center')
-        
+
         if center and member_code:
-            # Check if the member_code is already used in the given center
             if Member.objects.filter(center=center, member_code=member_code).exists():
                 raise ValidationError(f"The member code {member_code} is already used in this center.")
-        
+
         return member_code
 
 
 class AddressInformationForm(forms.ModelForm):
+    # Fields for current address
+    current_province = forms.ModelChoiceField(queryset=Province.objects.all(), label="Current Province")
+    current_district = forms.ModelChoiceField(queryset=District.objects.none(), label="Current District")
+    current_municipality = forms.ModelChoiceField(queryset=Municipality.objects.none(), label="Current Municipality")
+    current_ward_no = forms.IntegerField(label="Current Ward No")
+    current_tole = forms.CharField(label="Current Tole")
+    current_house_no = forms.CharField(label="Current House No", required=False)
+
+    # Fields for permanent address
+    same_as_current_permanent = forms.BooleanField(
+        label="Same as Current Address (Permanent)", required=False
+    )
+    permanent_province = forms.ModelChoiceField(queryset=Province.objects.all(), label="Permanent Province")
+    permanent_district = forms.ModelChoiceField(queryset=District.objects.none(), label="Permanent District")
+    permanent_municipality = forms.ModelChoiceField(queryset=Municipality.objects.none(), label="Permanent Municipality")
+    permanent_ward_no = forms.IntegerField(label="Permanent Ward No")
+    permanent_tole = forms.CharField(label="Permanent Tole")
+    permanent_house_no = forms.CharField(label="Permanent House No", required=False)
+
+    # Fields for old address
+    same_as_current_old = forms.BooleanField(
+        label="Same as Current Address (Old)", required=False
+    )
+    old_province = forms.ModelChoiceField(queryset=Province.objects.all(), label="Old Province", required=False)
+    old_district = forms.ModelChoiceField(queryset=District.objects.none(), label="Old District", required=False)
+    old_municipality = forms.ModelChoiceField(queryset=Municipality.objects.none(), label="Old Municipality", required=False)
+    old_ward_no = forms.IntegerField(label="Old Ward No", required=False)
+    old_tole = forms.CharField(label="Old Tole", required=False)
+    old_house_no = forms.CharField(label="Old House No", required=False)
+
     class Meta:
         model = AddressInformation
-        fields = ['permanent_province', 'permanent_district', 'permanent_municipality', 'permanent_ward_no', 'permanent_tole', 'permanent_house_no',
-                'current_province', 'current_district', 'current_municipality', 'current_ward_no', 'current_tole', 'current_house_no',
-                'old_province', 'old_district', 'old_municipality', 'old_ward_no', 'old_tole', 'old_house_no',]
+        fields = []  # All fields are handled manually.
+
+    def __init__(self, *args, **kwargs):
+        super(AddressInformationForm, self).__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            if field_name != 'same_as_current_permanent' or field_name != 'same_as_current_old':
+                field.widget.attrs['class'] = 'form-control'
+
+        # Dynamically set queryset for district and municipality fields
+        for address_type in ['current', 'permanent', 'old']:
+            province_field = f"{address_type}_province"
+            district_field = f"{address_type}_district"
+            municipality_field = f"{address_type}_municipality"
+
+            if province_field in self.data:
+                try:
+                    province_id = int(self.data.get(province_field))
+                    self.fields[district_field].queryset = District.objects.filter(province_id=province_id)
+                except (ValueError, TypeError):
+                    self.fields[district_field].queryset = District.objects.none()
+
+            if district_field in self.data:
+                try:
+                    district_id = int(self.data.get(district_field))
+                    self.fields[municipality_field].queryset = Municipality.objects.filter(district_id=district_id)
+                except (ValueError, TypeError):
+                    self.fields[municipality_field].queryset = Municipality.objects.none()
+
+            # Pre-fill fields based on initial data or instance
+            if self.initial.get(province_field):
+                self.fields[district_field].queryset = District.objects.filter(province=self.initial[province_field])
+
+            if self.initial.get(district_field):
+                self.fields[municipality_field].queryset = Municipality.objects.filter(district=self.initial[district_field])
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        # Handle "Same as Current Address" for permanent and old addresses
+        if cleaned_data.get('same_as_current_permanent'):
+            for field in ['province', 'district', 'municipality', 'ward_no', 'tole', 'house_no']:
+                cleaned_data[f"permanent_{field}"] = cleaned_data.get(f"current_{field}")
+
+        if cleaned_data.get('same_as_current_old'):
+            for field in ['province', 'district', 'municipality', 'ward_no', 'tole', 'house_no']:
+                cleaned_data[f"old_{field}"] = cleaned_data.get(f"current_{field}")
+
+        return cleaned_data
 
 class PersonalInformationForm(forms.ModelForm):
     class Meta:
@@ -293,16 +386,11 @@ class PersonalInformationForm(forms.ModelForm):
                    'occupation', 'family_member_no', 'date_of_birth', 'voter_id', 'voter_id_issued_on', 'citizenship_no', 'issued_from', 'issued_date', 'marriage_reg_no',
                    'registered_vdc', 'marriage_regd_date', 'registered_by', 'file_no',
          ]
-        widgets = {
-            'date_of_birth': DateInput(attrs={'type': 'date'}),
-            'issued_date': DateInput(attrs={'type': 'date'}),
-            'marriage_regd_date': DateInput(attrs={'type': 'date'}),
-        }
-
-    def clean(self):
-        cleaned_data = super().clean()
-        # print("Cleaned data:", cleaned_data)
-        return cleaned_data
+        
+        def __init__(self, *args, **kwargs):
+            super(PersonalInformationForm, self).__init__(*args, **kwargs)
+            for field_name, field in self.fields.items():
+                field.widget.attrs['class'] = 'form-control'
 
 
 class FamilyInformationForm(forms.ModelForm):
@@ -313,52 +401,18 @@ class FamilyInformationForm(forms.ModelForm):
             'citizenship_no', 'issued_from', 'issued_date', 
             'education', 'occupation', 'monthly_income', 'phone_number'
         ]
+
         widgets = {
-            'date_of_birth': DateInput(attrs={'type': 'date'}),
-            'issued_date': DateInput(attrs={'type': 'date'}),
+            'date_of_birth': forms.TextInput(attrs={'class': 'form-control nepali-date-field'}),
+            'issued_date': forms.TextInput(attrs={'class': 'form-control nepali-date-field'}),
         }
-
+        
     def __init__(self, *args, **kwargs):
-        # Capture predefined relationships if passed
-        self.relationships = kwargs.pop('relationships', None)
-        super().__init__(*args, **kwargs)
+        super(FamilyInformationForm, self).__init__(*args, **kwargs)
 
-        # Set up choices for relationship field if relationships are provided
-        if self.relationships:
-            self.fields['relationship'] = forms.ChoiceField(choices=[(rel, rel) for rel in self.relationships])
-
-            # Disable relationship field for predefined relationships (first three)
-            if self.initial.get('relationship') in self.relationships[:3]:
-                self.fields['relationship'].widget.attrs['readonly'] = True
-                self.fields['relationship'].widget.attrs['disabled'] = True
-            else:
-                # Ensure it's enabled for dynamically added family members
-                self.fields['relationship'].widget.attrs.pop('disabled', None)
-                self.fields['relationship'].widget.attrs.pop('readonly', None)
-
-    def clean_relationship(self):
-        relationship = self.cleaned_data.get('relationship')
-        
-        # Return initial if field is disabled for predefined relationships
-        if self.fields['relationship'].widget.attrs.get('disabled'):
-            return self.initial.get('relationship')  # Preset relationship remains
-
-        if not relationship:
-            raise forms.ValidationError("This field is required.")
-        return relationship
-
-    def clean(self):
-        cleaned_data = super().clean()
-        relationship = cleaned_data.get('relationship')
-        
-        # Require specific fields if relationship is 'Husband'
-        if relationship == 'Husband':
-            required_fields = ['citizenship_no', 'issued_from', 'issued_date']
-            for field in required_fields:
-                if not cleaned_data.get(field):
-                    self.add_error(field, f"{field.replace('_', ' ').capitalize()} is required for Husband.")
-                    
-        return cleaned_data
+        for field_name, field in self.fields.items():
+            if field_name not in ['date_of_birth', 'issued_date']:
+                field.widget.attrs['class'] = 'form-control'
 
 
 
@@ -368,22 +422,51 @@ class LivestockInformationForm(forms.ModelForm):
         model = LivestockInformation
         fields = ['cows', 'buffalo', 'goat', 'sheep']
 
+    def __init__(self, *args, **kwargs):
+        super(LivestockInformationForm, self).__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
+
 class HouseInformationForm(forms.ModelForm):
     class Meta:
         model = HouseInformation
         fields = ['concrete', 'mud', 'iron']
 
+    def __init__(self, *args, **kwargs):
+        super(HouseInformationForm, self).__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
+
 class LandInformationForm(forms.ModelForm):
     class Meta:
         model = LandInformation
-        fields = ['farming_land', 'other_land']
+        fields = [ 'farming_land','other_land']
+        widgets = {
+            'farming_land': forms.TextInput(attrs={'placeholder': 'Farming Land (Dhur)'}),
+            'other_land': forms.TextInput(attrs={'placeholder': 'Other Land (Dhur)'})
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(LandInformationForm, self).__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
 
 class IncomeInformationForm(forms.ModelForm):
     class Meta:
         model = IncomeInformation
         fields = ['agriculture_income', 'animal_farming_income', 'business_income', 'abroad_employment_income', 'wages_income', 'personal_job_income', 'government_post', 'pension', 'other']
 
+    def __init__(self, *args, **kwargs):
+        super(IncomeInformationForm, self).__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
+
 class ExpensesInformationForm(forms.ModelForm):
     class Meta:
         model = ExpensesInformation
         fields = ['house_expenses', 'education_expenses', 'health_expenses', 'festival_expenses', 'clothes_expenses', 'communication_expenses', 'fuel_expenses', 'entertaiment_expenses', 'other_expenses']
+
+    def __init__(self, *args, **kwargs):
+        super(ExpensesInformationForm, self).__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'

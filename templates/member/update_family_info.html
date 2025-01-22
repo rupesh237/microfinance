@@ -1,19 +1,15 @@
 {% extends "base/index.html" %}
-{% load static %}
-
-{% block title %}
-    <title>Expenses Information</title>
-{% endblock title %}
-
 {% block content %}
 <div class="container mt-5">
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">
-            <h2 class="mb-0">Expenses Information</h2>
+            <h2 class="mb-0">Update Family Information for {{ member.personalInfo.first_name }} {{ member.personalInfo.last_name }} </h2>
         </div>
         <div class="card-body">
             <form method="post">
                 {% csrf_token %}
+                <h2>Predefined Family Members</h2>
+                {% for form in predefined_forms %}
                 <div class="row">
                     {% for field in form %}
                         <div class="col-md-6 mb-3">
@@ -30,12 +26,15 @@
                         </div>
                     {% endfor %}
                 </div>
+                {% endfor %}
+
+
                 <div class="d-flex justify-content-between mt-4">
                     <button class="btn btn-secondary" type="button" onclick="window.history.back()">Back</button>
-                    <button class="btn btn-primary" type="submit">Next</button>
+                    <button type="submit" class="btn btn-primary">Next</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-{% endblock content %}
+{% endblock %}

@@ -14,27 +14,3 @@ form {
     color: red;
     font-size: 0.9em;
 }
-button{
-    margin-bottom: 5px;
-    padding: 5px 5px;
-    color: white;
-    background-color: red;
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
-}
-button:hover{
-    background-color: rgb(234, 27, 27);
-}
-
-button[type="submit"] {   
-    margin-left: 150px;
-    background-color: green;
-    color: white;
-    border-radius: 5px;
-    padding: 5px;
-}
-
-button[type="submit"]:hover {
-    background-color: rgb(42, 135, 42);
-}

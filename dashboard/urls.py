@@ -37,9 +37,31 @@ urlpatterns= [
     path('load-groups/', views.load_groups, name='load_groups'),
     path('load-member-codes/', views.load_member_codes, name='load_member_codes'), 
     path('select-center/', views.SelectCenterView.as_view(), name='select_center'),
-    path('add-member/', views.MemberWizard.as_view(views.FORMS), name='add_member'),
+
+    path('address-information/', views.AddressInfoView.as_view(), name = 'address_info'),
+    path('personal-information/', views.PersonalInfoView.as_view(), name = 'personal_info'),
+    path('family-information/', views.FamilyInfoView.as_view(), name = 'family_info'),
+    path('get_new_family_form/', views.get_new_family_form, name='get_new_family_form'),
+    path('livestock-information/', views.livestock_info_view, name = 'livestock_info'),
+    path('house-information/', views.house_info_view, name = 'house_info'),
+    path('land-information/', views.land_info_view, name = 'land_info'),
+    path('income-information/', views.income_info_view, name = 'income_info'),
+    path('expenses-information/', views.expenses_info_view, name = 'expenses_info'),
+
+    # path('add-member/', views.MemberWizard.as_view(views.FORMS), name='add_member'),
     path('member/<int:member_id>/', views.member_detail_view, name='member_detail'),
-    path('update-member/<int:member_id>', views.MemberUpdateWizard.as_view(views.FORMSS), name='update_member'),
+    # path('update-member/<int:member_id>', views.MemberUpdateWizard.as_view(views.FORMSS), name='update_members'),
+    
+# update of member information urls
+    path('update_address/<int:member_id>/', views.update_address_info, name='update_member'),
+    path('update_personal/<int:member_id>/', views.UpdatePersonalInfoView.as_view(), name='update_personal_info'),
+    path('update-family-info/<int:member_id>/', views.update_family_info_view, name='update_family_info'),    
+    path('update-livestock/<int:member_id>/', views.update_livestock_info_view, name='update_livestock_info'),
+    path('update-house/<int:member_id>/', views.update_house_info_view, name='update_house_info'),
+    path('update-land/<int:member_id>/', views.update_land_info_view, name='update_land_info'),
+    path('update_income/<int:member_id>/', views.update_income_info, name='update_income_info'),
+    path('update_expenses/<int:member_id>/', views.update_expenses_info, name='update_expenses_info'),
+
     path('get_saving_accounts/<int:member_id>/', views.get_saving_accounts, name='get_saving_accounts'),
     path('members/', views.MemberListView.as_view(), name="member_list"),
     path('change_member_status/', views.change_member_status, name="change_member_status"),

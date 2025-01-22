@@ -1,41 +1,75 @@
 {% extends "base/index.html" %}
+{% load custom_filters %}
+{% load static %}
 {% block title %}
-    <title>Branch list </title>
+    <title>Branch List</title>
 {% endblock title %}
+{% block corecss %}
+    <link rel="stylesheet" href="{% static 'css/member_list.css' %}">
+{% endblock %}
 
 {% block content %}
-    <h1>Branch List</h1>
-    {% comment %} <a href="{% url 'dashboard' %}">Home</a> {% endcomment %}
-    <a href="{% url 'add_branch' %}">Add Branch</a>
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Location</th>
-                <th>Manager</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for branch in branches %}
-            <tr>
-                <td>{{ branch.id }}</td>
-                <td>{{ branch.name }}</td>
-                <td>{{ branch.municipality }}-{{ branch.wardNo }}, {{ branch.district }}</td>
-                <td>{{ branch.manager }}</td>
-                <td>
-                    <a href="{% url "update_branch" branch.id %}"><i class='bi bi-pencil-fill'></i></a>
-                    <a href="#"><i class='bi bi-trash-fill'></i></a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="container mt-5">
+    <h1 class="mb-4 text-center">Branch List</h1>
+
+    <div class="d-flex justify-content-between mb-3">
+        <p class="lead">Manage all your branches here.</p>
+        <a href="{% url 'add_branch' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add Branch
+        </a>
+    </div>
+
+    <div>
+        <table>
+            <thead>
+                <tr>
+                    <th>
+                        ID<br>
+                        <input type="text" id="searchId" placeholder="Search ID">
+                    </th>
+                    <th>
+                        Name
+                        <input type="text" id="searchName" placeholder="Search Name">
+                    </th>
+                    <th>
+                        Location
+                        <input type="text" id="searchLocation" placeholder="Search Location">
+                    </th>
+                    <th>
+                        Manager
+                        <input type="text" id="searchManager" placeholder="Search Manager">
+                    </th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for branch in branches %}
+                <tr>
+                    <td>{{ branch.id }}</td>
+                    <td>{{ branch.name }}</td>
+                    <td>{{ branch.municipality }}-{{ branch.wardNo }}, {{ branch.district }}</td>
+                    {% for manager in managers|get_item:branch.id %}
+                    <td>{{ manager.name }}</td>
+                    {% empty %}
+                    <td>Not Assigned</td>
+                    {% endfor %}
+                    <td class="text-center">
+                        <a href="{% url 'update_branch' branch.id %}" class="btn btn-warning btn-sm" title="Edit">
+                            <i class="bi bi-pencil-fill"></i>
+                        </a>
+                        <a href="#" class="btn btn-danger btn-sm" title="Delete">
+                            <i class="bi bi-trash-fill"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
     <!-- Pagination controls -->
-    <div class="pagination">
-        <ul class="pagination">
+    <nav>
+        <ul class="pagination justify-content-center">
             {% if branches.has_previous %}
                 <li class="page-item">
                     <a href="?page=1" class="page-link">&laquo; First</a>
@@ -58,6 +92,6 @@
                 </li>
             {% endif %}
         </ul>
-    </div>
-
+    </nav>
+</div>
 {% endblock %}

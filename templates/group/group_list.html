@@ -1,43 +1,75 @@
 {% extends "base/index.html" %}
+{% load static %}
+{% block corecss %}
+    <link rel="stylesheet" href="{% static 'css/member_list.css' %}">
+{% endblock %}
 
 {% block title %}
-    <title>Group lists </title>
+    <title>Group List</title>
 {% endblock title %}
 
 {% block content %}
-    <h1>Group List</h1>
-    <a href="{% url 'add_group' %}">Add Group</a>
-    <table>
-        <thead>
-            <tr>
-                <th>Code</th>
-                <th>Name</th>
-                <th>Center Code</th>
-                <th>Center Name</th>
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for group in groups %}
-            <tr>
-                <td>{{ group.code }}</td>
-                <td>{{ group.name }}</td>
-                <td>{{ group.center.code }}</td>
-                <td>{{ group.center.name }}</td>
-                <td>{{ group.status }}</td>
-                <td>
-                    <a href="{% url 'edit_group' group.id %}"><i class='bi bi-pencil-fill'></i></a>
-                    <a href="{% url 'delete_group' group.id %}"><i class='bi bi-trash-fill'></i></a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Group List</h1>
+        <a href="{% url 'add_group' %}" class="btn btn-primary">Add Group</a>
+    </div>
+    <div>
+        <table>
+            <thead>
+                <tr>
+                    <th>
+                        Code
+                        <input type="text" id="searchCode" placeholder="Search Code">
+                    </th>
+                    <th>
+                        Name
+                        <input type="text" id="searchName" placeholder="Search Name">
+                    </th>
+                    <th>
+                        Center Code
+                        <input type="text" id="searchCenterCode" placeholder="Search Center Code">
+                    </th>
+                    <th>
+                        Center Name
+                        <input type="text" id="searchCenterName" placeholder="Search Center Name">
+                    </th>
+                    <th>
+                        Status
+                        <input type="text" id="searchStatus" placeholder="Search Status">
+                    </th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for group in groups %}
+                <tr>
+                    <td>{{ group.code }}</td>
+                    <td>{{ group.name }}</td>
+                    <td>{{ group.center.code }}</td>
+                    <td>{{ group.center.name }}</td>
+                    <td>{{ group.status }}</td>
+                    <td class="text-center">
+                        <a href="{% url 'edit_group' group.id %}" class="btn btn-warning btn-sm" title="Edit">
+                            <i class="bi bi-pencil-fill"></i>
+                        </a>
+                        <a href="{% url 'delete_group' group.id %}" class="btn btn-danger btn-sm" title="Delete">
+                            <i class="bi bi-trash-fill"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">No groups found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-     <!-- Pagination controls -->
-     <div class="pagination">
-        <ul class="pagination">
+    <!-- Pagination controls -->
+    <nav aria-label="Group list pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
             {% if groups.has_previous %}
                 <li class="page-item">
                     <a href="?page=1" class="page-link">&laquo; First</a>
@@ -60,6 +92,6 @@
                 </li>
             {% endif %}
         </ul>
-    </div>
-
+    </nav>
+</div>
 {% endblock %}

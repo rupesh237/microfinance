@@ -1,122 +1,105 @@
 {% extends "base/index.html" %}
-
 {% block title %}
-    <title>Address Information</title>
-{% endblock %}
-{% block corecss %}
-<style>
-    .form-check-inline {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .form-check-inline input[type="checkbox"] {
-        margin: 0;
-    }
-</style>
-
-
+    <title>Update Address Information</title>
 {% endblock %}
 
 {% block content %}
 <div class="container mt-5">
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">
-            <h2 class="mb-0">Address Information</h2>
+            <h2 class="mb-0">Update Address Information for {{ member.personalInfo.first_name }} {{ member.personalInfo.last_name }}</h2>
         </div>
         <div class="card-body">
-            <form method="post">
-                {% csrf_token %}
+        <form method="post">
+            {% csrf_token %}
 
-                <h3 class="mb-3 text-primary">Current Address</h3>
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        {{ form.current_province.label_tag }} {{ form.current_province }}
-                    </div>
-                    <div class="col-md-4">
-                        {{ form.current_district.label_tag }} {{ form.current_district }}
-                    </div>
-                    <div class="col-md-4">
-                        {{ form.current_municipality.label_tag }} {{ form.current_municipality }}
-                    </div>
-                    <div class="col-md-4">
-                        {{ form.current_ward_no.label_tag }} {{ form.current_ward_no }}
-                    </div>
-                    <div class="col-md-4">
-                        {{ form.current_tole.label_tag }} {{ form.current_tole }}
-                    </div>
-                    <div class="col-md-4">
-                        {{ form.current_house_no.label_tag }} {{ form.current_house_no }}
-                    </div>
+            <h3 class="mb-3 text-primary">Current Address</h3>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    {{ form.current_province.label_tag }} {{ form.current_province }}
                 </div>
+                <div class="col-md-4">
+                    {{ form.current_district.label_tag }} {{ form.current_district }}
+                </div>
+                <div class="col-md-4">
+                    {{ form.current_municipality.label_tag }} {{ form.current_municipality }}
+                </div>
+                <div class="col-md-4">
+                    {{ form.current_ward_no.label_tag }} {{ form.current_ward_no }}
+                </div>
+                <div class="col-md-4">
+                    {{ form.current_tole.label_tag }} {{ form.current_tole }}
+                </div>
+                <div class="col-md-4">
+                    {{ form.current_house_no.label_tag }} {{ form.current_house_no }}
+                </div>
+            </div>
 
-                <hr class="my-4">
+            <hr class="my-4">
 
-                <h3 class="mb-3 text-primary">Permanent Address</h3>
-                <div class="form-check form-check-inline">
-                    {{ form.same_as_current_permanent }} 
-                    <label for="id_same_as_current_permanent" class="form-check-label">
-                        {{ form.same_as_current_permanent.label }}
-                    </label>
+            <h3 class="mb-3 text-primary">Permanent Address</h3>
+            <div class="form-check mb-3">
+                {{ form.same_as_current_permanent }} 
+                <label for="id_same_as_current_permanent" class="form-check-label">
+                    {{ form.same_as_current_permanent.label }}
+                </label>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    {{ form.permanent_province.label_tag }} {{ form.permanent_province }}
                 </div>
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        {{ form.permanent_province.label_tag }} {{ form.permanent_province }}
-                    </div>
-                    <div class="col-md-4">
-                        {{ form.permanent_district.label_tag }} {{ form.permanent_district }}
-                    </div>
-                    <div class="col-md-4">
-                        {{ form.permanent_municipality.label_tag }} {{ form.permanent_municipality }}
-                    </div>
-                    <div class="col-md-4">
-                        {{ form.permanent_ward_no.label_tag }} {{ form.permanent_ward_no }}
-                    </div>
-                    <div class="col-md-4">
-                        {{ form.permanent_tole.label_tag }} {{ form.permanent_tole }}
-                    </div>
-                    <div class="col-md-4">
-                        {{ form.permanent_house_no.label_tag }} {{ form.permanent_house_no }}
-                    </div>
+                <div class="col-md-4">
+                    {{ form.permanent_district.label_tag }} {{ form.permanent_district }}
                 </div>
+                <div class="col-md-4">
+                    {{ form.permanent_municipality.label_tag }} {{ form.permanent_municipality }}
+                </div>
+                <div class="col-md-4">
+                    {{ form.permanent_ward_no.label_tag }} {{ form.permanent_ward_no }}
+                </div>
+                <div class="col-md-4">
+                    {{ form.permanent_tole.label_tag }} {{ form.permanent_tole }}
+                </div>
+                <div class="col-md-4">
+                    {{ form.permanent_house_no.label_tag }} {{ form.permanent_house_no }}
+                </div>
+            </div>
 
-                <hr class="my-4">
+            <hr class="my-4">
 
-                <h3 class="mb-3 text-primary">Old Address</h3>
-                <div class="form-check form-check-inline">
-                    {{ form.same_as_current_old }}
-                    <label for="id_same_as_current_old" class="form-check-label">
-                        {{ form.same_as_current_old.label }}
-                    </label>
+            <h3 class="mb-3 text-primary">Old Address</h3>
+            <div class="form-check mb-3">
+                {{ form.same_as_current_old }}
+                <label for="id_same_as_current_old" class="form-check-label">
+                    {{ form.same_as_current_old.label }}
+                </label>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    {{ form.old_province.label_tag }} {{ form.old_province }}
                 </div>
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        {{ form.old_province.label_tag }} {{ form.old_province }}
-                    </div>
-                    <div class="col-md-4">
-                        {{ form.old_district.label_tag }} {{ form.old_district }}
-                    </div>
-                    <div class="col-md-4">
-                        {{ form.old_municipality.label_tag }} {{ form.old_municipality }}
-                    </div>
-                    <div class="col-md-4">
-                        {{ form.old_ward_no.label_tag }} {{ form.old_ward_no }}
-                    </div>
-                    <div class="col-md-4">
-                        {{ form.old_tole.label_tag }} {{ form.old_tole }}
-                    </div>
-                    <div class="col-md-4">
-                        {{ form.old_house_no.label_tag }} {{ form.old_house_no }}
-                    </div>
+                <div class="col-md-4">
+                    {{ form.old_district.label_tag }} {{ form.old_district }}
                 </div>
+                <div class="col-md-4">
+                    {{ form.old_municipality.label_tag }} {{ form.old_municipality }}
+                </div>
+                <div class="col-md-4">
+                    {{ form.old_ward_no.label_tag }} {{ form.old_ward_no }}
+                </div>
+                <div class="col-md-4">
+                    {{ form.old_tole.label_tag }} {{ form.old_tole }}
+                </div>
+                <div class="col-md-4">
+                    {{ form.old_house_no.label_tag }} {{ form.old_house_no }}
+                </div>
+            </div>
 
-                <div class="d-flex justify-content-between mt-4">
-                    <button class="btn btn-secondary" type="button" onclick="window.history.back()">Back</button>
-                    <button class="btn btn-primary" type="submit">Next</button>
-                </div>
-            </form>
+            <div class="d-flex justify-content-between mt-4">
+                <button class="btn btn-secondary" type="button" onclick="window.history.back()">Back</button>
+                <button class="btn btn-primary" type="submit">Next</button>
+            </div>
+        </form>
         </div>
     </div>
 </div>
@@ -223,44 +206,25 @@
 
         function copyAddressToPermanent() {
             if (sameAsCurrentPermanent.checked) {
-                // Set static fields
                 permanentProvince.value = currentProvince.value;
+                permanentDistrict.value = currentDistrict.value;
+                permanentMunicipality.value = currentMunicipality.value;
                 permanentWardNo.value = currentWardNo.value;
                 permanentTole.value = currentTole.value;
                 permanentHouseNo.value = currentHouseNo.value;
-        
-                // Load districts and municipalities dynamically
-                $(permanentProvince).trigger('change'); // Trigger change to load districts
-                setTimeout(() => {
-                    permanentDistrict.value = currentDistrict.value;
-                    $(permanentDistrict).trigger('change'); // Trigger change to load municipalities
-                    setTimeout(() => {
-                        permanentMunicipality.value = currentMunicipality.value;
-                    }, 500); // Delay to allow municipalities to load
-                }, 500); // Delay to allow districts to load
             }
         }
 
         function copyAddressToOld() {
             if (sameAsCurrentOld.checked) {
-                // Set static fields
                 oldProvince.value = currentProvince.value;
+                oldDistrict.value = currentDistrict.value;
+                oldMunicipality.value = currentMunicipality.value;
                 oldWardNo.value = currentWardNo.value;
                 oldTole.value = currentTole.value;
                 oldHouseNo.value = currentHouseNo.value;
-        
-                // Load districts and municipalities dynamically
-                $(oldProvince).trigger('change'); // Trigger change to load districts
-                setTimeout(() => {
-                    oldDistrict.value = currentDistrict.value;
-                    $(oldDistrict).trigger('change'); // Trigger change to load municipalities
-                    setTimeout(() => {
-                        oldMunicipality.value = currentMunicipality.value;
-                    }, 500); // Delay to allow municipalities to load
-                }, 500); // Delay to allow districts to load
             }
         }
-        
 
         sameAsCurrentPermanent.addEventListener('change', copyAddressToPermanent);
         sameAsCurrentOld.addEventListener('change', copyAddressToOld);

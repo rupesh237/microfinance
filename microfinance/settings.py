@@ -23,6 +23,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 PHOTO_PATH = 'users/'
 SIGNATURE_PATH = 'signatures/'
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Ensure session data is stored in the database
+# CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
@@ -55,7 +56,7 @@ INSTALLED_APPS = [
     "django_htmx",
     # 3rd parties apps
     'compressor',
-    # 'nepali_datetime_field',
+    'nepali_datetime_field',
 ]
 
 MIDDLEWARE = [
