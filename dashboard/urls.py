@@ -55,7 +55,7 @@ urlpatterns= [
 # update of member information urls
     path('update_address/<int:member_id>/', views.update_address_info, name='update_member'),
     path('update_personal/<int:member_id>/', views.UpdatePersonalInfoView.as_view(), name='update_personal_info'),
-    path('update-family-info/<int:member_id>/', views.update_family_info_view, name='update_family_info'),    
+    path('update-family-info/<int:member_id>/', views.UpdateFamilyInfoView.as_view(), name='update_family_info'),    
     path('update-livestock/<int:member_id>/', views.update_livestock_info_view, name='update_livestock_info'),
     path('update-house/<int:member_id>/', views.update_house_info_view, name='update_house_info'),
     path('update-land/<int:member_id>/', views.update_land_info_view, name='update_land_info'),

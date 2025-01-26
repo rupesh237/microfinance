@@ -155,7 +155,8 @@ def pdf_report(request, member_id):
 def update_address_info(request, member_id):
     member = get_object_or_404(Member, id=member_id)
     address_info = AddressInformation.objects.filter(member=member)
-
+    request.session['demanding_loan'] = True
+    print(request.session['demanding_loan'])
     if request.method == "POST":
         form = AddressInformationForm(request.POST, instance=address_info.first())
         if form.is_valid():
@@ -203,7 +204,7 @@ def update_address_info(request, member_id):
                 )
 
             messages.success(request, "Address information updated successfully!")
-            return redirect("update_personal_info_for_loan", member_id=member.id)
+            return redirect("update_personal_info", member_id=member.id)
 
         else:
             messages.error(request, "Please correct the errors below.")
@@ -228,215 +229,14 @@ def update_address_info(request, member_id):
         "member": member,
     })
 
-# Step 2: Personal Information Update
-class UpdatePersonalInfoView(UpdateView):
-    model = PersonalInformation
-    form_class = PersonalInformationForm
-    template_name = 'member/update_personal_info.html'
-
-    def get_object(self):
-        """Retrieve the PersonalInformation object for the given member."""
-        member_id = self.kwargs.get('member_id')
-        return get_object_or_404(PersonalInformation, member_id=member_id)
-
-    def form_valid(self, form):
-        # Update the registered_by and registered_date fields
-        personal_info = form.save(commit=False)
-        personal_info.registered_by = self.request.user
-        personal_info.registered_date = nepali_datetime.date.today()  # Assuming Nepali date is needed
-        member_id = self.object.member_id
-        personal_info.save()
-
-        # Redirect to the member detail view with the correct URL argument
-        return redirect(reverse('update_family_info_for_loan', kwargs={'member_id': member_id}))
-
-    def form_invalid(self, form):
-        """Handle invalid forms."""
-        return self.render_to_response(self.get_context_data(form=form))
-
-def update_family_info_view(request, member_id):
-    member = get_object_or_404(Member, id=member_id)
-
-    # Define relationships that should not be modified
-    personal_info = get_object_or_404(PersonalInformation, id=member_id)
-    gender = personal_info.gender
-    marital_status = personal_info.marital_status
-    print(f'Gender: {gender}')
-    print(f'Marital Status: {marital_status}')
-    if gender == 'Male' or (gender == 'Female' and marital_status == 'Single'):
-        predefined_relationships = ['Grandfather', 'Father', 'Mother']
-    else:
-        predefined_relationships = ['Father', 'Husband', 'Father-In-Law']
-    
-    # Fetch all existing FamilyInformation for the member
-    existing_family_info = FamilyInformation.objects.filter(member=member)
-
-    # Split forms into predefined and dynamic based on relationship
-    predefined_forms = []
-    dynamic_forms = []
-
-    if request.method == 'POST':
-        valid = True
-
-        # Handle predefined relationships
-        for relationship in predefined_relationships:
-            instance = existing_family_info.filter(relationship=relationship).first()
-            form = FamilyInformationForm(
-                request.POST,
-                instance=instance,
-                prefix=f'predefined-{relationship}'
-            )
-            predefined_forms.append(form)
-            if not form.is_valid():
-                valid = False
-
-        # Handle dynamically added relationships
-        i = 0
-        while f'dynamic-form-{i}-family_member_name' in request.POST:
-            instance = existing_family_info.exclude(relationship__in=predefined_relationships).order_by('id')[i] if i < existing_family_info.exclude(relationship__in=predefined_relationships).count() else None
-            form = FamilyInformationForm(
-                request.POST,
-                instance=instance,
-                prefix=f'dynamic-form-{i}'
-            )
-            dynamic_forms.append(form)
-            if not form.is_valid():
-                valid = False
-            i += 1
-
-        if valid:
-            # Save predefined forms
-            for form in predefined_forms:
-                family_info = form.save(commit=False)
-                family_info.member = member
-                family_info.save()
-
-            # Save dynamic forms
-            for form in dynamic_forms:
-                family_info = form.save(commit=False)
-                family_info.member = member
-                family_info.save()
-
-            return redirect('update_livestock_info_for_loan', member_id=member.id)
-    else:
-        # Initialize predefined forms
-        for relationship in predefined_relationships:
-            instance = existing_family_info.filter(relationship=relationship).first()
-            form = FamilyInformationForm(
-                instance=instance,
-                initial={'relationship': relationship},
-                prefix=f'predefined-{relationship}'
-            )
-            predefined_forms.append(form)
-
-        # Initialize dynamic forms
-        dynamic_family_info = existing_family_info.exclude(relationship__in=predefined_relationships)
-        for i, instance in enumerate(dynamic_family_info):
-            form = FamilyInformationForm(instance=instance, prefix=f'dynamic-form-{i}')
-            dynamic_forms.append(form)
-
-    return render(request, 'member/update_family_info.html', {
-        'member': member,
-        'predefined_forms': predefined_forms,
-        'dynamic_forms': dynamic_forms,
-    })
-
-def update_livestock_info_view(request, member_id):
-    member = get_object_or_404(Member, id=member_id)
-    livestock_info = LivestockInformation.objects.filter(member=member).first()
-
-    if request.method == 'POST':
-        form = LivestockInformationForm(request.POST, instance=livestock_info)
-        if form.is_valid():
-            livestock_info = form.save(commit=False)
-            livestock_info.member = member
-            livestock_info.save()
-            return redirect('update_house_info_for_loan', member_id=member.id)
-    else:
-        form = LivestockInformationForm(instance=livestock_info)
-
-    return render(request, 'member/update_livestock_info.html', {'form': form, 'member': member})
-
-def update_house_info_view(request, member_id):
-    member = get_object_or_404(Member, id=member_id)
-    house_info = HouseInformation.objects.filter(member=member).first()
-
-    if request.method == 'POST':
-        form = HouseInformationForm(request.POST, instance=house_info)
-        if form.is_valid():
-            house_info = form.save(commit=False)
-            house_info.member = member
-            house_info.save()
-            return redirect('update_land_info_for_loan', member_id=member.id)
-    else:
-        form = HouseInformationForm(instance=house_info)
-
-    return render(request, 'member/update_house_info.html', {'form': form, 'member': member})
-
-def update_land_info_view(request, member_id):
-    member = get_object_or_404(Member, id=member_id)
-    land_info = LandInformation.objects.filter(member=member).first()
-
-    if request.method == 'POST':
-        form = LandInformationForm(request.POST, instance=land_info)
-        if form.is_valid():
-            land_info = form.save(commit=False)
-            land_info.member = member
-            land_info.save()
-            return redirect('update_income_info_for_loan', member_id=member.id)
-    else:
-        form = LandInformationForm(instance=land_info)
-
-    return render(request, 'member/update_land_info.html', {'form': form, 'member': member})
-
-def update_income_info(request, member_id):
-    # Fetch the member and their existing IncomeInformation if it exists
-    member = get_object_or_404(Member, id=member_id)
-    income_info = IncomeInformation.objects.filter(member=member).first()
-
-    if request.method == 'POST':
-        # Bind the form with the existing instance if available, otherwise create a new one
-        form = IncomeInformationForm(request.POST, instance=income_info)
-        if form.is_valid():
-            # Save the form and associate it with the member
-            income_info = form.save(commit=False)
-            income_info.member = member
-            income_info.save()
-            return redirect('update_expenses_info_for_loan', member_id=member.id)
-    else:
-        # Initialize the form with the existing data if available
-        form = IncomeInformationForm(instance=income_info)
-
-    return render(request, 'member/update_income_info.html', {'form': form, 'member': member})
-
-# Step 4: Expenses Information Update
-def update_expenses_info(request, member_id):
-    # Fetch the member and their existing ExpensesInformation if it exists
-    member = get_object_or_404(Member, id=member_id)
-    expenses_info = ExpensesInformation.objects.filter(member=member).first()
-
-    if request.method == 'POST':
-        # Bind the form with the existing instance if available, otherwise create a new one
-        form = ExpensesInformationForm(request.POST, instance=expenses_info)
-        if form.is_valid():
-            # Save the form and associate it with the member
-            expenses_info = form.save(commit=False)
-            expenses_info.member = member
-            expenses_info.save()
-            return redirect('loan_demand_form', member_id=member.id)
-    else:
-        # Initialize the form with the existing data if available
-        form = ExpensesInformationForm(instance=expenses_info)
-
-    return render(request, 'member/update_expenses_info.html', {'form': form, 'member': member})
-
-# Update member information for loan application ends here.
 
 
 
 ## LOAN DEMAND ##
 def loan_demand_form(request, member_id):
     member = get_object_or_404(Member, id =member_id)
+    if 'demanding_loan' in request.session:
+        del request.session['demanding_loan']
     form = LoanDemandForm()
     if request.method == 'POST':
         form = LoanDemandForm(request.POST)
