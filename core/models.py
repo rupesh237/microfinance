@@ -2,6 +2,7 @@ from django.db import models, transaction
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth.models import User
+from django.utils.translation import gettext_lazy as _
 
 from dashboard.models import Branch, Center, Member
 
@@ -88,6 +89,7 @@ class Voucher(models.Model):
         ('Collection Sheet', 'Collection Sheet'),
         ('Loan', 'Loan'),
         ('Cash and Bank', 'Cash and Bank'),
+        ('Service Fee', 'Service Fee'),
         ('Manual', 'Manual'),
     ]
 
@@ -138,7 +140,7 @@ class CollectionSheet(models.Model):
     member_collection = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, blank=True, null=True)
     special_record = models.CharField(max_length=100, choices=[( 'A', 'A'), ('P', 'P'), ('L', 'L'), ('S', 'S'),('D', 'D'), ('B', 'B'), ('M', 'M'),('E', 'E')], default='P', null=True, blank=True)
 
-    meeting_no = models.IntegerField(default=1)
+    meeting_no = models.IntegerField(null=True, blank=True)
     meeting_date = models.DateField()
 
     evaluation_no = models.IntegerField()
@@ -156,7 +158,7 @@ class CollectionSheet(models.Model):
         if not self.meeting_date:
             self.meeting_date = self.calculate_meeting_date()
 
-        if not self.meeting_no:
+        if self._state.adding and not self.meeting_no:
             self.meeting_no = self.calculate_meeting_no()
 
         super().save(*args, **kwargs)
@@ -166,14 +168,18 @@ class CollectionSheet(models.Model):
         Calculate the meeting number for this center based on existing meetings.
         The meeting_no will be based on the number of meetings that have already occurred for the center.
         """
-        # Get the meetings for the current center that are already scheduled
-        meetings = CollectionSheet.objects.filter(center=self.center).order_by('meeting_date')
+        # Get unique meeting dates for this center
+        unique_meeting_dates = CollectionSheet.objects.filter(center=self.center).values_list('meeting_date', flat=True).distinct()
         
-        # Get the number of meetings already scheduled for this center
-        meeting_count = meetings.count()
-
-        # The next meeting number will be the next in the sequence
-        return meeting_count + 1
+        # Count unique meeting dates to determine the meeting number
+        meeting_count = unique_meeting_dates.count()
+        
+        # If the new meeting date is already in the list, reuse its meeting_no; otherwise, increment
+        if self.meeting_date in unique_meeting_dates:
+            last_meeting_no = CollectionSheet.objects.filter(center=self.center, meeting_date=self.meeting_date).order_by('-meeting_no').first()
+            return last_meeting_no.meeting_no if last_meeting_no else meeting_count
+        else:
+            return meeting_count + 1
 
     def calculate_meeting_date(self):
         """
@@ -197,3 +203,27 @@ class CollectionSheet(models.Model):
         return f"CollectionSheet {self.id} for Member {self.member} on {self.meeting_date}"
 
 
+class ReceiptTypes(models.TextChoices):
+    ENTRANCE_FEE = 'EntranceFee', _('Entrance Fee')
+    MEMBERSHIP_FEE = 'MembershipFee', _('Membership Fee')
+    PASSBOOK_FEE = 'PassbookFee', _('Passbook Fee')
+    LOAN_PROCESSING_FEE = 'LoanProcessingFee', _('Loan Processing Fee')
+    SAVINGS_DEPOSIT = 'SavingsDeposit', _('Savings Deposit')
+    FIXED_DEPOSIT = 'FixedDeposit', _('Fixed Deposit')
+    RECURRING_DEPOSIT = 'RecurringDeposit', _('Recurring Deposit')
+    ADDITIONAL_SAVINGS = 'AdditionalSavings', _('Additional Savings')
+    SHARE_CAPITAL = 'ShareCapital', _('Share Capital')
+    PENAL_INTEREST = 'PenalInterest', _('Penal Interest')
+    LOAN_DEPOSIT = 'LoanDeposit', _('Loan Deposit')
+    INSURANCE = 'Insurance', _('Insurance')
+
+class PaymentTypes(models.TextChoices):
+    LOANS = 'Loans', _('Loans')
+    TRAVELLING_ALLOWANCE = 'TravellingAllowance', _('Travelling Allowance')
+    PAYMENT_OF_SALARY = 'PaymentOfSalary', _('Payment of Salary')
+    PRINTING_CHARGES = 'PrintingCharges', _('Printing Charges')
+    STATIONARY_CHARGES = 'StationaryCharges', _('Stationary Charges')
+    OTHER_CHARGES = 'OtherCharges', _('Other Charges')
+    SAVINGS_WITHDRAWAL = 'SavingsWithdrawal', _('Savings Withdrawal')
+    FIXED_WITHDRAWAL = 'FixedWithdrawal', _('Fixed Deposit Withdrawal')
+    RECURRING_WITHDRAWAL = 'RecurringWithdrawal', _('Recurring Deposit Withdrawal')

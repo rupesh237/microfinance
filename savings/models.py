@@ -66,7 +66,7 @@ class FixedDeposit(models.Model):
     maturity_date = models.DateField()
 
     def __str__(self):
-        return f"FD - {self.amount} by {self.member.personalInfo.name}"
+        return f"FD - {self.amount} by {self.member.personalInfo.first_name} {self.member.personalInfo.middle_name} {self.member.personalInfo.last_name}"
 
 class RecurringDeposit(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='recurring_deposits')
@@ -75,7 +75,7 @@ class RecurringDeposit(models.Model):
     interest_rate = models.DecimalField(max_digits=5, decimal_places=2)
 
     def __str__(self):
-        return f"RD - {self.amount} by {self.member.personalInfo.name}"
+        return f"RD - {self.amount} by {self.member.personalInfo.first_name} {self.member.personalInfo.middle_name} {self.member.personalInfo.last_name}"
 
 
 class CashSheet(models.Model):
@@ -98,6 +98,7 @@ class CashSheet(models.Model):
             description=f'Receipt of {self.account.account_number} {self.account.account_type}',
             transaction_date=self.transaction_date,
             created_by=self.created_by,
+            branch=self.member.center.branch,
         )
         return voucher
 
@@ -124,6 +125,7 @@ class PaymentSheet(models.Model):
             description=f'Approved by {self.created_by}',
             transaction_date=self.transaction_date,
             created_by=self.created_by,
+            branch=self.member.center.branch,
         )
         return voucher
 

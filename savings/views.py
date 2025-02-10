@@ -17,7 +17,7 @@ from .models import SavingsAccount, FixedDeposit, RecurringDeposit, CashSheet, P
 from .forms import SavingsAccountForm, FixedDepositForm, RecurringDepositForm, CashSheetForm, PaymentSheetForm
 from dashboard.models import Member
 
-from core.models import Voucher
+from core.models import Voucher, Teller
 
 from .filters import StatementFilter
 
@@ -100,6 +100,11 @@ class CashSheetCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
                 print(f"Processing account {account.id} with amount {amount}")
                 try:
                     with transaction.atomic():  # Start a database transaction
+                        current_teller = Teller.objects.filter(employee=self.request.user).first()
+                        if current_teller is None:
+                            messages.error(self.request, "No teller detected for given employee.")
+                            return redirect('create_cash_sheet', member_id=member.id)
+
                         # Create a new CashSheet instance for each account
                         cash_sheet = CashSheet(
                             account=account,
@@ -134,10 +139,16 @@ class CashSheetCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
                             created_by=self.request.user,
                             voucher=voucher,
                         )
+
+                        # Update teller balance
+                        current_teller.balance += amount
+                        current_teller.save()
+
                         print(f"Created CashSheet: {cash_sheet}")
                 except Exception as e:
                     print(f"Error creating CashSheet: {e}")
 
+        messages.success(self.request, "Amount has been deposited successfully.")
         return HttpResponseRedirect(reverse_lazy('create_cash_sheet', kwargs={'member_id': member_id}))
 
 
@@ -156,6 +167,11 @@ def delete_cash_sheet(request, member_id, pk ):
     cash_sheet = get_object_or_404(CashSheet, pk=pk)
 
     if request.method == 'POST':
+        current_teller = Teller.objects.filter(employee=request.user).first()
+        if current_teller is None:
+            messages.error(request, "No teller detected for given employee.")
+            return redirect('member-statement', member_id=member_id)
+        
         # update account balance before deleteing the cash sheet
         account = cash_sheet.account
         print(f"Account: {account}")
@@ -166,6 +182,10 @@ def delete_cash_sheet(request, member_id, pk ):
         print(f"Voucher: {voucher}")
         if voucher:
             voucher.delete()
+
+        #Update teller balance
+        current_teller.balance -= cash_sheet.amount
+        current_teller.save()
 
         # Delete the CashSheet instance
         cash_sheet.delete()
@@ -205,6 +225,11 @@ class PaymentSheetCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
 
         accounts = SavingsAccount.objects.filter(member=self.kwargs['member_id'])
         current_accounts = [account for account in accounts if account.account_type in current_account_codes]
+
+        current_teller = Teller.objects.filter(employee=self.request.user).first()
+        if current_teller is None:
+            messages.error(self.request, "No teller detected for given employee.")
+            return redirect('create_payment_sheet', member_id=member.id)
       
         for account in current_accounts:
             amount_field_name = f'amount_{account.id}'
@@ -213,6 +238,9 @@ class PaymentSheetCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
             if amount is not None and amount > 0:
                 if amount > account.balance:
                     messages.error(self.request, f"Insufficient balance in account {account.account_number}.")
+                    return self.form_invalid(form)
+                elif current_teller.balance < amount:
+                    messages.error(self.request, f"Insufficient balance in teller's account. Teller's balance: {current_teller.balance}.")
                     return self.form_invalid(form)
                 else:
                     print(f"Processing account {account.id} with amount {amount}")
@@ -235,6 +263,10 @@ class PaymentSheetCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
                             account.balance -= amount
                             account.save()
 
+                            # Update teller balance
+                            current_teller.balance -= amount
+                            current_teller.save()
+
                             # Automatically create a Statement
                             Statement.objects.create(
                                 account=account,
@@ -256,6 +288,7 @@ class PaymentSheetCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
                     except Exception as e:
                         print(f"Error creating Payment Sheet: {e}")
 
+        messages.success(self.request, "Amount has been withdrawn successfully.")
         return HttpResponseRedirect(reverse_lazy('create_payment_sheet', kwargs={'member_id': member_id}))
 
     def get_context_data(self, **kwargs):
@@ -273,6 +306,12 @@ def delete_payment_sheet(request, member_id, pk ):
     payment_sheet = get_object_or_404(PaymentSheet, pk=pk)
 
     if request.method == 'POST':
+        
+        current_teller = Teller.objects.filter(employee=request.user).first()
+        if current_teller is None:
+            messages.error(request, "No teller detected for given employee.")
+            return redirect('member-statement', member_id=member_id)
+      
         # update account balance before deleteing the cash sheet
         account = payment_sheet.account
         print(f"Account: {account}")
@@ -286,6 +325,11 @@ def delete_payment_sheet(request, member_id, pk ):
 
         # Delete the CashSheet instance
         payment_sheet.delete()
+
+        #Update teller balance
+        current_teller.balance += payment_sheet.amount
+        current_teller.save()
+
         messages.success(request, 'Payment Sheet and associated Voucher have been deleted successfully.')
 
         # Redirect to the success URL

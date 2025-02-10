@@ -6,28 +6,26 @@
     <link rel="stylesheet" href="{% static 'css/savings.css' %}">
 {% endblock corecss %}
 {% block title %}
-    <title>PAYMENT SHEET</title>
+    <title>Voucher</title>
 {% endblock title %}
 
 {% block content %}
-    <a href="{% url 'member_list' %}">Back</a>
+    <a href="{% url 'vouchers' %}">Back</a>
     <div class="container">
-        <h4>PAYMENT SHEET</h4>
-
-        <div class="container" id="member-detail" style="border: 1px solid #ddd; border-radius: 8px; padding: 16px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); margin-top:8px; margin-bottom:8px;">
-            <p><strong>M.Code:</strong>  {{member.code}}</p>
-            <p><strong>Member Name:</strong> {{member.personalInfo.first_name}} {{member.personalInfo.middle_name}} {{member.personalInfo.last_name}}</p>
-        </div>
+        <h4></h4>
 
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
-              <li class="breadcrumb-item active">Savings</li>
+              <li class="breadcrumb-item active">Receipt</li>
+              <li class="breadcrumb-item" aria-current="page"><a href="#">Payment</a></li>
+              <li class="breadcrumb-item" aria-current="page"><a href="#">Journal</a></li>
             </ol>
           </nav>
           
-
-        <form method="post">
+       
+        {% comment %} <form method="post">
             {% csrf_token %}
+             <!-- Other fields from CashSheetForm, if any -->
              <table>
                 <thead>
                     <tr>
@@ -39,7 +37,7 @@
                 <tbody>
                     {% for account, amount_field_name in form.account_amount_fields %}
                     <tr>
-                        <td>{{ account.account_number }}</td>
+                        <td>{{ account.account_type_display }}-{{ account.account_number }}</td>
                         <td>{{ account.balance }}</td>
                         <td>{{ form|get_field:amount_field_name }}</td>
                     </tr>
@@ -48,17 +46,17 @@
                 
             </table>        
 
-            <!-- Non-table fields like 'withdrawn_by', 'remarks', etc. -->
+            <!-- Non-table fields like 'deposited_by', 'remarks', etc. -->
             <div>
-                {{ form.withdrawn_by.label_tag }} {{ form.withdrawn_by }}
+                {{ form.deposited_by.label_tag }} {{ form.deposited_by }}
             </div>
             <div>
                 {{ form.remarks.label_tag }} {{ form.remarks }}
             </div>
             <div>
-                {{ form.cheque_no.label_tag }} {{ form.cheque_no }}
+                {{ form.source_of_fund.label_tag }} {{ form.source_of_fund }}
             </div>
             <input type="submit" value="Save">
-        </form>
+        </form> {% endcomment %}
     </div>
 {% endblock content %}

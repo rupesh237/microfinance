@@ -1,58 +1,125 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpResponse, HttpResponseBadRequest, Http404
+from django.http import HttpResponse, HttpResponseBadRequest, Http404, JsonResponse
 from django.views.generic import ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.forms import modelformset_factory
-from django.db.models import Count
+from django.db.models.functions import TruncMonth
+from django.db.models import Count, F, Sum
 from django.db import transaction
 from django.urls import reverse
 from django.template.loader import render_to_string
 
 from dashboard.mixins import RoleRequiredMixin
 from django.utils import timezone
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
 from weasyprint import HTML, CSS
 from django.template.loader import get_template
 
-from core.models import Voucher, CollectionSheet, Teller, CashVault, VaultTransaction, TellerToTellerTransaction
+from core.models import Voucher, CollectionSheet, Teller, CashVault, DailyCashSummary, VaultTransaction, TellerToTellerTransaction
 from core.forms import CollectionSheetForm
 from core.filters import VoucherFilter, ReportFilter, CollectionSheetFilter
 
 from dashboard.models import Center, GRoup, Member, User
-from savings.models import SAVING_ACCOUNT_TYPE, SavingsAccount, CashSheet, Statement
+from savings.models import SAVING_ACCOUNT_TYPE, SavingsAccount, CashSheet, Statement, PaymentSheet
 from loans.models import Loan, LOAN_TYPE_CHOICES
 
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 
 # Create your views here.
-def voucher_list(request):
-    vouchers = Voucher.objects.all()
-    # Check if there are any GET parameters (filters applied)
-    filters_applied = bool(request.GET)
-    today = timezone.now().date()
 
+## CHARTS ##
+def member_chart(request):
+    branch = request.user.employee_detail.branch
 
-    voucher_filter = VoucherFilter(
-        request.GET,
-        queryset=vouchers if filters_applied else Voucher.objects.filter(created_at__date=today).all()
+    # Get the last 7 months (current month included)
+    today = datetime.today()
+    months = [today.replace(day=1) - timedelta(days=30 * i) for i in range(6, -1, -1)]
+    month_labels = [month.strftime("%B") for month in months]  # Format as "January 2024"
+    
+
+    # Query active members by month
+    active_members = (
+        Member.objects.filter(center__branch=branch, status='A')
+        .annotate(month=TruncMonth('registered_date'))
+        .values("month")
+        .annotate(count=Count("id"))
+        .order_by("month")
     )
-    context = {
-               'filter': voucher_filter,
-               'today': today.strftime("%Y/%m/%d"),
-               }
-    if request.htmx:
-        return render(request, 'vouchers/partials/voucher-container.html', context)
-    return render(request, 'vouchers/voucher-list.html', context)
 
+    # Query dropout members by month
+    dropout_members = (
+        Member.objects.filter(center__branch=branch, status='D')
+        .annotate(month=TruncMonth('dropout_date'))
+        .values("month")
+        .annotate(count=Count("id"))
+        .order_by("month")
+    )
+
+    six_months_ago = today.date() - timedelta(days=180)
+    # Query loanee members by month
+    loanee_members = (
+        Member.objects.filter(center__branch=branch, status="A", loans__approved_date__gte=six_months_ago)
+        .annotate(month=TruncMonth('loans__approved_date'))  # Assuming you want to group by loan approval month
+        .values("month")
+        .annotate(count=Count("id"))
+        .order_by("month")
+    )
+    
+    # Convert query results into a dictionary { "YYYY-MM": count }
+    active_data = {item['month'].strftime("%Y-%m"): item['count'] for item in active_members if item['month']}
+    dropout_data = {item['month'].strftime("%Y-%m"): item['count'] for item in dropout_members if item['month']}
+    loanee_data = {item['month'].strftime("%Y-%m"): item['count'] for item in loanee_members if item['month']}
+
+    # Ensure all months are included (even if there are zero members)
+    month_keys = [month.strftime("%Y-%m") for month in months]
+    final_active_data = [active_data.get(month, 0) for month in month_keys]
+    final_dropout_data = [dropout_data.get(month, 0) for month in month_keys]
+    final_loanee_data = [loanee_data.get(month, 0) for month in month_keys]
+
+    return JsonResponse({
+        "labels": month_labels,  # Months
+        "active_data": final_active_data,  # Active member counts
+        "dropout_data": final_dropout_data,  # Dropout member counts
+        "loanee_data": final_loanee_data  # Loanee member counts
+    })
+
+def savings_chart(request):
+    branch = request.user.employee_detail.branch
+    
+    # Get total count of savings accounts in the branch
+    total_savings_accounts = (
+        SavingsAccount.objects.filter(member__center__branch=branch).count()
+    )
+
+    # Get total amount grouped by account type
+    savings_totals = (
+        SavingsAccount.objects.filter(member__center__branch=branch)
+        .values("account_type")  # Group by account type
+        .annotate(total_amount=Sum("balance"))  # Sum balances per account type
+        .order_by("account_type")
+    )
+
+    # Extract labels (account types) and corresponding amounts
+    labels = [item["account_type"] for item in savings_totals]
+    amounts = [item["total_amount"] for item in savings_totals]
+
+    return JsonResponse({
+        "labels": labels,  # Account types as labels
+        "amounts": amounts,  # Total amount per account type
+        "total_savings_accounts": total_savings_accounts  # Total count of savings accounts
+    })
+
+## REPORTS ##
 def report_list(request):
     # List of report options
     reports = [
         {'name': 'MIS Report', 'url': ''},
         {'name': 'Receipt Compile', 'url': 'receipt'},
         {'name': 'Payment Compile', 'url': 'payment'},
+        {'name': 'Day Book Compile', 'url': 'daybook'},
         # Add more reports as needed
     ]
     return render(request, 'reports/report-list.html', {'reports': reports})
@@ -61,6 +128,7 @@ def report_list(request):
 # Receipt Report
 def receipt_compile_report(request):
     today = timezone.now()
+    branch = request.user.employee_detail.branch
     
     # Check if there are any filters applied (if there are any GET parameters)
     filters_applied = bool(request.GET)
@@ -145,14 +213,10 @@ def receipt_compile_report(request):
                 
                 grand_total = total_loans + total_savings
 
-                # print("Saving Receipts:", saving_receipts)
-                # print("Loan Receipts:", loan_receipts)
-                # print("Total Savings:", total_savings)
-                # print("Total Loans:", total_loans)
-                # print("Grand Total:", grand_total)
                 # Render the HTML template for the PDF
                 template = get_template('reports/receipt-compile-pdf.html')
                 html_content = template.render({
+                    'branch': branch,
                     'saving_receipts': saving_receipts,
                     'loan_receipts': loan_receipts,
                     'grand_total': grand_total,
@@ -181,6 +245,7 @@ def receipt_compile_report(request):
 # Payment Report
 def payment_compile_report(request):
     today = timezone.now()
+    branch = request.user.employee_detail.branch
     
     # Check if there are any filters applied (if there are any GET parameters)
     filters_applied = bool(request.GET)
@@ -233,6 +298,7 @@ def payment_compile_report(request):
                 # Render the HTML template for the PDF
                 template = get_template('reports/payment-compile-pdf.html')
                 html_content = template.render({
+                    'branch': branch,
                     'saving_payments': saving_payments,
                     'total_savings': total_savings,
                     'today': today,
@@ -260,12 +326,182 @@ def payment_compile_report(request):
 
 # DayBook Report
 def day_book_report(request):
-    today = timezone.now().date()
+    today = timezone.now()
+    branch = request.user.employee_detail.branch
     
-    day_book = Voucher.objects.filter(created_at__iexact=today).all()
+    # Check if there are any filters applied (if there are any GET parameters)
+    filters_applied = bool(request.GET)
+    
+    # Initialize the receipts queryset and filter accordingly
+    day_book_transactions = Voucher.objects.filter(branch=branch).all()
+    day_book_transactions_filter = ReportFilter(
+        request.GET if filters_applied else None, 
+        queryset=day_book_transactions if filters_applied else Voucher.objects.none()
+    )
+
+    # Check if form is submitted to generate the PDF
+    if filters_applied:
+        # Check if filters are valid (e.g., start and end date are present)
+        date_str = request.GET.get('date')
+
+        if date_str:
+            selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+            tomorrow = selected_date + timedelta(days=1)
+            print(selected_date)
+            overall_data = {}
+            receipts_data = {}
+            receipts = {}
+            payments_data = {}
+            counter = 1
+
+            # Meetings
+            tomorrow_meetings = Center.objects.filter(branch=branch, meeting_date=tomorrow.day).count()
+            today_meetings = Center.objects.filter(branch=branch, meeting_date=selected_date.day).count()
+            rescheduled_meetings = (
+                CollectionSheet.objects.filter(branch=branch, meeting_date=selected_date)
+                .exclude(next_meeting_date__day=F('center__meeting_date'))
+                .values('center')
+                .distinct()
+                .count()
+            )
+            # Member statistics
+            new_members = Member.objects.filter(center__branch=branch, status='A', registered_date=selected_date).count() 
+            active_members = Member.objects.filter(center__branch=branch, status='A').count() 
+            public_members = Member.objects.filter(center__branch=branch, member_category='Public Member').count()
+            todays_dropout_members = Member.objects.filter(center__branch=branch, status='D', dropout_date=selected_date).count() # add dropout_date in member model
+            dropout_members = Member.objects.filter(center__branch=branch, status='D').count()
+     
+            # Loan statistics
+            loans_approved = Loan.objects.filter(member__center__branch=branch, approved_date=selected_date, status='active') \
+                .aggregate(total_approved_amount=Sum('amount'))['total_approved_amount'] or 0
+            todays_borrower = Loan.objects.filter(member__center__branch=branch, loan_demand_date=selected_date).count()
+            total_borrower = Loan.objects.filter(member__center__branch=branch).count()
+
+            # Store data in overall_data
+            overall_data = {
+                "meetings": {
+                    "tomorrow_meeting": tomorrow_meetings,
+                    "today_meeting": today_meetings,
+                    "rescheduled_meeting": rescheduled_meetings,
+                },
+                "members": {
+                    "new_member": new_members,
+                    "active_member": active_members,
+                    "public_member": public_members,
+                    "today's_dropout_member": todays_dropout_members,
+                    "dropout_member": dropout_members,
+                },
+                "loans": {
+                    "loan_approved": loans_approved,
+                    "today's_borrower": todays_borrower,
+                    "total_borrower": total_borrower,
+                }
+            }
+
+            # Receipt 
+            advance_recovery = 0
+            principal_recovery = day_book_transactions_filter.qs.aggregate(
+                total_principal_paid=Sum('emi_payments__principal_paid')
+            )['total_principal_paid'] or 0
+
+            interest_recovery = day_book_transactions_filter.qs.aggregate(
+                total_interest_paid=Sum('emi_payments__interest_paid')
+            )['total_interest_paid'] or 0
+            total_insurance = 0
+            total_fee_income = day_book_transactions_filter.qs.filter(category="Service Fee").aggregate(total_amount=Sum('amount'))['total_amount'] or 0 
+            receipt_manual_voucher = day_book_transactions_filter.qs.filter(voucher_type="Receipt", category="Manual").aggregate(total_amount=Sum('amount'))['total_amount'] or 0 
+            receipt_generated_voucher = day_book_transactions_filter.qs.filter(voucher_type="Receipt").aggregate(total_amount=Sum('amount'))['total_amount'] or 0 
+            total_receipt = receipt_manual_voucher + receipt_generated_voucher
+            total_savings = CashSheet.objects.filter(
+                member__center__branch=branch,  # Filter by branch
+                transaction_date__date=selected_date,  # Filter by the selected date
+            ).aggregate(total_deposit_amount=Sum('amount'))['total_deposit_amount'] or 0
+            # Store data in receipts
+            receipts_data = {
+                    "advance_recovery": advance_recovery,
+                    "principal_recovery": principal_recovery,
+                    "interest_recovery": interest_recovery,
+                    "total_saving": total_savings,
+                    "total_insurance": total_insurance,
+                    "total_fee_income": total_fee_income,
+                    "manual_voucher": receipt_manual_voucher,
+                    "generated_voucher": receipt_generated_voucher,
+                    "total_receipt": total_receipt,
+                }
+            
+            # Payments
+            loan_disbursed = Loan.objects.filter(member__center__branch=branch, loan_disburse_date=selected_date, status='active') \
+                .aggregate(total_approved_amount=Sum('amount'))['total_approved_amount'] or 0
+            saving_withdrawl = PaymentSheet.objects.filter(
+                member__center__branch=branch,  # Filter by branch
+                transaction_date__date=selected_date,  # Filter by the selected date
+            ).aggregate(total_withdrawal_amount=Sum('amount'))['total_withdrawal_amount'] or 0
+
+            insurance_paid = 0
+            interest_return = 0
+            payment_manual_voucher = day_book_transactions_filter.qs.filter(voucher_type="Payment", category="Manual").aggregate(total_amount=Sum('amount'))['total_amount'] or 0 
+            payment_generated_voucher = day_book_transactions_filter.qs.filter(voucher_type="Payment").aggregate(total_amount=Sum('amount'))['total_amount'] or 0 
+            total_payment = payment_manual_voucher + payment_generated_voucher
+
+            # Store data in payments
+            payments_data = {
+                    "loan_disbursed": loan_disbursed,
+                    "saving_withdrawl": saving_withdrawl,
+                    "insurance_paid": insurance_paid,
+                    "interest_return": interest_return,
+                    "manual_voucher": payment_manual_voucher,
+                    "generated_voucher": payment_generated_voucher,
+                    "total_payment": total_payment,
+                }
+
+            # Cash vault
+            vault = CashVault.objects.filter(branch=branch).first()
+            daily_summary = DailyCashSummary.objects.filter(branch=branch, date=selected_date).first()
+
+            # Cash Denomination
+            # Calculate the denominations and amounts in cash vault
+            from random import randint
+            rand_denominations = [{'denomination' : 1000, 'count':randint(1, 50)}, {'denomination' : 500, 'count':randint(1, 50)}, {'denomination' : 100, 'count':randint(1, 50)}, {'denomination' : 50, 'count':randint(1, 50)}, {'denomination' : 20, 'count':randint(1, 50)}, {'denomination' : 10, 'count':randint(1, 50)}, {'denomination' : 5, 'count':randint(1, 50)}, {'denomination' : 2, 'count':randint(1, 50)}, {'denomination' : 1, 'count':randint(1, 50)}]
+            cash_denominations = []
+            total_cash_denomination_amount = 0
+            for denomination in rand_denominations:
+                total_cash_denomination_amount +=  (denomination['denomination'] * denomination['count']) 
+                cash_denominations.append({
+                    'denomination': denomination['denomination'],
+                    'amount': denomination['denomination'] * denomination['count'],
+                    'count': denomination['count']
+                })
+            print(cash_denominations)
+                    
+            # Render the HTML template for the PDF
+            template = get_template('reports/daybook-pdf.html')
+            html_content = template.render({
+                'branch': branch,
+                'overall_data': overall_data,
+                'receipts_data': receipts_data,
+                'payments_data': payments_data,
+                'vault': vault,
+                'daily_summary': daily_summary,
+                'cash_denominations': cash_denominations,
+                'total_cash_denomination_amount': total_cash_denomination_amount,
+                'today': today,
+                'date': selected_date,
+            })
+
+            # Generate the PDF from the HTML content
+            response = HttpResponse(content_type='application/pdf')
+            response['Content-Disposition'] = f'inline; filename="daybook_{date}.pdf"'
+            HTML(string=html_content, base_url=request.build_absolute_uri('/')).write_pdf(response)
+            return response
+        else:
+            # If no valid filters are provided, return to the form
+            messages.error(request, 'Please select a valid date.')
+            return render(request, 'reports/daybook.html', {'filter': day_book_transactions_filter})
+
+    return render(request, 'reports/daybook.html', {'filter': day_book_transactions_filter})
 
 
-# Collection Sheet
+## Collection Sheet ##
 def collection_sheet_by_date(request):
     today = timezone.now()
     day = today.day
@@ -290,13 +526,13 @@ def collection_sheet_by_date(request):
 
     # Check if CollectionSheets already exist for today
     centers_with_sheets = {}
-    for center in centers:
-        formatted_date = date(today.year, today.month, center.meeting_date)
+    for center in meetings_filter.qs:
         sheets = CollectionSheet.objects.filter(
             center=center,
-            meeting_date=formatted_date
+            meeting_date=selected_date
         ).first()
         centers_with_sheets[center.id] = sheets
+    # print(centers_with_sheets)
 
     context = {
                'filter': meetings_filter,
@@ -502,7 +738,7 @@ def create_collection_sheet(request, center_id):
                                 messages.success(request, f"Collection sheet saved successfully.")
                             except Exception as e:
                                 print(f"Error creating CollectionSheet: {e}")
-                                messages.error(request, f"Error saving collection sheet for member {member.name}")
+                                messages.error(request, f"Error saving collection sheet for member {member.personalInfo.first_name} {member.personalInfo.middle_name} {member.personalInfo.last_name}")
                 return redirect(f"{reverse('collection_sheet', kwargs={'center_id': center.id})}?meeting_date={formatted_date}")
         else:
             print("Formset errors:", formset.errors)
@@ -529,7 +765,7 @@ def create_collection_sheet(request, center_id):
 def generate_voucher_number():
         today_str = timezone.now().strftime('%Y%m%d')
         last_voucher = Voucher.objects.filter(transaction_date=timezone.now().date()).order_by('voucher_number').last()
-        print(f"last Voucher: {last_voucher}")
+        # print(f"last Voucher: {last_voucher}")
         if last_voucher:
             last_sequence = int(last_voucher.voucher_number[-3:])
             next_sequence = last_sequence + 1
@@ -538,7 +774,7 @@ def generate_voucher_number():
         return f"{today_str}{next_sequence:03}"
         
 def update_member_accounts(request, initial_data):
-    transaction_date = timezone.now().date()
+    transaction_date = timezone.now()
     for data in initial_data:
         member = data['member']
         savings_accounts = data['account_details']
@@ -554,8 +790,9 @@ def update_member_accounts(request, initial_data):
                         category='Collection Sheet',
                         amount=details['amount'],
                         description=f'Collection Sheet of {member}: {account.account_number}',
-                        transaction_date=transaction_date,
+                        transaction_date=transaction_date.date(),
                         created_by=request.user,
+                        branch=request.user.employee_detail.branch,
                     )
 
                     # Update account balance
@@ -594,6 +831,15 @@ def collection_sheet_view(request, center_id):
 
     # Filter collection sheets based on meeting_date
     collection_sheets = CollectionSheet.objects.filter(center=center, meeting_date=meeting_date).all()
+    current_status = collection_sheets[0].status
+    meeting_by = collection_sheets[0].meeting_by
+    meeting_no = collection_sheets[0].meeting_no
+    evaluation_no = collection_sheets[0].evaluation_no
+    supervision_by_1 = collection_sheets[0].supervision_by_1
+    supervision_by_2 = collection_sheets[0].supervision_by_2
+    next_meeting_date =  collection_sheets[0].next_meeting_date
+    total = collection_sheets[0].total
+
     groups = center.groups.all()  # Assuming groups are related to the Center model
     members = Member.objects.filter(group__in=groups)
 
@@ -803,10 +1049,20 @@ def collection_sheet_view(request, center_id):
             elif status in ['submitted', 'approved', 'accepted']:
                 try:
                     if status == "accepted":
+                        current_teller = Teller.objects.filter(employee=request.user).first()
+                        if current_teller is None:
+                            messages.error(request, "No teller detected for given employee.")
+                            return redirect(f"{reverse('collection_sheet', kwargs={'center_id': center.id})}?meeting_date={meeting_date_str}")
+                        # update account balance before deleting the cash sheet
                         try:
                             update_member_accounts(request, initial_data=initial_data)
                             # If update_member_accounts succeeds, update the CollectionSheet status
-                            CollectionSheet.objects.filter(center=center, meeting_date=meeting_date).update(status=status.capitalize())
+                            collection_sheets = CollectionSheet.objects.filter(center=center, meeting_date=meeting_date)
+                            total_collection = collection_sheets[0].total
+                            collection_sheets.update(status=status.capitalize())
+                            print(total_collection)
+                            current_teller.balance += Decimal(total_collection)
+                            current_teller.save()
                             messages.success(request, f"All collection sheets for center {center.code} have been updated to status '{status.capitalize()}'.")
                         except Exception as e:
                             print(f"Error: {e}")
@@ -834,14 +1090,14 @@ def collection_sheet_view(request, center_id):
         'loan_types': loan_types,
         'total_columns': total_columns,
         'meeting_date': meeting_date,
-        'meeting_no': collection_sheets[0].meeting_no,
-        'status': collection_sheets[0].status,
-        'evaluation_no': collection_sheets[0].evaluation_no,
-        'meeting_by': collection_sheets[0].meeting_by,
-        'supervision_by_1': collection_sheets[0].supervision_by_1,
-        'supervision_by_2': collection_sheets[0].supervision_by_2,
-        'next_meeting_date': collection_sheets[0].next_meeting_date,
-        'total': collection_sheets[0].total,
+        'meeting_no': meeting_no,
+        'status': current_status,
+        'evaluation_no': evaluation_no,
+        'meeting_by': meeting_by,
+        'supervision_by_1': supervision_by_1,
+        'supervision_by_2': supervision_by_2,
+        'next_meeting_date': next_meeting_date,
+        'total': total,
     }
 
     return render(request, 'collection-sheet/collection-sheet-view.html', context=context)
@@ -1229,3 +1485,28 @@ def cash_management_view(request):
 
     return render(request, 'cash_management/cash_management_view.html', context=context)
 
+
+## VOUCHERS
+def voucher_list(request):
+    vouchers = Voucher.objects.all()
+    # Check if there are any GET parameters (filters applied)
+    filters_applied = bool(request.GET)
+    today = timezone.now().date()
+
+
+    voucher_filter = VoucherFilter(
+        request.GET,
+        queryset=vouchers if filters_applied else Voucher.objects.filter(created_at__date=today).all()
+    )
+    context = {
+               'filter': voucher_filter,
+               'today': today.strftime("%Y/%m/%d"),
+               }
+    if request.htmx:
+        return render(request, 'vouchers/partials/voucher-container.html', context)
+    return render(request, 'vouchers/voucher-list.html', context)
+
+def add_voucher(request):
+    return render(request, 'vouchers/add-voucher.html')
+
+## RECEIPTS ##

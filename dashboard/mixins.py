@@ -13,7 +13,7 @@ class RoleRequiredMixin(UserPassesTestMixin):
         if user.is_superuser:
             return True
         try:
-            employee = user.employee
+            employee = user.employee_detail
             return employee.role in self.allowed_roles
         except Employee.DoesNotExist:
             return False

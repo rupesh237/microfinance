@@ -54,9 +54,16 @@
 
                     let isMatch = false;
                     emiRows.forEach(row => {
-                        const emiAmount = parseFloat(row.querySelector('.emi-amount').textContent);
-                        if (!isNaN(emiAmount) && enteredAmount === emiAmount) {
-                            isMatch = true;
+                        const emiElement = row.querySelector('.emi-amount');
+                        if (emiElement) {
+                            const emiAmount = parseFloat(emiElement.textContent || '0');
+                            console.log('EMI Value:', emiAmount);
+                
+                            if (!isNaN(emiAmount) && enteredAmount === emiAmount) {
+                                isMatch = true;
+                            }
+                        } else {
+                            console.warn('No element with class .emi-amount found in row:', row);
                         }
                     });
 
@@ -134,6 +141,13 @@
                             <td>{{ emi.remaining_principal|floatformat:2 }}</td>
                         </tr>
                         {% endfor %}
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td>{{ total_principal_amount|floatformat:2 }}</td>
+                            <td>{{ total_interest_amount|floatformat:2 }}</td>
+                            <td></td>
+                        </tr>
                     </tbody>
                 </table>
             </div>

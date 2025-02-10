@@ -73,6 +73,13 @@
                                 <td>{{ emi.remaining_principal|floatformat:2 }}</td>
                             </tr>
                             {% endfor %}
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td>{{ total_principal_amount|floatformat:2 }}</td>
+                                <td>{{ total_interest_amount|floatformat:2 }}</td>
+                                <td></td>
+                            </tr>
                         </tbody>
                     </table>
                 </div> 

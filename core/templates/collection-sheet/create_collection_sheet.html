@@ -67,14 +67,14 @@
                         </td>
                     </tr>
                     {% for data, form in group_info.data|zip_lists:formset.forms %}
-                        <tr>
+                        <tr id="row-{{ data.member.id }}">
                             <td>{{ data.member.code }}</td>
                             <td>{{ data.member.personalInfo.first_name }} {{ data.member.personalInfo.middle_name }} {{ data.member.personalInfo.last_name }}</td>
                              <!-- Input for member_collection -->
                             <td id="member_collection">
                                 {{form.member_collection}}
                             </td>
-                            <td>{{ data.total }}</td>
+                            <td id="total-{{ data.member.id }}">{{ data.total }}</td>
                             <td>{{ form.special_record }}</td>
 
                             <!-- Savings Accounts -->
@@ -310,7 +310,7 @@
         });
     
         const totalInput = document.getElementById('total');
-        console.log('totalInput:', totalInput);  // Debug: log the total
+        {% comment %} console.log('totalInput:', totalInput);  // Debug: log the total {% endcomment %}
         if (totalInput) {
             totalInput.value = total.toFixed(2);
             console.log('Calculated Total:', total.toFixed(2));  // Debug: log the total
@@ -325,11 +325,49 @@
         collectionInputs.forEach(input => {
             input.addEventListener('input', function() {
                 updateTotal();  // Update total when input changes
+                {% comment %} const memberId = this.dataset.id;
+                console.log("memberId: " + memberId)
+                const amountCollectionValue = parseFloat(document.getElementById(`total-${memberId}`).textContent);
+                const collectionValue = parseFloat(this.value);
+
+                const row = document.getElementById(`row-${memberId}`);
+                console.log("row:", row, totalValue, collectionValue)
+                
+                // Change row color based on the comparison
+                if (collectionValue >= amountCollectionValue) {
+                    row.style.backgroundColor = 'lightgreen';
+                } else {
+                    row.style.backgroundColor = 'lightcoral';
+                } {% endcomment %}
             });
         });
 
         updateTotal();  // Initialize total when the page loads
     });
+
+    {% comment %} document.addEventListener('DOMContentLoaded', function () {
+        // Select all member collection input fields
+        const collectionInputs = document.querySelectorAll('input[name^="form"][name$="member_collection"]');
+
+        // Add an event listener to each input field
+        collectionInputs.forEach(input => {
+            input.addEventListener('input', function () {
+                const memberId = this.dataset.id;
+                const totalValue = parseFloat(document.getElementById(`total-${memberId}`).textContent);
+                const collectionValue = parseFloat(this.value);
+
+                const row = document.getElementById(`row-${memberId}`);
+                console.log("row:", row, totalValue, collectionValue)
+                
+                // Change row color based on the comparison
+                if (collectionValue >= totalValue) {
+                    row.style.backgroundColor = 'lightgreen';
+                } else {
+                    row.style.backgroundColor = 'lightcoral';
+                }
+            });
+        });
+    }); {% endcomment %}
 
     document.querySelector('form').addEventListener('submit', function() {
         console.log('Final Total Before Submission:', document.getElementById('total').value);

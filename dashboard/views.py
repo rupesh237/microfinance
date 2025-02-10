@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -8,15 +8,18 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
+from decimal import Decimal
 
 import nepali_datetime
 from django.db import transaction
+from django.db.models import Count, Avg
 
 from django.views.generic import (
     CreateView, ListView, UpdateView, DeleteView )
 
 from dashboard.models import Employee, Province, District, Municipality, Branch, GRoup, Member, Center,AddressInformation, PersonalInformation, FamilyInformation, LivestockInformation, HouseInformation, LandInformation, IncomeInformation, ExpensesInformation
 from savings.models import SavingsAccount, INITIAL_SAVING_ACCOUNT_TYPE, Statement
+from core.models import Teller, Voucher
 
 from dashboard.forms import BranchForm, EmployeeForm, CenterForm, GroupForm
 
@@ -66,6 +69,7 @@ def dashboard(request):
     
 @login_required
 def admin_dashboard(request):
+    branch = request.user.employee_detail.branch
     members =Member.objects.all().select_related('personalInfo')
     address_info= None
     try:
@@ -76,13 +80,32 @@ def admin_dashboard(request):
     groups = GRoup.objects.all()
     centers = Center.objects.all()
     employees = Employee.objects.all()
+
+    #Member Summary
+    total_centers = Center.objects.filter(branch=branch).distinct().count()
+    active_members = members.filter(center__branch=branch, status="A").count()
+    droupout_members = members.filter(center__branch=branch, status="D").count()
+    loanee_members = members.filter(center__branch=branch, status="A", loans__isnull=False).count()
+  # Query to count all members in each center for the given branch
+    members_per_center = members.filter(center__branch=branch).values('center').annotate(member_count=Count('id'))
+    # Calculate the total number of members across all centers
+    total_members = sum(item['member_count'] for item in members_per_center)
+
+    # Calculate the average number of members per center
+    average_members_per_center = total_members / total_centers if total_centers else 0 
+
     return render(request, "dashboard/admin_dashboard.html",{
         'bank': 'Admin',
         'groups': groups,
         'centers': centers,
         'employees': employees,
         'members': members,
-        'address_info': address_info
+        'address_info': address_info,
+        'total_centers': total_centers,
+        'active_members': active_members,
+        'droupout_members': droupout_members,
+        'loanee_members': loanee_members,
+        'average_members_per_center': average_members_per_center,
     })
 
 @login_required
@@ -847,7 +870,7 @@ def update_family_info_view(request, member_id):
     member = get_object_or_404(Member, id=member_id)
 
     # Define relationships that should not be modified
-    personal_info = get_object_or_404(PersonalInformation, id=member_id)
+    personal_info = get_object_or_404(PersonalInformation, member_id=member_id)
     gender = personal_info.gender
     marital_status = personal_info.marital_status
     print(f'Gender: {gender}')
@@ -1121,34 +1144,77 @@ class MemberListView(ListView):
            queryset = Member.objects.all().select_related('personalInfo').prefetch_related(current_address_prefetch).filter(status__iexact=status_filter)
         return queryset
     
+
 def change_member_status(request):
     if request.method == 'POST':
+        # Debug: Log the POST data
+        print("POST data:", request.POST)
         member_id = request.POST.get('memberId')
         new_status = request.POST.get('status')
 
+        # Fetch member and validate
         member = get_object_or_404(Member, id=member_id)
-        member.status = new_status 
-        member.save() 
-
-       # Check if the accounts should be created automatically
+       
+        # Handle account creation and fees
         if request.POST.get('create_accounts') == 'yes':
-            # Loop through each account type and create them for the member
-            for account_code, account_name in INITIAL_SAVING_ACCOUNT_TYPE:
-                # Set default amount based on account_code
-                if account_code == "CS":
-                    amount = 200.0
-                elif account_code == "CF":
-                    amount = 10.0
-                else:
-                    amount = 0 
-                SavingsAccount.objects.create(
-                    member=member,
-                    account_type=account_code,
-                    account_number=f"{member.code}.{account_code}.1", 
-                    amount=amount,
-                    balance=0.00,
-                )
-            
+            try:
+                with transaction.atomic():
+                    # Constants for fees
+                    MEMBERSHIP_FEE = 100.00
+                    PASSBOOK_FEE = 25.00
+                    TOTAL_FEE = MEMBERSHIP_FEE + PASSBOOK_FEE
+
+                    # Ensure current teller exists
+                    current_teller = Teller.objects.filter(employee=request.user).first()
+                    print(current_teller)
+                    if not current_teller:
+                        return JsonResponse({'success': False, 'error': 'Current Teller not found'}, status=400)
+
+                    # Loop through account types and create accounts
+                    for account_code, account_name in INITIAL_SAVING_ACCOUNT_TYPE:
+                        amount = 200.0 if account_code == "CS" else 10.0 if account_code == "CF" else 0
+                        
+                        # Create savings account
+                        SavingsAccount.objects.create(
+                            member=member,
+                            account_type=account_code,
+                            account_number=f"{member.code}.{account_code}.1",
+                            amount=amount,
+                            balance=0.00,
+                        )
+
+                        # Adjust teller balance and create voucher for "CS" account type
+                        if account_code == "CS":
+                            current_teller.balance += Decimal(TOTAL_FEE)
+                            current_teller.save()
+
+                            voucher = Voucher.objects.create(
+                                voucher_type='Receipt',
+                                category='Service Fee',
+                                amount=TOTAL_FEE,
+                                description=f"Membership and Passbook Fee for {member.code}",
+                                transaction_date=timezone.now(),
+                                created_by=request.user,
+                            )
+                            print(voucher)
+                    member.status = new_status
+                    member.registered_date = timezone.now().date()
+                    member.save()
+            except Exception as e:
+                print("Error:", str(e))
+                return JsonResponse({'success': False, 'error': str(e)}, status=400)
+        elif request.POST.get('create_accounts') == 'no':
+            member.status = new_status
+            member.save()
+            messages.success(request, f"Member status updated to {new_status} for {member.name}.")
+            return JsonResponse({'success': True})
+
+        # Redirect to the member list with status 'A' (Active)
+        if new_status == 'A':
+            messages.success(request, f"Member status updated to Active and accounts created successfully for {member.name}.")
+            return HttpResponseRedirect(f"{reverse('member_list')}?status=A")
+
+        messages.success(request, f"Member status updated to {new_status} for {member.name}.")
         return JsonResponse({'success': True})
 
     return JsonResponse({'success': False}, status=400)

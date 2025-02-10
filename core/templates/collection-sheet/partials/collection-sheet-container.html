@@ -56,7 +56,7 @@
               <tbody>
                   {% for meeting in filter.qs %}
                     <tr>
-                        <td class="px-6 py-3">{{metting.code}}</td>
+                        <td class="px-6 py-3">{{meeting.code}}</td>
                         <td class="px-6 py-3">{{meeting.name}}</td>
                         <td class="px-6 py-3">
                             <div class="form-check">
@@ -111,9 +111,33 @@
                             </div>
                             {% endwith %}
                         </td>
-                        <td class="px-6 py-3">{{meeting.meeting_by}}</td>
-                        <td class="px-6 py-3">{{meeting.meeting_date|format_meeting_date}}</td>
-                        <td class="px-6 py-3">{{meeting.meeting_date|format_meeting_date}}</td>
+                        <td class="px-6 py-3">
+                          {% with centers_with_sheets|get_item:meeting.id as sheet %}
+                            {% if sheet %}
+                              {{ sheet.meeting_by }}
+                            {% else %}
+                              {{ meeting.meeting_by }}
+                            {% endif %}
+                          {% endwith %}
+                        </td>        
+                        <td class="px-6 py-3">
+                          {% with centers_with_sheets|get_item:meeting.id as sheet %}
+                            {% if sheet %}
+                              {{ sheet.meeting_date }}
+                            {% else %}
+                              {{ selected_date }}
+                            {% endif %}
+                          {% endwith %}
+                        </td>        
+                        <td class="px-6 py-3">
+                          {% with centers_with_sheets|get_item:meeting.id as sheet %}
+                            {% if sheet %}
+                              {{ sheet.meeting_date }}
+                            {% else %}
+                              {{ selected_date }}
+                            {% endif %}
+                          {% endwith %}
+                        </td>                        
                         <td class="px-6 py-3">
                           {% with centers_with_sheets|get_item:meeting.id as sheet %}
                           {% if sheet %}{{sheet.meeting_no}}{% endif %}
@@ -127,7 +151,7 @@
                         <td class="px-6 py-3">
                             <i class='bi bi-pencil-fill mr-2'></i>
                             {% if centers_with_sheets|get_item:meeting.id %}
-                            <a href="{% url 'collection_sheet' meeting.id %}?meeting_date={{ meeting.meeting_date|format_meeting_date }}"><i class="bi bi-file-earmark-spreadsheet-fill"></i></a>
+                            <a href="{% url 'collection_sheet' meeting.id %}?meeting_date={{ selected_date }}"><i class="bi bi-file-earmark-spreadsheet-fill"></i></a>
                             {% else %}
                             <a href="{% url 'create_collection_sheet' meeting.id %}"><i class="bi bi-file-earmark-spreadsheet-fill"></i></a>
                             {% endif %}

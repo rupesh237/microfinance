@@ -42,14 +42,14 @@
         </form>
       </div>
 
-        {% if messages %}
+        {% comment %} {% if messages %}
             {% for message in messages %}
             <div class="alert alert-{{ message.tags }}{% if message.tags == 'error' %} alert-danger{% endif %}">
                 {{ message }}
             </div>        
             {% endfor %}
         {% endif %}
-      
+       {% endcomment %}
           <table class='table'>
               <thead class="text-xs text-black uppercase">
                   <th class="px-6 py-3">Channel</th>

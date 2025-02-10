@@ -6,9 +6,9 @@ from core.models import Voucher
 from decimal import Decimal
 
 LOAN_TYPE_CHOICES = [
-        ('flat', 'Flat Interest'),
-        ('declining', 'Declining Balance'),
-        ('interest_only', 'Interest Only'),
+        ('Flat', 'Flat Interest'),
+        ('Declining', 'Declining Balance'),
+        ('Interest_Only', 'Interest Only'),
     ]
 class Loan(models.Model):
     LOAN_PURPOSE_CHOICES = [

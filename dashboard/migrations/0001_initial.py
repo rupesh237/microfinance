@@ -282,22 +282,4 @@ class Migration(migrations.Migration):
             name='province',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='branches', to='dashboard.province'),
         ),
-        migrations.CreateModel(
-            name='AddressInformation',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('ward_no', models.IntegerField(default=1)),
-                ('tole', models.CharField(max_length=50)),
-                ('house_no', models.CharField(blank=True, max_length=50, null=True)),
-                ('address_type', models.CharField(choices=[('current', 'Current Address'), ('permanent', 'Permanent Address'), ('old', 'Old Address')], max_length=20)),
-                ('district', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='member_permanent_district', to='dashboard.district')),
-                ('member', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='address_info', to='dashboard.member')),
-                ('municipality', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='member_permanent_municipality', to='dashboard.municipality')),
-                ('province', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='member_permanent_province', to='dashboard.province')),
-            ],
-            options={
-                'verbose_name': 'Address Information',
-                'verbose_name_plural': 'Address Information',
-            },
-        ),
     ]

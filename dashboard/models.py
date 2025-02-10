@@ -46,37 +46,12 @@ class InterestTypes(models.TextChoices):
     INTEREST_ONLY = 'Interest Only', _('Interest Only')
 
 
-class ReceiptTypes(models.TextChoices):
-    ENTRANCE_FEE = 'EntranceFee', _('Entrance Fee')
-    MEMBERSHIP_FEE = 'MembershipFee', _('Membership Fee')
-    BOOK_FEE = 'BookFee', _('Book Fee')
-    LOAN_PROCESSING_FEE = 'LoanProcessingFee', _('Loan Processing Fee')
-    SAVINGS_DEPOSIT = 'SavingsDeposit', _('Savings Deposit')
-    FIXED_DEPOSIT = 'FixedDeposit', _('Fixed Deposit')
-    RECURRING_DEPOSIT = 'RecurringDeposit', _('Recurring Deposit')
-    ADDITIONAL_SAVINGS = 'AdditionalSavings', _('Additional Savings')
-    SHARE_CAPITAL = 'ShareCapital', _('Share Capital')
-    PENAL_INTEREST = 'PenalInterest', _('Penal Interest')
-    LOAN_DEPOSIT = 'LoanDeposit', _('Loan Deposit')
-    INSURANCE = 'Insurance', _('Insurance')
-
-
 class FdRdStatus(models.TextChoices):
     OPENED = 'Opened', _('Opened')
     PAID = 'Paid', _('Paid')
     CLOSED = 'Closed', _('Closed')
 
 
-class PaymentTypes(models.TextChoices):
-    LOANS = 'Loans', _('Loans')
-    TRAVELLING_ALLOWANCE = 'TravellingAllowance', _('Travelling Allowance')
-    PAYMENT_OF_SALARY = 'PaymentOfSalary', _('Payment of Salary')
-    PRINTING_CHARGES = 'PrintingCharges', _('Printing Charges')
-    STATIONARY_CHARGES = 'StationaryCharges', _('Stationary Charges')
-    OTHER_CHARGES = 'OtherCharges', _('Other Charges')
-    SAVINGS_WITHDRAWAL = 'SavingsWithdrawal', _('Savings Withdrawal')
-    FIXED_WITHDRAWAL = 'FixedWithdrawal', _('Fixed Deposit Withdrawal')
-    RECURRING_WITHDRAWAL = 'RecurringWithdrawal', _('Recurring Deposit Withdrawal')
 
 GENDER_CHOICES = [
         ('Male', 'Male'),
@@ -287,6 +262,8 @@ class Member(models.Model):
     position = models.IntegerField(null=True)
 
     status = models.CharField(max_length=25, choices=MEMBER_STATUS, default='RTR')
+    registered_date = models.DateField(null=True, blank=True)
+    dropout_date = models.DateField(null=True, blank=True)
     def __str__(self):
         return f'Member {self.id} in group {self.group.name}'
 

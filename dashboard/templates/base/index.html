@@ -70,8 +70,8 @@
                 </li>
             </ul>
             <div class="nav-right">
-                <p><i class="bi bi-bank"></i> Branch Office - Baneshwor <i class="bi bi-calendar"></i> 2081-06-1</p>
-                <p>Rupesh Kumar Mandal <a href="{% url 'logout' %}"> <i class="bi bi-person-check" style="font-size: 25px; color: white;"></i></a></p>
+                <p><i class="bi bi-bank"></i> Branch Office - {{branch.name}} <i class="bi bi-calendar"></i> {% now "Y-m-d" %}</p>
+                <p>{{request.user.employee_detail.name}}<a href="{% url 'logout' %}"> <i class="bi bi-person-check" style="font-size: 25px; color: white;"></i></a></p>
             </div>
         </nav>
         {% endblock navbar %}
@@ -92,7 +92,7 @@
     
 <!-- Bootstrap JS (include this line) -->
 <script src="{% static 'bootstrap/bootstrap.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/nepali-date@1.0.0/dist/nepali-date.min.js"></script>
 
-    
 </body>
 </html>
