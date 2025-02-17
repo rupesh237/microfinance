@@ -22,4 +22,5 @@ urlpatterns = [
 
     path('member-chart/', views.member_chart, name='member_chart'),
     path('saving-chart/', views.savings_chart, name='saving_chart'),
+    path('loan-disburse-chart/', views.loan_disburse_chart, name='loan_disburse_chart'),
 ]

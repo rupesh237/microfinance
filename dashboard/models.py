@@ -138,7 +138,7 @@ class Branch(models.Model):
     wardNo = models.IntegerField(default=1)
 
     def __str__(self):
-        return f'{self.name} ({self.municipality})'
+        return f'{self.code}: {self.name}'
 
 class Employee(models.Model):
     ROLE_CHOICES = [
@@ -267,6 +267,34 @@ class Member(models.Model):
     def __str__(self):
         return f'Member {self.id} in group {self.group.name}'
 
+# Member documents:
+DOC_TYPE_CHOICES = [
+    ('Citizenship', 'Citizenship'),
+    ('Passport', 'Passport'),
+    ('Voter ID', 'Voter ID'),
+    ('Driver License', 'Driver License'),
+]
+
+class PersonalMemberDocument(models.Model):
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name="personal_documents")
+    document_type = models.CharField(max_length=50, choices=DOC_TYPE_CHOICES)
+    document_file = models.FileField(upload_to='member/personal/', blank=True, null=True)
+    uploaded_date = models.DateField(auto_now=True)
+    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='uploaded_member_documents', null=True)
+
+    def __str__(self):
+        return f"{self.member.personalInfo.first_name} {self.member.personalInfo.middle_name} {self.member.personalInfo.last_name} - Personal Document"
+
+class FamilyMemberDocument(models.Model):
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name="family_documents")
+    relationship = models.CharField(max_length=100)  # Example: Father, Mother, Spouse
+    document = models.FileField(upload_to='member/family/', blank=True, null=True)
+    uploaded_date = models.DateField(null=True, blank=True)
+    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='uploaded_family_documents', null=True)
+
+    def __str__(self):
+        return f"{self.member.personalInfo.first_name} {self.member.personalInfo.middle_name} {self.member.personalInfo.last_name} - {self.relationship} Document"
+    
 # Member information from here on:
 class AddressInformation(models.Model):
     ADDRESS_TYPE_CHOICES = [
@@ -295,6 +323,7 @@ class PersonalInformation(models.Model):
     first_name = models.CharField(max_length=50)
     middle_name = models.CharField(max_length=50, blank=True)
     last_name = models.CharField(max_length=50)
+    photo = models.ImageField(upload_to='member/personal/', blank=True, null=True)
     phone_number = models.CharField(max_length=15, null=True)
     gender = models.CharField(max_length=15, choices=GENDER_CHOICES, default='Female')
     marital_status = models.CharField(max_length=30, choices=MARITAL_STATUS_CHOICES)

@@ -112,6 +112,32 @@ def savings_chart(request):
         "total_savings_accounts": total_savings_accounts  # Total count of savings accounts
     })
 
+def loan_disburse_chart(request):
+    branch = request.user.employee_detail.branch
+    
+    # Get total count of loans in the branch
+    total_loans = (
+        Loan.objects.filter(member__center__branch=branch).count()
+    )
+
+    # Get total amount grouped by loan purpose
+    loan_totals = (
+        Loan.objects.filter(member__center__branch=branch)
+        .values("loan_purpose")  # Group by loan purpose
+        .annotate(total_amount=Sum("amount"))  # Sum amounts per loan purpose
+        .order_by("loan_purpose")
+    )
+
+    # Extract labels (loan types) and corresponding amounts
+    labels = [item["loan_purpose"] for item in loan_totals]
+    amounts = [item["total_amount"] for item in loan_totals]
+
+    return JsonResponse({
+        "labels": labels,  # Loan types as labels
+        "amounts": amounts,  # Total amount per loan type
+        "total_loans": total_loans  # Total count of loans
+    })
+
 ## REPORTS ##
 def report_list(request):
     # List of report options

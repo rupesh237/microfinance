@@ -45,11 +45,11 @@
 
         <!-- Second Row of Divs -->
         <div class="summary-row">
-            <div class="summary-box" style="width: 100%; max-width: 600px; height: 350px;">
+            <div class="summary-box" style="max-width: 600px; height: 350px;">
                 <h3>Active vs Dropout Member</h3>
                 <canvas id="memberChart"></canvas>
             </div>
-            <div class="summary-box" style="width: 100%; max-width: 450px; height: 400px;">
+            <div class="summary-box" style="max-width: 450px; height: 400px;">
                 <h3>Saving Balances</h3>
                 <canvas id="savingsChart"></canvas>
                 {% comment %} <ul>
@@ -63,6 +63,13 @@
                     <li><span class="label">Data 11:</span> <span class="value">Value</span></li>
                     <li><span class="label">Data 12:</span> <span class="value">Value</span></li>
                 </ul>
+            </div>
+        </div>  
+        
+        <div class="summary-row">
+            <div class="summary-box" style="max-width: 450px; height: 400px;">
+                <h3>Loans Disburse </h3>
+                <canvas id="loanDisburseChart"></canvas>
             </div>
         </div>
     </div>
@@ -218,6 +225,71 @@
                document.getElementById("savingsChart").parentNode.id = "savingsChartContainer";
             });
     </script>
+
+    <script>
+        fetch("{% url 'loan_disburse_chart' %}")
+            .then(response => response.json())
+            .then(data => {
+                const ctx = document.getElementById("loanDisburseChart").getContext("2d");
+                const amounts = data.amounts.map(Number);  // Ensure all values are numbers
+                // Calculate total amount for percentage calculations
+                const total = amounts.reduce((sum, value) => sum + value, 0);
+                {% comment %} console.log('total', total); {% endcomment %}
+    
+                new Chart(ctx, {
+                    type: "pie",
+                    data: {
+                        labels: data.labels,  // Month labels
+                        datasets: [
+                            {
+                                data: data.amounts, // Active members count
+                                backgroundColor: [
+                                'rgb(255, 99, 132)',
+                                'rgb(54, 162, 235)',
+                                'rgb(255, 205, 86)',
+                                'rgb(75, 192, 192)',
+                                'rgb(153, 102, 255)'
+                            ],
+                                fill: false,
+                                tension: 0.2
+                            },
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            datalabels: {
+                                color: '#000', // Text color
+                                font: {
+                                    weight: 'bold'
+                                },
+                                formatter: (value) => {
+                                    let percentage = ((value / total) * 100).toFixed(1); // Calculate percentage
+                                    return percentage + "%"; // Show percentage
+                                },
+                                align: (context) => {
+                                    let percentage = (context.dataset.data[context.dataIndex] / total) * 100;
+                                    return percentage < 10 ? 'end' : 'center'; // Small values align differently
+                                },
+                                rotation: (context) => {
+                                    let percentage = (context.dataset.data[context.dataIndex] / total) * 100;
+                                    return percentage < 10 ? -90 : 0; // Rotate only small values
+                                },
+                                offset: (context) => {
+                                    let percentage = (context.dataset.data[context.dataIndex] / total) * 100;
+                                    return percentage < 10 ? 30 : 2; // Adjust spacing for better readability
+                                }
+                            }
+                        }
+                    },
+                    plugins: [ChartDataLabels] // Enable the plugin
+                });
+            });
+    </script>
+    
     
 
 {% endblock %}

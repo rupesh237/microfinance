@@ -5,7 +5,7 @@ from django.utils import timezone
 from . models import Branch, Employee, District, Municipality, Center, Member
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from .models import AddressInformation, PersonalInformation, FamilyInformation, LivestockInformation, LandInformation, HouseInformation, IncomeInformation, ExpensesInformation, GRoup
+from .models import AddressInformation, PersonalInformation, PersonalMemberDocument, FamilyMemberDocument, FamilyInformation, LivestockInformation, LandInformation, HouseInformation, IncomeInformation, ExpensesInformation, GRoup
 from .models import Province, District, Municipality
 class BranchForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
@@ -36,7 +36,25 @@ class BranchForm(forms.ModelForm):
 
                 except (ValueError, TypeError):
                     pass
+            
+    def clean(self):
+        cleaned_data = super().clean()
+        code = cleaned_data.get('code')
+        branch_name = cleaned_data.get('name')
+
+        if code:
+            existing_branch = Branch.objects.filter(code=code).exclude(id=self.instance.id if self.instance else None)
+            if existing_branch.exists():
+                self.add_error('code', 'Branch with this code already exists.')
+        
+        if branch_name:
+            existing_branch = Branch.objects.filter(name=branch_name).exclude(id=self.instance.id if self.instance else None)
+            if existing_branch.exists():
+                self.add_error('name', 'Branch with this name already exists.')
+        
+        return cleaned_data
     
+
 
 class EmployeeForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput)
@@ -51,8 +69,15 @@ class EmployeeForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
+        role = cleaned_data.get('role')
+        branch = cleaned_data.get('branch')
         password = cleaned_data.get("password")
         confirm_password = cleaned_data.get("confirm_password")
+
+        if role == "manager":
+            existing_manager = Employee.objects.filter(branch=branch,role=role).exclude(id=self.instance.id if self.instance else None)
+            if existing_manager.exists():
+                self.add_error('role', "Only one manager can be assigned to a branch.")
 
         if password != confirm_password:
             self.add_error('confirm_password', "Passwords do not match")
@@ -61,15 +86,33 @@ class EmployeeForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super(EmployeeForm, self).__init__(*args, **kwargs)
+        self.fields['branch'].queryset = self.get_branch_queryset(user)
 
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
     
+    def get_branch_queryset(self, user):
+        """Returns queryset for the center field based on user role."""
+        if not user or not user.is_authenticated:
+            return Branch.objects.none()
+
+        if user.is_superuser:
+            return Branch.objects.all()
+
+        try:
+            employee = user.employee_detail
+            if employee.role == 'admin':
+                return Branch.objects.all()
+            return Branch.objects.filter(id=employee.branch.id)
+        except AttributeError:
+            return Branch.objects.none()
+    
     
 
 class CenterForm(forms.ModelForm):
-    formed_date_display = forms.DateTimeField(label="Formed Date", required=False, 
-                                              widget=forms.DateTimeInput(attrs={'readonly': 'readonly'}))
+    formed_date_display = forms.DateTimeField(
+        label="Formed Date", required=False, 
+        widget=forms.DateTimeInput(attrs={'readonly': 'readonly'}))
     class Meta:
         model = Center
         fields = ['input_code', 'name', 'branch', 'province', 'district', 'municipality', 'category', 'no_of_group', 'no_of_members', 'meeting_place', 'meeting_distance', 'formed_by', 'meeting_start_date', 'meeting_start_time', 'meeting_end_time', 'walking_time', 'meeting_by', 'meeting_repeat_type', 'meeting_interval', 'meeting_date', 'every', 'pgt_by', 'from_date', 'to_date', 'grt_by', 'approved_by' ]
@@ -91,88 +134,73 @@ class CenterForm(forms.ModelForm):
         user = kwargs.pop('user', None)
         super(CenterForm, self).__init__(*args, **kwargs)
 
-        for field_name, field in self.fields.items():
+        self.fields['branch'].queryset = self.get_branch_queryset(user)
+        self.apply_field_classes()
+        self.configure_initial_values()
+        self.set_dynamic_querysets()
+        
+    def apply_field_classes(self):
+        """Apply Bootstrap form-control class to all fields."""
+        for field in self.fields.values():
             field.widget.attrs['class'] = 'form-control'
-        # Disable only the 'every' field
-        self.fields['every'].disabled = True
-        self.fields['formed_date_display'].disabled = True
-        self.fields['district'].queryset = District.objects.none()
-        self.fields['municipality'].queryset = Municipality.objects.none()
 
-        # If editing an existing center, use the saved formed_date value (formatted to date only)
+    def configure_initial_values(self):
+        """Set initial values for read-only and dependent fields."""
         if self.instance and self.instance.pk:
             self.fields['formed_date_display'].initial = self.instance.formed_date.date()
-
-             # Set initial values for district and municipality if they exist
-            if self.instance.district:
-                self.fields['district'].initial = self.instance.district.id
-            if self.instance.municipality:
-                self.fields['municipality'].initial = self.instance.municipality.id
+            self.fields['branch'].widget = forms.HiddenInput()
         else:
-            # If adding a new center, use the current date (without time)
             self.fields['formed_date_display'].initial = timezone.now().date()
 
-        # Handle province change for district
-        if 'province' in self.data:
-            try:
-                province_id = int(self.data.get('province'))
-                self.fields['district'].queryset = District.objects.filter(province_id=province_id).order_by('name')
+        self.fields['every'].disabled = True
+        self.fields['formed_date_display'].disabled = True
 
-            except (ValueError, TypeError):
-                pass
-        elif self.instance and self.instance.province:
-            # If editing, set district queryset based on the province of the instance
-            self.fields['district'].queryset = District.objects.filter(province_id=self.instance.branch.province.id).order_by('name')
+    def set_dynamic_querysets(self):
+        """Set queryset for district and municipality dynamically."""
+        self.fields['district'].queryset = District.objects.filter(
+            province_id=int(self.data.get('province', self.instance.province.id if self.instance and self.instance.province else 0))
+        ) if 'province' in self.data or (self.instance and self.instance.province) else District.objects.none()
 
-        # Handle district change for municipality
-        if 'district' in self.data:
-            try:
-                district_id = int(self.data.get('district'))
-                self.fields['municipality'].queryset = Municipality.objects.filter(district_id=district_id).order_by('name')
+        self.fields['municipality'].queryset = Municipality.objects.filter(
+            district_id=int(self.data.get('district', self.instance.district.id if self.instance and self.instance.district else 0))
+        ) if 'district' in self.data or (self.instance and self.instance.district) else Municipality.objects.none()
+    
+    
+    def get_branch_queryset(self, user):
+        """Returns queryset for the center field based on user role."""
+        if not user or not user.is_authenticated:
+            return Branch.objects.none()
 
-            except (ValueError, TypeError):
-                pass
-        elif self.instance and self.instance.district:
-            # If editing, set municipality queryset based on the district of the instance
-            self.fields['municipality'].queryset = Municipality.objects.filter(district_id=self.instance.district.id).order_by('name')
+        if user.is_superuser:
+            return Branch.objects.all()
 
-        # Hide the branch field when updating
-        if self.instance and self.instance.pk:
-            self.fields['branch'].widget = forms.HiddenInput()
+        try:
+            employee = user.employee_detail
+            if employee.role == 'admin':
+                return Branch.objects.all()
+            return Branch.objects.filter(id=employee.branch.id)
+        except AttributeError:
+            return Branch.objects.none()
         
-        # Check if user is passed and is authenticated
-        if user and user.is_authenticated:
-            # If the user is superuser, show all branches
-            if user.is_superuser:
-                self.fields['branch'].queryset = Branch.objects.all()
-            else:
-                try:
-                    # Check if the user is an employee
-                    employee = user.employee
-                    # If the user's role is 'admin', show all branches
-                    if employee.role == 'admin':
-                        self.fields['branch'].queryset = Branch.objects.all()
-                    else:
-                        # Otherwise, limit to the user's specific branch
-                        self.fields['branch'].queryset = Branch.objects.filter(id=employee.branch.id)
-                
-                # Handle case where employee profile doesn't exist
-                except Employee.DoesNotExist:
-                    self.fields['branch'].queryset = Branch.objects.none()
-        else:
-            # If no user is provided, set an empty queryset or handle it appropriately
-            self.fields['branch'].queryset = Branch.objects.none()
-
     def clean(self):
         cleaned_data = super().clean()
         from_date = cleaned_data.get('from_date')
         to_date = cleaned_data.get('to_date')
+        input_code = cleaned_data.get('input_code')
+        branch = cleaned_data['branch']
 
         # Validate that both dates are provided
         if from_date and to_date:
             # Check that the difference is exactly 7 days
             if (to_date - from_date).days != 7:
                 raise ValidationError('The "to date" must be exactly 7 days after the "from date".')
+            
+            # Ensure input_code is unique within the same branch
+        if input_code and branch:
+            existing_center = Center.objects.filter(input_code=input_code, branch=branch).exclude(id=self.instance.id if self.instance else None)
+            if existing_center.exists():
+                self.add_error('input_code', 'This input code already exists for this branch. Please choose a different one.')
+                
         return cleaned_data
 
     def save(self, commit=True):
@@ -180,13 +208,13 @@ class CenterForm(forms.ModelForm):
 
         # Get the branch code
         branch_code = self.cleaned_data['branch'].code
-        print(branch_code)
+        # print(branch_code)
 
         # Format the code field as <branch_code>.<user_inputted_code>
         user_input_code = self.cleaned_data['input_code']
-        print(user_input_code)
+        # print(user_input_code)
         center.code = f"{branch_code}.{user_input_code}"
-        print(center)
+        # print(center)
 
         if commit:
             center.save()
@@ -196,55 +224,83 @@ class GroupForm(forms.ModelForm):
     position = forms.ChoiceField(choices=[])
     
     class Meta:
-        model = GRoup  # Adjust the model name here
+        model = GRoup 
         fields = ['center', 'position', 'code', 'name']
 
     def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
         super(GroupForm, self).__init__(*args, **kwargs)
-        # Disable all fields except 'name' when editing an existing group
-        if self.instance and self.instance.pk:
+
+        center_queryset = self.get_center_queryset(user)
+        self.fields['center'].queryset = center_queryset
+
+        # Disable fields except 'name' when editing an existing group
+        if self.instance.pk:
+            # Ensure the current instance's center is included in the queryset
+            if self.instance.center and self.instance.center not in center_queryset:
+                self.fields['center'].queryset = Center.objects.filter(id=self.instance.center.id) | center_queryset
             self.fields['center'].disabled = True
             self.fields['position'].disabled = True
             self.fields['code'].disabled = True
 
-            # Retain the previous choices for the 'position' field
-            self.fields['position'].choices = [(i, i) for i in range(1, self.instance.center.no_of_group + 1)]
+            self.fields['position'].choices = self.get_position_choices(self.instance.center)
         else:
-            # Dynamically populate 'position' based on the selected center
-            if 'center' in self.data:
-                try:
-                    center_id = int(self.data.get('center'))
-                    center = Center.objects.get(id=center_id)
-                    self.fields['position'].choices = [(i, i) for i in range(1, center.no_of_group + 1)]
-                    # Ensure the selected value is retained
-                    if 'position' in self.data:
-                        self.fields['position'].initial = self.data.get('position')
-                except (ValueError, TypeError, Center.DoesNotExist):
-                    self.fields['position'].choices = []
-            else:
-                self.fields['position'].choices = []
-            
-        for field_name, field in self.fields.items():
+            self.fields['position'].choices = self.get_dynamic_position_choices()
+
+        # Apply Bootstrap class
+        for field in self.fields.values():
             field.widget.attrs['class'] = 'form-control'
 
+    def get_position_choices(self, center):
+        """Returns position choices based on the center's no_of_group."""
+        return [(i, i) for i in range(1, center.no_of_group + 1)] if center else []
+    
+    def get_dynamic_position_choices(self):
+        """Handles dynamically populating the position field based on selected center."""
+        center_id = self.data.get('center')
+        if center_id:
+            try:
+                center = Center.objects.get(id=int(center_id))
+                return self.get_position_choices(center)
+            except (ValueError, TypeError, Center.DoesNotExist):
+                return []
+        return []
 
+    def get_center_queryset(self, user):
+        """Returns queryset for the center field based on user role."""
+        if not user or not user.is_authenticated:
+            return Center.objects.none()
+
+        if user.is_superuser:
+            return Center.objects.all()
+
+        try:
+            employee = user.employee_detail
+            if employee.role == 'admin':
+                return Center.objects.all()
+            return Center.objects.filter(branch=employee.branch)
+        except AttributeError:
+            return Center.objects.none()
+        
     def clean(self):
         cleaned_data = super().clean()
         center = cleaned_data.get('center')
+        name = cleaned_data.get('name')
 
-        if center and self.instance.pk:
-            # Exclude the current group from the count when updating
-            existing_groups_count = GRoup.objects.filter(center=center).exclude(pk=self.instance.pk).count()
+        if not center:
+            return cleaned_data
 
-            if existing_groups_count >= center.no_of_group:
-                raise ValidationError(f'The number of groups for this center has reached the maximum limit of {center.no_of_group}.')
-        elif center:
-            # This check is for new group creation
-            existing_groups_count = GRoup.objects.filter(center=center).count()
+        # Count existing groups excluding current one (if updating)
+        existing_groups_count = GRoup.objects.filter(center=center).exclude(pk=self.instance.pk).count()
 
-            if existing_groups_count >= center.no_of_group:
-                raise ValidationError(f'The number of groups for this center has reached the maximum limit of {center.no_of_group}.')
-        
+        if existing_groups_count >= center.no_of_group:
+            self.add_error('center', f'Maximum {center.no_of_group} groups allowed for this center.')
+
+        if name and center:
+            existing_group = GRoup.objects.filter(name=name, center=center).exclude(id=self.instance.id if self.instance else None)
+            if existing_group.exists():
+                self.add_error('name', 'Group with this name already exists. Please choose a different one.')
+
         return cleaned_data
 
 
@@ -379,10 +435,16 @@ class AddressInformationForm(forms.ModelForm):
 
         return cleaned_data
 
+
+class PersonalMemberDocumentForm(forms.ModelForm):
+    class Meta:
+        model = PersonalMemberDocument
+        fields = ['document_type', 'document_file',]
+
 class PersonalInformationForm(forms.ModelForm):
     class Meta:
         model = PersonalInformation
-        fields = ['first_name', 'middle_name', 'last_name', 'phone_number', 'gender', 'marital_status', 'family_status', 'education', 'religion',
+        fields = ['first_name', 'middle_name', 'last_name', 'photo', 'phone_number', 'gender', 'marital_status', 'family_status', 'education', 'religion',
                    'occupation', 'family_member_no', 'date_of_birth', 'voter_id', 'voter_id_issued_on', 'citizenship_no', 'issued_from', 'issued_date', 'marriage_reg_no',
                    'registered_vdc', 'marriage_regd_date', 'registered_by', 'file_no',
          ]

@@ -17,11 +17,18 @@ from django.db.models import Count, Avg
 from django.views.generic import (
     CreateView, ListView, UpdateView, DeleteView )
 
-from dashboard.models import Employee, Province, District, Municipality, Branch, GRoup, Member, Center,AddressInformation, PersonalInformation, FamilyInformation, LivestockInformation, HouseInformation, LandInformation, IncomeInformation, ExpensesInformation
+from dashboard.models import (Province, District, Municipality, 
+                              Branch, Employee, GRoup, Center,
+                              Member, AddressInformation, 
+                              PersonalInformation, PersonalMemberDocument, 
+                              FamilyInformation, FamilyMemberDocument,  
+                              LivestockInformation, HouseInformation, LandInformation, 
+                              IncomeInformation, ExpensesInformation)
 from savings.models import SavingsAccount, INITIAL_SAVING_ACCOUNT_TYPE, Statement
 from core.models import Teller, Voucher
 
-from dashboard.forms import BranchForm, EmployeeForm, CenterForm, GroupForm
+from dashboard.forms import (BranchForm, EmployeeForm, CenterForm, GroupForm, 
+                             PersonalMemberDocumentForm)
 
 from .mixins import RoleRequiredMixin
 
@@ -92,7 +99,8 @@ def admin_dashboard(request):
     total_members = sum(item['member_count'] for item in members_per_center)
 
     # Calculate the average number of members per center
-    average_members_per_center = total_members / total_centers if total_centers else 0 
+    average_members_per_center = round(total_members / total_centers, 2) if total_centers else 0
+
 
     return render(request, "dashboard/admin_dashboard.html",{
         'bank': 'Admin',
@@ -110,61 +118,216 @@ def admin_dashboard(request):
 
 @login_required
 def manager_dashboard(request):
-    employee = Employee.objects.get(user= request.user)
-    branch = employee.branch
+    branch = request.user.employee_detail.branch
+    members =Member.objects.filter(center__branch=branch).select_related('personalInfo')
+    address_info= None
+    try:
+        for member in members:
+            address_info = member.address_info.filter(address_type='current').first()
+    except:
+        address_info = 'No Address Found!'
+    groups = GRoup.objects.filter(center__branch=branch).all()
+    centers = Center.objects.filter(branch=branch).all()
+    employees = Employee.objects.filter(branch=branch).all()
+
+    #Member Summary
+    total_centers = Center.objects.filter(branch=branch).distinct().count()
+    active_members = members.filter(center__branch=branch, status="A").count()
+    droupout_members = members.filter(center__branch=branch, status="D").count()
+    loanee_members = members.filter(center__branch=branch, status="A", loans__isnull=False).count()
+  # Query to count all members in each center for the given branch
+    members_per_center = members.filter(center__branch=branch).values('center').annotate(member_count=Count('id'))
+    # Calculate the total number of members across all centers
+    total_members = sum(item['member_count'] for item in members_per_center)
+
+    # Calculate the average number of members per center
+    average_members_per_center = round(total_members / total_centers, 2) if total_centers else 0
+
     return render(request, "dashboard/manager_dashboard.html",{
         'branch': branch,
-        'bank': 'Manager'
+        'bank': 'Manager',
+        'groups': groups,
+        'centers': centers,
+        'employees': employees,
+        'members': members,
+        'address_info': address_info,
+        'total_centers': total_centers,
+        'active_members': active_members,
+        'droupout_members': droupout_members,
+        'loanee_members': loanee_members,
+        'average_members_per_center': average_members_per_center,
     })
 
 @login_required
 def employee_dashboard(request):
-    employee = Employee.objects.get(user= request.user)
-    branch = employee.branch
+    branch = request.user.employee_detail.branch
+    members =Member.objects.filter(center__branch=branch).select_related('personalInfo')
+    address_info= None
+    try:
+        for member in members:
+            address_info = member.address_info.filter(address_type='current').first()
+    except:
+        address_info = 'No Address Found!'
+    groups = GRoup.objects.filter(center__branch=branch).all()
+    centers = Center.objects.filter(branch=branch).all()
+    employees = Employee.objects.filter(branch=branch).all()
+
+    #Member Summary
+    total_centers = Center.objects.filter(branch=branch).distinct().count()
+    active_members = members.filter(center__branch=branch, status="A").count()
+    droupout_members = members.filter(center__branch=branch, status="D").count()
+    loanee_members = members.filter(center__branch=branch, status="A", loans__isnull=False).count()
+  # Query to count all members in each center for the given branch
+    members_per_center = members.filter(center__branch=branch).values('center').annotate(member_count=Count('id'))
+    # Calculate the total number of members across all centers
+    total_members = sum(item['member_count'] for item in members_per_center)
+
+    # Calculate the average number of members per center
+    average_members_per_center = round(total_members / total_centers, 2) if total_centers else 0
+
+    
     return render(request, "dashboard/employee_dashboard.html",{
         'branch': branch,
-        'bank': 'Staff'
+        'bank': 'Staff',
+        'groups': groups,
+        'centers': centers,
+        'employees': employees,
+        'members': members,
+        'address_info': address_info,
+        'total_centers': total_centers,
+        'active_members': active_members,
+        'droupout_members': droupout_members,
+        'loanee_members': loanee_members,
+        'average_members_per_center': average_members_per_center,
     })
 
+
+## BRANCH ##
+class BranchCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
+    model = Branch
+    form_class = BranchForm
+    template_name = 'branch/add_branch.html'
+    success_url = reverse_lazy('branch_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Branch created successfully!')
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        return super().form_invalid(form)
+    
 @login_required
-def add_branch(request):
-    if request.method =="POST":
-        form = BranchForm(request.POST)
-        if form.is_valid:
-            form.save()
-            return redirect('branch_list')
+def branch_list_view(request):
+    branches = Branch.objects.all().order_by('id')
+    paginator = Paginator(branches, 10)  # Show 10 centers per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # managers = {}
+    # for branch in branches:
+    #     manager = Employee.objects.filter(branch=branch, role='manager').first()
+    #     managers = branch.id[manager]
+    managers = {branch.id: Employee.objects.filter(branch=branch, role='manager').all() for branch in branches}
+    return render(request, 'branch/branch_list.html', {'branches': page_obj, 'managers': managers})
+
+class BranchUpdateView(LoginRequiredMixin, RoleRequiredMixin, UpdateView):
+    model = Branch
+    form_class = BranchForm
+    template_name = 'branch/update_branch.html'
+    success_url = reverse_lazy('branch_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, "Branch updated successfully!")
+        return super().form_valid(form)
+
+class BranchDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
+    model = Branch
+    success_url = reverse_lazy('branch_list')
+    template_name = 'branch/delete_branch.html'
+
+    def form_valid(self, form):
+        messages.error(self.request, "Branch deleted successfully!")
+        return super().form_valid(form)
+
+
+## EMPLOYEE ##
+class EmployeeListView(LoginRequiredMixin, RoleRequiredMixin, ListView):
+    model = Employee
+    template_name = 'employee/employee_list.html'
+    context_object_name = 'employees'
+
+    def get_queryset(self):
+        branch = self.request.user.employee_detail.branch
+        user_role = self.request.user.employee_detail.role
+        if user_role =='admin':
+            queryset = Employee.objects.all().order_by('name')
+        elif user_role =='manager' or user_role == 'staff':
+            queryset = Employee.objects.filter(branch=branch).order_by('name')
         else:
-            messages.error(request, 'Error saving branch, please try again')
-    form = BranchForm()
-    return render(request, "branch/add_branch.html",{
-        'form': form
-    })
+            PermissionDenied
+        paginator = Paginator(queryset, 10)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        return page_obj
 
-@login_required
-def update_branch(request, pk):
-    branch = get_object_or_404(Branch, pk=pk)
-    form = BranchForm(instance=branch)
-    # can also check the user status or the user role
-    if request.method == 'POST':
-        form = BranchForm(request.POST, instance=branch)
-        if form.is_valid():
-            branch = form.save()
-            message=messages.success(request, 'Successfully updated the branch!!')
-            return redirect('branch_list')
 
-        return messages.error(request, form.errors)
-    return render(request, 'branch/update_branch.html',{
-        'form': form,
-        'branch': branch
-    })
+class EmployeeCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
+    model = Employee
+    form_class = EmployeeForm
+    template_name = 'employee/add_employee.html'
+    success_url = reverse_lazy('employee_list')
 
-@login_required
-def delete_branch(request, pk):
-    branch = get_object_or_404(Branch, pk)
-    if request.method == 'POST':
-        branch.delete()
-        return redirect('branch_list')
-    return messages.error(request, 'Error while deleting branch, please try again')
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        # Set the user who created the center
+        cleaned_data = form.cleaned_data
+        user = User.objects.create_user(
+                username=cleaned_data['email'],
+                email=cleaned_data['email'],
+                password=cleaned_data['password']
+        )
+        # Create the employee instance but do not save to the database yet
+        employee = form.save(commit=False)
+        # Assign the user to the employee
+        employee.user = user
+        # Save the employee instance
+        employee.save()
+        messages.success(self.request, 'Employee added successfully!')
+        return super().form_valid(form)
+    
+
+    def form_invalid(self, form):
+        # messages.error(self.request, f'Error adding employee: {form.errors}')
+        return super().form_invalid(form)
+    
+class EmployeeUpdateView(LoginRequiredMixin, RoleRequiredMixin, UpdateView):
+    model = Employee
+    form_class = EmployeeForm
+    template_name = 'employee/edit_employee.html'
+    success_url = reverse_lazy('employee_list')
+
+    def get_form_kwargs(self):
+        kwargs =  super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+    
+    def form_valid(self, form):
+        messages.success(self.request, "Employee details updated successfully!")
+        return super().form_valid(form)
+
+    
+class EmployeeDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
+    model = Employee
+    success_url = reverse_lazy('employee_list')
+    template_name = 'employee/delete_employee.html'
+
+    def form_valid(self, form):
+        messages.error(self.request, "Employee deleted successfully!")
+        return super().form_valid(form)
 
 @login_required
 def add_employee(request):
@@ -184,6 +347,7 @@ def add_employee(request):
             employee.user = user
             # Save the employee instance
             employee.save()
+            messages.success(request, 'Employee added successfully!')
             return redirect('employee_list')
         else:
             messages.error(request, 'Error while adding Employee, please try again')
@@ -220,7 +384,14 @@ class CenterListView(LoginRequiredMixin, ListView):
     template_name = 'center/center_list.html'
 
     def get_queryset(self):
-        queryset = Center.objects.all()
+        branch = self.request.user.employee_detail.branch
+        user_role = self.request.user.employee_detail.role
+        if user_role == 'admin':
+            queryset = Center.objects.all().order_by('formed_date')
+        elif user_role =='manager' or user_role =='employee':
+            queryset = Center.objects.filter(branch=branch).all().order_by('formed_date')
+        else:
+            raise PermissionDenied
         paginator = Paginator(queryset, 10)  # 10 centers per page
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
@@ -272,11 +443,19 @@ class CenterUpdateView(LoginRequiredMixin, RoleRequiredMixin, UpdateView):
         kwargs =  super().get_form_kwargs()
         kwargs['user'] = self.request.user
         return kwargs
+    
+    def form_valid(self, form):
+        messages.success(self.request, "Center updated successfully!")
+        return super().form_valid(form)
 
 class CenterDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
     model = Center
     success_url = reverse_lazy('center_list')
     template_name = 'center/delete_center.html'
+
+    def form_valid(self, form):
+        messages.error(self.request, "Center deleted successfully!")
+        return super().form_valid(form)
 
 
 ## GROUPS ##
@@ -286,7 +465,14 @@ class GroupListView(LoginRequiredMixin, ListView):
     template_name = 'group/group_list.html'
 
     def get_queryset(self):
-        queryset = GRoup.objects.all()
+        branch = self.request.user.employee_detail.branch
+        user_role = self.request.user.employee_detail.role
+        if user_role == 'admin':
+            queryset = GRoup.objects.all().order_by('-created_on')
+        elif user_role == 'manager' or user_role == 'employee':
+            queryset = GRoup.objects.filter(center__branch=branch).all().order_by('-created_on')
+        else:
+            raise PermissionDenied
         paginator = Paginator(queryset, 10)  # 10 centers per page
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
@@ -313,6 +499,11 @@ class GroupCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
     template_name = 'group/add_group.html'
     success_url = reverse_lazy('group_list')
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
     def form_valid(self, form):
         form.instance.created_by = self.request.user
         return super().form_valid(form)
@@ -326,11 +517,21 @@ class GroupUpdateView(LoginRequiredMixin, RoleRequiredMixin, UpdateView):
     template_name = 'group/edit_group.html'
     success_url = reverse_lazy('group_list')
 
+    def form_valid(self, form):
+        messages.success(self.request, "Group updated successfully!")
+        return super().form_valid(form)
+
 class GroupDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
     model = GRoup
     success_url = reverse_lazy('group_list')
     template_name = 'group/delete_group.html'
 
+    def form_valid(self, form):
+        messages.warning(self.request, "Group deleted successfully!")
+        return super().form_valid(form)
+
+
+## MEMBERS ##
 from .forms import CenterSelectionForm
 class SelectCenterView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
     model = Member
@@ -373,7 +574,6 @@ class SelectCenterView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
         return super().form_invalid(form)
 
 from django.views.generic.edit import FormView
-import json
 
 from .forms import (
     CenterSelectionForm, AddressInformationForm, PersonalInformationForm, FamilyInformationForm, 
@@ -840,11 +1040,59 @@ def update_address_info(request, member_id):
         "member": member,
     })
 
+def upload_document(request):
+    if request.method == "POST":
+        form = PersonalMemberDocumentForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                member = Member.objects.get(id=request.POST.get('member'))
+            except Member.DoesNotExist:
+                return JsonResponse({"success": False, "message": "Member not found"}, status=400)
+
+            doc = form.save(commit=False)
+            doc.member = member
+            doc.uploaded_by = request.user
+            doc.save()
+            return JsonResponse({
+                "success": True,
+                "document": {
+                    "id": doc.id,
+                    "document_type": doc.document_type,
+                    "document_file_url": doc.document_file.url,
+                    "document_file_name": doc.document_file.name.split("/member/personal/")[-1],  # Extract filename
+                }
+            }, status=200)  
+
+        return JsonResponse({"success": False, "errors": form.errors})
+    
+    return JsonResponse({"success": False, "message": "Invalid request"}, status=400)
+
+def delete_document(request, document_id):
+    if request.method == "DELETE":
+        document = get_object_or_404(PersonalMemberDocument, id=document_id)
+        document.delete()
+        return JsonResponse({"success": True, "message": "Document deleted successfully."})
+    return JsonResponse({"success": False, "message": "Invalid request."}, status=400)
+
+
+
 # Step 2: Personal Information Update
 class UpdatePersonalInfoView(UpdateView):
     model = PersonalInformation
     form_class = PersonalInformationForm
     template_name = 'member/add_member/personal_info.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Retrieve the member object
+        member_id = self.kwargs.get('member_id')
+        member = get_object_or_404(Member, id=member_id)
+        # Pass the member instance to the context
+        personal_documents = member.personal_documents.all() or []
+        context['member'] = member
+        context['document_form'] = PersonalMemberDocumentForm()
+        context['personal_documents'] = personal_documents
+        return context
 
     def get_object(self):
         """Retrieve the PersonalInformation object for the given member."""
@@ -858,7 +1106,6 @@ class UpdatePersonalInfoView(UpdateView):
         personal_info.registered_date = nepali_datetime.date.today()  # Assuming Nepali date is needed
         member_id = self.object.member_id
         personal_info.save()
-
         # Redirect to the member detail view with the correct URL argument
         return redirect(reverse('update_family_info', kwargs={'member_id': member_id}))
 
@@ -1218,33 +1465,6 @@ def change_member_status(request):
         return JsonResponse({'success': True})
 
     return JsonResponse({'success': False}, status=400)
-
-
-@login_required
-def branch_list_view(request):
-    branches = Branch.objects.all()
-    paginator = Paginator(branches, 10)  # Show 10 centers per page
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    # managers = {}
-    # for branch in branches:
-    #     manager = Employee.objects.filter(branch=branch, role='manager').first()
-    #     managers = branch.id[manager]
-    managers = {branch.id: Employee.objects.filter(branch=branch, role='manager').all() for branch in branches}
-    return render(request, 'branch/branch_list.html', {'branches': page_obj, 'managers': managers})
-
-
-@login_required
-def employee_list_view(request):
-    employees = Employee.objects.all().select_related('user')
-    paginator = Paginator(employees, 10)  # Show 10 centers per page
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    return render(request, 'employee/employee_list.html', {
-        'employees': page_obj
-    })
-
 
 
 def deposits(request):
