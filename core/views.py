@@ -529,7 +529,7 @@ def day_book_report(request):
 
 ## Collection Sheet ##
 def collection_sheet_by_date(request):
-    today = timezone.now()
+    today = timezone.now().date()
     day = today.day
 
     centers = Center.objects.annotate(group_count=Count('groups')).filter(group_count__gt=0).order_by('meeting_date')

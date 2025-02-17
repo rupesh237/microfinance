@@ -1113,92 +1113,67 @@ class UpdatePersonalInfoView(UpdateView):
         """Handle invalid forms."""
         return self.render_to_response(self.get_context_data(form=form))
 
-def update_family_info_view(request, member_id):
-    member = get_object_or_404(Member, id=member_id)
+class UpdateFamilyInfoView(FormView):
+    template_name = "member/add_member/family_info.html"  # Use the same template as FamilyInfoView
+    form_class = FamilyInformationForm
 
-    # Define relationships that should not be modified
-    personal_info = get_object_or_404(PersonalInformation, member_id=member_id)
-    gender = personal_info.gender
-    marital_status = personal_info.marital_status
-    print(f'Gender: {gender}')
-    print(f'Marital Status: {marital_status}')
-    if gender == 'Male' or (gender == 'Female' and marital_status == 'Single'):
-        predefined_relationships = ['Grandfather', 'Father', 'Mother']
-    else:
-        predefined_relationships = ['Father', 'Husband', 'Father-In-Law']
-    
-    # Fetch all existing FamilyInformation for the member
-    existing_family_info = FamilyInformation.objects.filter(member=member)
+    def get_initial(self):
+        """Populate initial data for the forms from existing family info."""
+        member_id = self.kwargs.get('member_id')
+        member = get_object_or_404(Member, id=member_id)
 
-    # Split forms into predefined and dynamic based on relationship
-    predefined_forms = []
-    dynamic_forms = []
+        # Fetch all existing FamilyInformation for the member
+        existing_family_info = FamilyInformation.objects.filter(member=member)
 
-    if request.method == 'POST':
-        valid = True
+        # Initialize forms for both existing and dynamic family members
+        forms = []
+        for i, instance in enumerate(existing_family_info):
+            form = FamilyInformationForm(instance=instance, prefix=f'family-{i}')
+            forms.append(form)
 
-        # Handle predefined relationships
-        for relationship in predefined_relationships:
-            instance = existing_family_info.filter(relationship=relationship).first()
-            form = FamilyInformationForm(
-                request.POST,
-                instance=instance,
-                prefix=f'predefined-{relationship}'
-            )
-            predefined_forms.append(form)
-            if not form.is_valid():
-                valid = False
+        # Prepare context for dynamic form (add more family members)
+        return {
+            'member': member,
+            'forms': forms,
+        }
 
-        # Handle dynamically added relationships
+    def form_valid(self, form):
+        """Process the form data on valid submission."""
+        member_id = self.kwargs.get('member_id')
+        member = get_object_or_404(Member, id=member_id)
+
+        # Fetch all existing FamilyInformation for the member
+        existing_family_info = FamilyInformation.objects.filter(member=member)
+
+        # Handle existing family members
+        forms = []
         i = 0
-        while f'dynamic-form-{i}-family_member_name' in request.POST:
-            instance = existing_family_info.exclude(relationship__in=predefined_relationships).order_by('id')[i] if i < existing_family_info.exclude(relationship__in=predefined_relationships).count() else None
-            form = FamilyInformationForm(
-                request.POST,
-                instance=instance,
-                prefix=f'dynamic-form-{i}'
-            )
-            dynamic_forms.append(form)
+        while f'family-{i}-family_member_name' in self.request.POST:
+            instance = existing_family_info.order_by('id')[i] if i < existing_family_info.count() else None
+            form = FamilyInformationForm(self.request.POST, instance=instance, prefix=f'family-{i}')
+            forms.append(form)
             if not form.is_valid():
-                valid = False
+                return self.form_invalid(form)
             i += 1
 
-        if valid:
-            # Save predefined forms
-            for form in predefined_forms:
-                family_info = form.save(commit=False)
-                family_info.member = member
-                family_info.save()
+        # Save forms
+        for form in forms:
+            family_info = form.save(commit=False)
+            family_info.member = member
+            family_info.save()
 
-            # Save dynamic forms
-            for form in dynamic_forms:
-                family_info = form.save(commit=False)
-                family_info.member = member
-                family_info.save()
+        # Redirect to the 'update_livestock_info' page after saving the data
+        return redirect('update_livestock_info', member_id=member.id)
 
-            return redirect('update_livestock_info', member_id=member.id)
-    else:
-        # Initialize predefined forms
-        for relationship in predefined_relationships:
-            instance = existing_family_info.filter(relationship=relationship).first()
-            form = FamilyInformationForm(
-                instance=instance,
-                initial={'relationship': relationship},
-                prefix=f'predefined-{relationship}'
-            )
-            predefined_forms.append(form)
+    def get(self, request, *args, **kwargs):
+        """Handle GET requests to render forms."""
+        context = self.get_initial()
+        return self.render_to_response(context)
 
-        # Initialize dynamic forms
-        dynamic_family_info = existing_family_info.exclude(relationship__in=predefined_relationships)
-        for i, instance in enumerate(dynamic_family_info):
-            form = FamilyInformationForm(instance=instance, prefix=f'dynamic-form-{i}')
-            dynamic_forms.append(form)
-
-    return render(request, 'member/update_family_info.html', {
-        'member': member,
-        'predefined_forms': predefined_forms,
-        'dynamic_forms': dynamic_forms,
-    })
+    def post(self, request, *args, **kwargs):
+        """Handle POST requests for form submission."""
+        return self.form_valid(None)
+    
 
 def update_livestock_info_view(request, member_id):
     member = get_object_or_404(Member, id=member_id)
@@ -1282,7 +1257,11 @@ def update_expenses_info(request, member_id):
             expenses_info = form.save(commit=False)
             expenses_info.member = member
             expenses_info.save()
-            return redirect('member_detail', member_id=member.id)
+            try:
+                if request.session['demanding_loan']:
+                    return redirect('loan_demand_form', member_id=member.id)
+            except:
+                return redirect('member_detail', member_id=member.id)
     else:
         # Initialize the form with the existing data if available
         form = ExpensesInformationForm(instance=expenses_info)
