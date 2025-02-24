@@ -84,7 +84,7 @@ def member_loans(request, member_id):
                 voucher_type='Receipt',
                 category='Loan',
                 amount=payment.amount_paid,
-                description=f'Loan Receipt of {loan.member.personalInfo.first_name} {loan.member.personalInfo.middle_name} {loan.member.personalInfo.last_name}: {payment.amount_paid}',
+                narration=f'Loan Receipt of {loan.member.personalInfo.first_name} {loan.member.personalInfo.middle_name} {loan.member.personalInfo.last_name}: {payment.amount_paid}',
                 transaction_date=timezone.now().date(),
                 created_by=request.user,
                 branch=request.user.employee_detail.branch,
@@ -494,7 +494,7 @@ def loan_payment(request, loan_id):
                     voucher_type='Payment',
                     category='Loan',
                     amount=loan.loan_analysis_amount,
-                    description=f'Loan Payment of {loan.member.personalInfo.first_name} {loan.member.personalInfo.middle_name} {loan.member.personalInfo.last_name}: {loan.amount}',
+                    narration=f'Loan Payment of {loan.member.personalInfo.first_name} {loan.member.personalInfo.middle_name} {loan.member.personalInfo.last_name}: {loan.amount}',
                     transaction_date=timezone.now().date(),
                     created_by=request.user,
                 )

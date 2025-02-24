@@ -1,4 +1,6 @@
 from django.db import models, transaction
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth.models import User
@@ -20,7 +22,7 @@ class Teller(models.Model):
 
 class CashVault(models.Model):
     branch = models.OneToOneField(Branch, on_delete=models.CASCADE, related_name="cash_vault")
-    current_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     last_updated = models.DateTimeField()
     pending_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, null=True, blank=True)
 
@@ -97,8 +99,12 @@ class Voucher(models.Model):
     voucher_type = models.CharField(max_length=10, choices=VOUCHER_TYPE_CHOICES)
     category = models.CharField(max_length=30, choices=VOUCHER_CATEGORY_CHOICES)
     amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    description = models.TextField(blank=True)
+    narration = models.TextField(blank=True)
     transaction_date = models.DateField()
+
+    in_word = models.TextField(max_length=255, null=True, blank=True)
+    cheque_no = models.BigIntegerField(null=True, blank=True)
+    encloser = models.TextField(max_length=255, null=True, blank=True)
     
     
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="created_vouchers")
@@ -132,6 +138,24 @@ class Voucher(models.Model):
             next_sequence = 1
         return f"{today_str}{next_sequence:03}"
     
+class VoucherEntry(models.Model):
+    ENTRY_TYPE_CHOICES = [
+        ('debit', 'Debit'),
+        ('credit', 'Credit')
+    ]
+
+    voucher = models.ForeignKey(Voucher, on_delete=models.CASCADE, related_name="entries")
+
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    account = GenericForeignKey("content_type", "object_id")
+    # account = models.CharField(max_length=100)  # Replace with ForeignKey if needed
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    entry_type = models.CharField(max_length=6, choices=ENTRY_TYPE_CHOICES)
+    memo = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.entry_type.capitalize()} - {self.account}: {self.amount}"
 
 class CollectionSheet(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name="collection_sheets")
@@ -227,3 +251,4 @@ class PaymentTypes(models.TextChoices):
     SAVINGS_WITHDRAWAL = 'SavingsWithdrawal', _('Savings Withdrawal')
     FIXED_WITHDRAWAL = 'FixedWithdrawal', _('Fixed Deposit Withdrawal')
     RECURRING_WITHDRAWAL = 'RecurringWithdrawal', _('Recurring Deposit Withdrawal')
+

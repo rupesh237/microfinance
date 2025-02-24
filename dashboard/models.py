@@ -3,9 +3,8 @@ from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from nepali_datetime_field.models import NepaliDateField
+
 # Create your models here.
-# class Nepal(models.MOdel):
-#     name = 'Nepal'
 class Province(models.TextChoices):
     PROVINCE_1 = 'Province No. 1', _('Province No. 1')
     PROVINCE_2 = 'Madhesh Province', _('Madhesh Province')
@@ -264,6 +263,8 @@ class Member(models.Model):
     status = models.CharField(max_length=25, choices=MEMBER_STATUS, default='RTR')
     registered_date = models.DateField(null=True, blank=True)
     dropout_date = models.DateField(null=True, blank=True)
+
+    temporary = models.BooleanField(default=True)
     def __str__(self):
         return f'Member {self.id} in group {self.group.name}'
 

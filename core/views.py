@@ -18,13 +18,13 @@ from dateutil.relativedelta import relativedelta
 from weasyprint import HTML, CSS
 from django.template.loader import get_template
 
-from core.models import Voucher, CollectionSheet, Teller, CashVault, DailyCashSummary, VaultTransaction, TellerToTellerTransaction
-from core.forms import CollectionSheetForm
+from core.models import Voucher, VoucherEntry,CollectionSheet, Teller, CashVault, DailyCashSummary, VaultTransaction, TellerToTellerTransaction
+from core.forms import CollectionSheetForm, VoucherForm
 from core.filters import VoucherFilter, ReportFilter, CollectionSheetFilter
 
 from dashboard.models import Center, GRoup, Member, User
 from savings.models import SAVING_ACCOUNT_TYPE, SavingsAccount, CashSheet, Statement, PaymentSheet
-from loans.models import Loan, LOAN_TYPE_CHOICES
+from loans.models import Loan, EMIPayment,LOAN_TYPE_CHOICES
 
 from collections import defaultdict, OrderedDict
 
@@ -112,6 +112,56 @@ def savings_chart(request):
         "total_savings_accounts": total_savings_accounts  # Total count of savings accounts
     })
 
+
+def loan_outstanding_chart(request):
+    branch = request.user.employee_detail.branch
+    
+    # Get total count of loans in the branch
+    total_loans = (
+        Loan.objects.filter(member__center__branch=branch, is_cleared=False).count()
+    )
+
+    # Get total amount grouped by loan purpose
+    loan_totals = (
+        Loan.objects.filter(member__center__branch=branch, is_cleared=False)
+        .values("loan_purpose")  # Group by loan purpose
+        .annotate(total_amount=Sum("amount"))  # Sum amounts per loan purpose
+        .order_by("loan_purpose")
+    )
+
+    # Calculate remaining principal per loan purpose
+    remaining_principal_by_purpose = []
+
+    for loan_group in loan_totals:
+        loan_purpose = loan_group["loan_purpose"]
+        total_amount = loan_group["total_amount"]
+
+        # Get total principal paid from EMIPayment
+        total_principal_paid = (
+            EMIPayment.objects.filter(loan__loan_purpose=loan_purpose, loan__member__center__branch=branch)
+            .aggregate(total_principal_paid=Sum("principal_paid"))["total_principal_paid"] or 0
+        )
+        # Calculate remaining principal
+        remaining_principal = total_amount - total_principal_paid
+
+        remaining_principal_by_purpose.append({
+            "loan_purpose": loan_purpose,
+            "total_amount": total_amount,
+            "principal_paid": total_principal_paid,
+            "remaining_principal": remaining_principal
+        })
+
+    # Extract labels (loan types) and corresponding amounts
+    labels = [item["loan_purpose"] for item in remaining_principal_by_purpose]
+    remaining_principal = [item["remaining_principal"] for item in remaining_principal_by_purpose]
+
+    return JsonResponse({
+        "labels": labels,  # Loan types as labels
+        "remaining_principal": remaining_principal,  # Total count of loans
+        "remaining_principal_by_purpose": remaining_principal_by_purpose,
+    })
+
+
 def loan_disburse_chart(request):
     branch = request.user.employee_detail.branch
     
@@ -160,7 +210,7 @@ def receipt_compile_report(request):
     filters_applied = bool(request.GET)
     
     # Initialize the receipts queryset and filter accordingly
-    receipts = Voucher.objects.filter(voucher_type='Receipt')
+    receipts = Voucher.objects.filter(voucher_type='Receipt', branch=branch)
     receipt_filter = ReportFilter(
         request.GET if filters_applied else None, 
         queryset=receipts if filters_applied else Voucher.objects.none()
@@ -277,7 +327,7 @@ def payment_compile_report(request):
     filters_applied = bool(request.GET)
     
     # Initialize the receipts queryset and filter accordingly
-    payments = Voucher.objects.filter(voucher_type='Payment')
+    payments = Voucher.objects.filter(voucher_type='Payment', branch=branch)
     payment_filter = ReportFilter(
         request.GET if filters_applied else None, 
         queryset=payments if filters_applied else Voucher.objects.none()
@@ -497,7 +547,7 @@ def day_book_report(request):
                     'amount': denomination['denomination'] * denomination['count'],
                     'count': denomination['count']
                 })
-            print(cash_denominations)
+            # print(cash_denominations)
                     
             # Render the HTML template for the PDF
             template = get_template('reports/daybook-pdf.html')
@@ -815,7 +865,7 @@ def update_member_accounts(request, initial_data):
                         voucher_type='Receipt',
                         category='Collection Sheet',
                         amount=details['amount'],
-                        description=f'Collection Sheet of {member}: {account.account_number}',
+                        narration=f'Collection Sheet of {member}: {account.account_number}',
                         transaction_date=transaction_date.date(),
                         created_by=request.user,
                         branch=request.user.employee_detail.branch,
@@ -1535,4 +1585,245 @@ def voucher_list(request):
 def add_voucher(request):
     return render(request, 'vouchers/add-voucher.html')
 
+
 ## RECEIPTS ##
+def create_receipt(request):
+    branch = request.user.employee_detail.branch
+    # Get all accounts for dropdown in receipt form
+    cash_vault = CashVault.objects.filter(branch=branch).all()
+    tellers = Teller.objects.filter(branch=branch).all()
+    # accounts = list(cash_vault) + list(tellers)
+
+    if request.method == "POST":
+        voucher_form = VoucherForm(request.POST)
+        # Fetch debit and credit entries from the request
+        debit_account_type = request.POST.get("debit_account")
+        debit_account_attr = debit_account_type.split("-")
+        if debit_account_attr[0] == "CashVault":
+            debit_account = CashVault.objects.get(id=debit_account_attr[1], branch=branch)
+        elif debit_account_attr[0] == "Teller":
+            debit_account = Teller.objects.get(id=debit_account_attr[1], branch=branch)
+        debit_amount = Decimal(request.POST.get("debit_amount"))
+        debit_memo = request.POST.get("debit_memo")
+
+        credit_account_type = request.POST.get("credit_account")
+        credit_account_attr = credit_account_type.split("-")
+        if credit_account_attr[0] == "CashVault":
+            credit_account = CashVault.objects.get(id=credit_account_attr[1], branch=branch)
+        elif credit_account_attr[0] == "Teller":
+            credit_account = Teller.objects.get(id=credit_account_attr[1], branch=branch)
+        credit_amount = Decimal(request.POST.get("credit_amount"))
+        credit_memo = request.POST.get("credit_memo")
+
+        if debit_amount != credit_amount:
+            messages.error(request, "Debit and Credit amounts do not match!")
+            return render(request, 'vouchers/add-receipt.html',  {'voucher_form': voucher_form, "cash_vault": cash_vault,
+                    "tellers": tellers,})
+        
+        if voucher_form.is_valid():
+            with transaction.atomic():
+                try:
+                    voucher = voucher_form.save(commit=False)
+                    voucher.voucher_type = "Receipt"
+                    voucher.category = "Manual"
+                    voucher.amount = credit_amount
+                    voucher.transaction_date = timezone.now().date()
+                    voucher.created_by = request.user
+                    voucher.branch = branch
+                    voucher.save()
+
+                    # Save Debit Entries
+                    VoucherEntry.objects.create(
+                        voucher=voucher,
+                        account=debit_account,
+                        entry_type="debit",
+                        amount=debit_amount,
+                        memo=debit_memo
+                    )
+
+                    debit_account.balance -= debit_amount
+                    debit_account.save()
+
+                    # Save Credit Entries
+                    VoucherEntry.objects.create(
+                        voucher=voucher,
+                        account=credit_account,
+                        entry_type="credit",
+                        amount=credit_amount,
+                        memo=credit_memo
+                        )
+                    
+                    credit_account.balance += credit_amount
+                    credit_account.save()
+
+                    messages.success(request, "Voucher created successfully!")
+                    return redirect("vouchers")  # Change to your desired redirect
+                except Exception as e:
+                    messages.error(request, f"Error saving voucher: {e}")
+                return redirect('new_receipt')
+            
+    else:
+        voucher_form = VoucherForm()
+
+    return render(request, 'vouchers/add-receipt.html',  {'voucher_form': voucher_form, "cash_vault": cash_vault,
+        "tellers": tellers,})
+
+## PAYMENTS ##
+def create_payment(request):
+    branch = request.user.employee_detail.branch
+    # Get all accounts for dropdown in receipt form
+    cash_vault = CashVault.objects.filter(branch=branch).all()
+    tellers = Teller.objects.filter(branch=branch).all()
+    # accounts = list(cash_vault) + list(tellers)
+
+    if request.method == "POST":
+        voucher_form = VoucherForm(request.POST)
+        # Fetch debit and credit entries from the request
+        debit_account_type = request.POST.get("debit_account")
+        debit_account_attr = debit_account_type.split("-")
+        if debit_account_attr[0] == "CashVault":
+            debit_account = CashVault.objects.get(id=debit_account_attr[1], branch=branch)
+        elif debit_account_attr[0] == "Teller":
+            debit_account = Teller.objects.get(id=debit_account_attr[1], branch=branch)
+        debit_amount = Decimal(request.POST.get("debit_amount"))
+        debit_memo = request.POST.get("debit_memo")
+
+        credit_account_type = request.POST.get("credit_account")
+        credit_account_attr = credit_account_type.split("-")
+        if credit_account_attr[0] == "CashVault":
+            credit_account = CashVault.objects.get(id=credit_account_attr[1], branch=branch)
+        elif credit_account_attr[0] == "Teller":
+            credit_account = Teller.objects.get(id=credit_account_attr[1], branch=branch)
+        credit_amount = Decimal(request.POST.get("credit_amount"))
+        credit_memo = request.POST.get("credit_memo")
+
+        if debit_amount != credit_amount:
+            messages.error(request, "Debit and Credit amounts do not match!")
+            return render(request, 'vouchers/add-payment.html',  {'voucher_form': voucher_form, "cash_vault": cash_vault,
+                    "tellers": tellers,})
+        
+        if voucher_form.is_valid():
+            with transaction.atomic():
+                try:
+                    voucher = voucher_form.save(commit=False)
+                    voucher.voucher_type = "Payment"
+                    voucher.category = "Manual"
+                    voucher.amount = debit_amount
+                    voucher.transaction_date = timezone.now().date()
+                    voucher.created_by = request.user
+                    voucher.branch = branch
+                    voucher.save()
+
+                    # Save Debit Entries
+                    VoucherEntry.objects.create(
+                        voucher=voucher,
+                        account=debit_account,
+                        entry_type="debit",
+                        amount=debit_amount,
+                        memo=debit_memo
+                    )
+                    debit_account.balance -= debit_amount
+                    debit_account.save()
+
+                    # Save Credit Entries
+                    VoucherEntry.objects.create(
+                        voucher=voucher,
+                        account=credit_account,
+                        entry_type="credit",
+                        amount=credit_amount,
+                        memo=credit_memo
+                        )
+                    credit_account.balance += credit_amount
+                    credit_account.save()
+
+                    messages.success(request, "Voucher created successfully!")
+                    return redirect("vouchers")  # Change to your desired redirect
+                except Exception as e:
+                    messages.error(request, f"Error saving voucher: {e}")
+                return redirect('new_payment')
+            
+    else:
+        voucher_form = VoucherForm()
+
+    return render(request, 'vouchers/add-payment.html',  {'voucher_form': voucher_form, "cash_vault": cash_vault,
+        "tellers": tellers,})
+
+
+## Journal ##
+def create_journal(request):
+    branch = request.user.employee_detail.branch
+    # Get all accounts for dropdown in receipt form
+    cash_vault = CashVault.objects.filter(branch=branch).all()
+    tellers = Teller.objects.filter(branch=branch).all()
+    # accounts = list(cash_vault) + list(tellers)
+
+    if request.method == "POST":
+        voucher_form = VoucherForm(request.POST)
+        # Fetch debit and credit entries from the request
+        debit_account_type = request.POST.get("debit_account")
+        debit_account_attr = debit_account_type.split("-")
+        if debit_account_attr[0] == "CashVault":
+            debit_account = CashVault.objects.get(id=debit_account_attr[1], branch=branch)
+        elif debit_account_attr[0] == "Teller":
+            debit_account = Teller.objects.get(id=debit_account_attr[1], branch=branch)
+        debit_amount = Decimal(request.POST.get("debit_amount"))
+        debit_memo = request.POST.get("debit_memo")
+
+        credit_account_type = request.POST.get("credit_account")
+        credit_account_attr = credit_account_type.split("-")
+        if credit_account_attr[0] == "CashVault":
+            credit_account = CashVault.objects.get(id=credit_account_attr[1], branch=branch)
+        elif credit_account_attr[0] == "Teller":
+            credit_account = Teller.objects.get(id=credit_account_attr[1], branch=branch)
+        credit_amount = Decimal(request.POST.get("credit_amount"))
+        credit_memo = request.POST.get("credit_memo")
+
+        if debit_amount != credit_amount:
+            messages.error(request, "Debit and Credit amounts do not match!")
+            return render(request, 'vouchers/add-journal.html',  {'voucher_form': voucher_form, "cash_vault": cash_vault,
+                    "tellers": tellers,})
+        
+        if voucher_form.is_valid():
+            with transaction.atomic():
+                try:
+                    voucher = voucher_form.save(commit=False)
+                    voucher.voucher_type = "Journal"
+                    voucher.category = "Manual"
+                    voucher.amount = debit_amount
+                    voucher.transaction_date = timezone.now().date()
+                    voucher.created_by = request.user
+                    voucher.branch = branch
+                    voucher.save()
+
+                    # Save Debit Entries
+                    VoucherEntry.objects.create(
+                        voucher=voucher,
+                        account=debit_account,
+                        entry_type="debit",
+                        amount=debit_amount,
+                        memo=debit_memo
+                    )
+                    debit_account.balance -= debit_amount
+                    debit_account.save()
+
+                    # Save Credit Entries
+                    VoucherEntry.objects.create(
+                        voucher=voucher,
+                        account=credit_account,
+                        entry_type="credit",
+                        amount=credit_amount,
+                        memo=credit_memo
+                        )
+                    credit_account.balance += credit_amount
+                    credit_account.save()
+
+                    messages.success(request, "Voucher created successfully!")
+                    return redirect("vouchers")  # Change to your desired redirect
+                except Exception as e:
+                    messages.error(request, f"Error saving voucher: {e}")
+                return redirect('new_journal')   
+    else:
+        voucher_form = VoucherForm()
+
+    return render(request, 'vouchers/add-journal.html',  {'voucher_form': voucher_form, "cash_vault": cash_vault,
+        "tellers": tellers,})

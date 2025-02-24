@@ -11,6 +11,7 @@
 {% block content %}
 <form method="post">
     {% csrf_token %}
+    {{ forms.management_form }}
     <table>
         <thead>
             <tr>
@@ -28,7 +29,10 @@
         </thead>
         <tbody>
             {% for form in forms %}
-            <tr>{% include "member/add_member/family_info_form.html" %}</tr>
+                {% include "member/add_member/family_info_form.html" %}
+                {% for error in form.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                {% endfor %}
             {% endfor %}
         </tbody>
     </table>
@@ -40,26 +44,74 @@
 <script src="https://unpkg.com/nepali-date-picker@2.0.1/dist/jquery.nepaliDatePicker.min.js"></script>
 <script>
     $(document).ready(function () {
-        function initializeNepaliDatePicker() {
-            $('.nepali-date-field').nepaliDatePicker({
+        function initializeNepaliDatePicker(selector) {
+            $(selector).nepaliDatePicker({
                 dateFormat: '%y-%m-%d',
                 closeOnDateSelect: true,
                 minDate: '१९७५-१-१',
                 maxDate: '२१००-१२-३०'
+            }).attr('data-datepicker-initialized', true);
+        }
+    
+        // Ensure existing fields get initialized after a short delay
+        setTimeout(function () {
+            initializeNepaliDatePicker('.nepali-date-field');
+            console.log("Date picker initialized for existing fields.");
+        }, 10);  // Small delay to allow rendering
+    
+        function attachDeleteButton() {
+            $(".delete-member-btn").off("click").on("click", function () {
+                $(this).closest("tr").remove();
             });
         }
-        initializeNepaliDatePicker();
 
+        let formCount = 0;
+            
+        // Find the highest current form index
+       $('tbody tr').each(function () {
+            let prefix = $(this).find('input[name^="family-"]').attr('name');
+            if (prefix) {
+                let match = prefix.match(/family-(\d+)-/);
+                if (match) {
+                    formCount = Math.max(formCount, parseInt(match[1]) + 1);
+                }
+            }
+        });
+        console.log(formCount)
+    
         $('#add-member-btn').click(function () {
-            const formCount = $('tbody tr').length;
             fetch(`/get_new_family_form/?count=${formCount}`)
-                .then(response => response.json())
-                .then(data => {
-                    $('tbody').append(data.form_html);
-                    initializeNepaliDatePicker();
-                })
-                .catch(error => console.error('Error fetching new form:', error));
+            .then(response => response.json())
+            .then(data => {
+                let newRow = $(data.form_html);
+                newRow.find(".delete-member-btn").show();
+                $('tbody').append(newRow);
+    
+                attachDeleteButton();
+    
+                // Ensure datepicker is reinitialized for newly added fields
+                setTimeout(function () {
+                    let newDateFields = newRow.find('.nepali-date-field');
+    
+                    newDateFields.each(function () {
+                        $(this).nepaliDatePicker('destroy');  // Destroy any old datepicker instance
+                        $(this).val('');  // Ensure no old values are carried over
+                        $(this).nepaliDatePicker(); // Reinitialize
+                    });
+    
+                    console.log("Date picker initialized correctly.");
+                }, 50);
+            })
+            .catch(error => console.error('Error fetching new form:', error));
+        });
+    
+        // Ensure datepicker initializes on dynamically added fields when focused
+        $(document).on('focus', '.nepali-date-field', function () {
+            if (!$(this).data('datepicker-initialized')) {
+                initializeNepaliDatePicker(this);
+            }
         });
     });
+    
 </script>
 {% endblock content %}

@@ -7,6 +7,9 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from .models import AddressInformation, PersonalInformation, PersonalMemberDocument, FamilyMemberDocument, FamilyInformation, LivestockInformation, LandInformation, HouseInformation, IncomeInformation, ExpensesInformation, GRoup
 from .models import Province, District, Municipality
+
+from  nepali_datetime_field.forms import NepaliDateInput
+
 class BranchForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(BranchForm, self).__init__(*args, **kwargs)
@@ -465,8 +468,8 @@ class FamilyInformationForm(forms.ModelForm):
         ]
 
         widgets = {
-            'date_of_birth': forms.TextInput(attrs={'class': 'form-control nepali-date-field'}),
-            'issued_date': forms.TextInput(attrs={'class': 'form-control nepali-date-field'}),
+            'date_of_birth': NepaliDateInput(attrs={'class': 'form-control nepali-date-field'}),
+            'issued_date': NepaliDateInput(attrs={'class': 'form-control nepali-date-field'}),
         }
         
     def __init__(self, *args, **kwargs):
@@ -475,8 +478,6 @@ class FamilyInformationForm(forms.ModelForm):
         for field_name, field in self.fields.items():
             if field_name not in ['date_of_birth', 'issued_date']:
                 field.widget.attrs['class'] = 'form-control'
-
-
 
 
 class LivestockInformationForm(forms.ModelForm):

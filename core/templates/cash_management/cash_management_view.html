@@ -96,8 +96,8 @@
                     {% if vault %}
                     <tr>
                         <td>{{ vault }}</td>
-                        <td>{{ vault.current_balance }}</td>
-                        <td>{{ vault.current_balance }}</td>
+                        <td>{{ vault.balance }}</td>
+                        <td>{{ vault.balance }}</td>
                         <td>
                             <i class="bi bi-pencil-fill" data-bs-toggle="modal" data-bs-target="#vaultTransactionModal"></i>
                         </td>
@@ -207,10 +207,6 @@
                             </tbody>
                         </table> 
                     </div>
-                    {% comment %} <div class="modal-footer">
-                        <a class="btn btn-primary text-white" href="{% url 'update_member_for_loan' member.id %}">Okay, proceed</a>
-                        <a class="btn btn-primary text-white" href="{% url 'loan_demand_list' member.id %}">NO</a>                        
-                    </div> {% endcomment %}
                 </form>
             </div>
         </div>

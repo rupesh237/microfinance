@@ -1,0 +1,260 @@
+<form method="POST">
+    {% csrf_token %}
+    <div class="container mt-4">
+        <div class="row justify-content-around">
+            <!-- Debit Section-->
+            <div class="col-sm-5 col-md-5 mb-5">
+                <div class="card shadow">
+                    <div class="card-header text-center bg-light text-black">
+                        <h6 class="mb-0"><strong>DEBIT</strong></h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="debit-account" class="form-label">Account<span class="text-danger">*</span></label>
+                            <select class="form-select" name="debit_account" id="debit-account" required>
+                                <option value="">Choose Account...</option>
+                                {% for account in cash_vault %}
+                                <option value="CashVault-{{ account.id }}" name="{{account}}">{{ account }}</option>
+                                {% endfor %}
+                                {% for account in tellers %}
+                                <option value="Teller-{{ account.id }}" name="{{account}}">{{ account }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="debit-amount" class="form-label">Amount<span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="debit_amount" id="debit-amount" placeholder="Enter amount" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="debit-memo" class="form-label">Memo</label>
+                            <input type="text" class="form-control" name="debit_memo" id="debit-memo" placeholder="Enter memo">
+                        </div>
+
+                        <button type="button" class="btn btn-outline-dark w-10" id="add-debit">
+                            <i class="bi bi-plus-circle-fill"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Credit Section-->
+            <div class="col-sm-5 col-md-5">
+                <div class="card shadow">
+                    <div class="card-header text-center text-dark">
+                        <h6 class="mb-0"><strong>CREDIT</strong></h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="credit-account" class="form-label">Account<span class="text-danger">*</span></label>
+                            <select class="form-select" name="credit_account" id="credit-account" required>
+                                <option value="">Choose Account...</option>
+                                {% for account in cash_vault %}
+                                <option value="vault-{{ account.id }}" name="{{account}}">{{ account }}</option>
+                                {% endfor %}
+                                {% for account in tellers %}
+                                <option value="teller-{{ account.id }}" name="{{account}}">{{ account }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="credit-amount" class="form-label">Amount<span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="credit_amount" id="credit-amount" placeholder="Enter amount" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="credit-memo" class="form-label">Memo</label>
+                            <input type="text" class="form-control" name="credit_memo" id="credit-memo" placeholder="Enter memo">
+                        </div>
+
+                        <button type="button" class="btn btn-outline-dark w-10" id="add-credit">
+                            <i class="bi bi-plus-circle-fill"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        <div>
+
+        <!-- Error Message -->
+        <div id="error-message" class="text-danger text-center mt-2" style="display: none;">
+            <strong>Debit and Credit amounts do not tally!</strong>
+        </div>
+
+
+        <!--Table-->
+        <div class="mt-4">
+            <table class="table table-striped table-bordered" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Account Head</th>
+                        <th>Debit</th>
+                        <th>Credit</th>
+                        <th>Memo</th>
+                        <th>Balance</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="voucher-table">
+                    <!-- Entries will be dynamically added here -->
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td><strong>Total</strong></td>
+                        <td id="total-debit">0.0</td>
+                        <td id="total-credit">0.0</td>
+                        <td colspan="3"></td>
+                    </tr>
+                </tfoot>
+            </table>
+            <!--Table-->
+        </div>
+        
+        <!-- Additional Details -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">{{ voucher_form.in_word.label }}</label>
+                    {{ voucher_form.in_word }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">{{ voucher_form.narration.label }}<span class="text-danger">*</span></label>
+                    {{ voucher_form.narration }}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">{{ voucher_form.cheque_no.label }}</label>
+                    {{ voucher_form.cheque_no }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">{{ voucher_form.encloser.label }}</label>
+                    {{ voucher_form.encloser }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Save Button -->
+        <div class="text-center mt-3">
+            <button class="btn btn-primary" type="Submit" id="save-button" disabled><i class="bi bi-floppy2"></i> Save</button>
+        </div>
+    </div>
+</form>
+<script src="https://cdn.jsdelivr.net/npm/number-to-words"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const debitAccount = document.getElementById("debit-account");
+        const creditAccount = document.getElementById("credit-account");
+        const allOptions = Array.from(debitAccount.options); // Store all options
+
+        debitAccount.addEventListener("change", function () {
+            let selectedValue = this.value;
+    
+            // Clear existing options and re-add all except the selected debit account
+            creditAccount.innerHTML = "";
+            allOptions.forEach(option => {
+                if (option.value !== selectedValue) {
+                    creditAccount.appendChild(option.cloneNode(true));
+                }
+            });
+        });
+
+        let totalDebit = 0;
+        let totalCredit = 0;
+        
+        const addDebitBtn = document.getElementById("add-debit");
+        const addCreditBtn = document.getElementById("add-credit");
+
+        const errorMessage = document.getElementById("error-message");
+
+    
+        addDebitBtn.addEventListener("click", function () {
+            let account = document.getElementById("debit-account").selectedOptions[0].text;
+            let amount = parseFloat(document.getElementById("debit-amount").value) || 0;
+            let memo = document.getElementById("debit-memo").value;
+    
+            if (account && amount > 0) {
+                totalDebit += amount;
+                addToTable(account, amount, 0, memo, amount, "debit");
+                addDebitBtn.disabled = true; // Disable after adding
+            }
+        });
+    
+        addCreditBtn.addEventListener("click", function () {
+            let account = document.getElementById("credit-account").selectedOptions[0].text;
+            let amount = parseFloat(document.getElementById("credit-amount").value) || 0;
+            let memo = document.getElementById("credit-memo").value;
+    
+            if (account && amount > 0) {
+                totalCredit += amount;
+                addToTable(account, 0, amount, memo, amount, "credit");
+                addCreditBtn.disabled = true; // Disable after adding
+            }
+        });
+    
+        function addToTable(account, debit, credit, memo, balance, type) {
+            let table = document.getElementById("voucher-table");
+            let row = table.insertRow();
+            row.innerHTML = `
+                <td>${account}</td>
+                <td>${debit.toFixed(2)}</td>
+                <td>${credit.toFixed(2)}</td>
+                <td>${memo}</td>
+                <td>${(balance).toFixed(2)}</td>
+                <td><button class="btn btn-sm btn-danger remove-entry"><i class="bi bi-trash"></i></button></td>
+            `;
+    
+            document.getElementById("total-debit").innerText = totalDebit.toFixed(2);
+            document.getElementById("total-credit").innerText = totalCredit.toFixed(2);
+
+            let rowCount = table.rows.length;
+            if (rowCount == 2) {
+                checkBalance();
+            }
+    
+            // Handle removal of entry
+            row.querySelector(".remove-entry").addEventListener("click", function () {
+                let rowAmount = parseFloat(row.cells[1].innerText) || parseFloat(row.cells[2].innerText);
+                if (row.cells[1].innerText !== "0.00") {
+                    totalDebit -= rowAmount;
+                    addDebitBtn.disabled = false; // Re-enable Add Debit button
+                } else {
+                    totalCredit -= rowAmount;
+                    addCreditBtn.disabled = false; // Re-enable Add Credit button
+                }
+                row.remove();
+                document.getElementById("total-debit").innerText = totalDebit.toFixed(2);
+                document.getElementById("total-credit").innerText = totalCredit.toFixed(2);
+                checkBalance(); // Re-check balance after removal
+            });
+        }
+
+        function checkBalance() {
+            if (totalDebit !== totalCredit) {
+                errorMessage.style.display = "block"; // Show error if not balanced
+                document.getElementById("save-button").disabled = true; // Disable Save button if not balanced
+            } else {
+                errorMessage.style.display = "none"; // Hide error if balanced
+                document.getElementById("save-button").disabled = false; // Enable Save button if balanced
+            }
+        }
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const debitAmountInput = document.getElementById("debit-amount");
+        const inWordField = document.getElementById("id_in_word");
+    
+        debitAmountInput.addEventListener("input", function () {
+            let amount = parseInt(debitAmountInput.value, 10);
+            if (!isNaN(amount) && amount > 0) {
+                inWordField.value = numberToWords.toWords(amount).charAt(0).toUpperCase() + numberToWords.toWords(amount).slice(1) + " Only";
+            } else {
+                inWordField.value = "";
+            }
+        });
+    });
+    
+    
+</script>

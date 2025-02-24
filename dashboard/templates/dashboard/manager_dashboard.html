@@ -52,17 +52,10 @@
             <div class="summary-box" style="max-width: 450px; height: 400px;">
                 <h3>Saving Balances</h3>
                 <canvas id="savingsChart"></canvas>
-                {% comment %} <ul>
-                    <li><span class="label">Data 9:</span> <span class="value">Value</span></li>
-                    <li><span class="label">Data 10:</span> <span class="value">Value</span></li>
-                </ul> {% endcomment %}
             </div>
             <div class="summary-box">
                 <h3>Loans Outstanding </h3>
-                <ul>
-                    <li><span class="label">Data 11:</span> <span class="value">Value</span></li>
-                    <li><span class="label">Data 12:</span> <span class="value">Value</span></li>
-                </ul>
+                <canvas id="loanOutstandingChart"></canvas>
             </div>
         </div>
         
@@ -72,38 +65,6 @@
                 <canvas id="loanDisburseChart"></canvas>
             </div>
         </div>
-    </div>
-    <div class="container1">
-        <h1>Member List</h1>
-        <table>
-            <thead>
-                <tr>
-                    <th>Code</th>
-                    <th>Name</th>
-                    <th>Center</th>
-                    <th>Phone Number</th>
-                    <th>Current Address</th>
-                    <th>Category</th>
-                    <th>Status</th>
-                    <th>Details</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for member in members %}
-                <tr>
-                    <td>{{member.code}}</td>
-                    <td>{{ member.personalInfo.first_name }} {{ member.personalInfo.last_name }}</td>
-                    <td>{{member.center}}</td>
-                    <td>{{ member.personalInfo.phone_number }}</td>
-                    <td>{{ address_info.tole }}, {{ address_info.municipality }}-{{ address_info.ward_no }} </td>
-                    <td>{{ member.member_category }}</td>
-                    <td>{{ member.status }}</td>
-                    <td><a href="{% url 'member_detail' member.id %}">View Details</a></td>
-                    <td><a href="">Statement</a></td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -223,6 +184,34 @@
                 });
                 // Move legend outside canvas
                document.getElementById("savingsChart").parentNode.id = "savingsChartContainer";
+            });
+    </script>
+
+    <script>
+        fetch("{% url 'loan_outstanding_chart' %}")
+            .then(response => response.json())
+            .then(data => {
+                const ctx = document.getElementById("loanOutstandingChart").getContext("2d");    
+                new Chart(ctx, {
+                    type: "pie",
+                    data: {
+                        labels: data.labels,  // Month labels
+                        datasets: [
+                            {
+                                data: data.remaining_principal, // Active members count
+                                backgroundColor: [
+                                'rgb(255, 99, 132)',
+                                'rgb(54, 162, 235)',
+                                'rgb(255, 205, 86)',
+                                'rgb(75, 192, 192)',
+                                'rgb(153, 102, 255)'
+                            ],
+                                fill: false,
+                                tension: 0.2
+                            },
+                        ]
+                    },
+                });
             });
     </script>
 

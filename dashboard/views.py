@@ -540,6 +540,11 @@ class SelectCenterView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
     template_name = 'member/add_member/select_center.html'
     success_url = reverse_lazy('address_info') 
 
+    def dispatch(self, request, *args, **kwargs):
+        """Delete any unfinished members before starting a new process."""
+        Member.objects.filter(temporary=True).delete()
+        return super().dispatch(request, *args, **kwargs)
+
     def form_valid(self, form):
         # Store center and group information in the session instead of saving the Member
         center_id = form.cleaned_data['center'].id
@@ -549,14 +554,25 @@ class SelectCenterView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
         code = form.cleaned_data['code']
         position = form.cleaned_data['position']
         print(f"{center_id} {group_id} {member_code} {member_category} {code} {position}")
+
+        # Create and save the Member instance
+        member = Member.objects.create(
+            center_id=center_id,
+            group_id=group_id,
+            member_code=member_code,
+            member_category=member_category,
+            code=code,
+            position=position,
+            temporary=True,  # Mark as temporary
+        )
         
         # Store these details in the session
-        self.request.session['center_id'] = center_id
-        self.request.session['group_id'] = group_id
-        self.request.session['member_code'] = member_code
-        self.request.session['member_category'] = member_category
-        self.request.session['code'] = code
-        self.request.session['position'] = position
+        self.request.session['member_id'] = member.id
+        # self.request.session['group_id'] = group_id
+        # self.request.session['member_code'] = member_code
+        # self.request.session['member_category'] = member_category
+        # self.request.session['code'] = code
+        # self.request.session['position'] = position
 
         return redirect(self.success_url)
 
@@ -611,7 +627,8 @@ class AddressInfoView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
             }
 
             # Print debug information
-            print(f"{address_type.capitalize()} Address - Province: {province}, District: {district}, Municipality: {municipality}, Ward: {ward_no}, Tole: {tole}, House: {house_no}")
+            # print(f"{address_type.capitalize()} Address - Province: {province}, District: {district}, Municipality: {municipality}, Ward: {ward_no}, Tole: {tole}, House: {house_no}")
+            print(self.request.session.get('member_id'))
 
         # Save all address data into session
         self.request.session['address_info'] = session_data
@@ -643,18 +660,24 @@ class PersonalInfoView(FormView):
     form_class = PersonalInformationForm
     template_name = 'member/add_member/personal_info.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Retrieve the member object
+        member_id = self.request.session.get('member_id')
+        member = get_object_or_404(Member, id=member_id)
+        # Pass the member instance to the context
+        personal_documents = member.personal_documents.all() or []
+        context['member'] = member
+        context['document_form'] = PersonalMemberDocumentForm()
+        context['personal_documents'] = personal_documents
+        return context
+
     def get_initial(self):
         """Populate initial data for the form from session."""
-        initial_data = self.request.session.get('personal_info', {})
-  # Reset invalid date
-        return initial_data
+        return self.request.session.get('personal_info', {}) or {}
 
     def form_valid(self, form):
         personal_info = form.cleaned_data
-
-        # Debugging: Print cleaned data
-        # print("Cleaned data from form:", personal_info)
-
         # Serialize only the specific fields
         try:
             # Handle date_of_birth (Nepali date)
@@ -716,10 +739,9 @@ class FamilyInfoView(FormView):
         initial_data = {}
         for i, rel in enumerate(predefined_relationships):
             if i < len(family_info):
-                initial_data[f"form-{i}"] = family_info[i]
+                initial_data[f"form-{i}"] = {**family_info[i], "relationship": rel}
             else:
                 initial_data[f"form-{i}"] = {"relationship": rel}
-
         return initial_data
 
     def get(self, request, *args, **kwargs):
@@ -753,11 +775,13 @@ class FamilyInfoView(FormView):
                 valid = False
 
         # Validate additional forms dynamically
-        prefixes = set(
-            key.split("-")[0]
+        prefixes = [
+            key.rsplit("-", 1)[0]
             for key in request.POST.keys()
-            if key.startswith("form-") and "-family_member_name" in key
-        )
+            if "-family_member_name" in key
+        ]
+
+        prefixes = sorted(set(prefixes), key=lambda x: int(x.split("-")[1]))  # Ensure correct order
 
         for prefix in prefixes:
             if prefix not in [f"form-{i}" for i in range(len(predefined_relationships))]:
@@ -766,13 +790,14 @@ class FamilyInfoView(FormView):
                 if not form.is_valid():
                     valid = False
 
+        # print("Extracted prefixes:", prefixes)
         return forms, valid
 
     def post(self, request, *args, **kwargs):
         """Handle POST requests for form submission."""
         forms, valid = self.process_forms(request)
-        print(forms)
-        print(request.POST)
+        # print(forms)
+        # print(request.POST)
         if valid:
             family_info_list = []
             for form in forms:
@@ -803,8 +828,12 @@ def get_new_family_form(request):
     """
     AJAX view to dynamically add a new family member form.
     """
-    existing_count = int(request.GET.get('count', 0))
-    new_form = FamilyInformationForm(prefix=f'form-{existing_count}')
+    try:
+        existing_count = int(request.GET.get('count', 0))
+    except ValueError:
+        return JsonResponse({'error': 'Invalid count'}, status=400)
+
+    new_form = FamilyInformationForm(prefix=f'family-{existing_count}')
     form_html = render_to_string('member/add_member/family_info_form.html', {'form': new_form})
     return JsonResponse({'form_html': form_html})
 
@@ -895,25 +924,9 @@ def expenses_info_view(request):
 
         try:
             with transaction.atomic():
-                # Retrieve additional information
-                center_id = request.session.get('center_id')
-                group_id = request.session.get('group_id')
-                member_code = request.session.get('member_code')
-                member_category = request.session.get('member_category')
-                code = request.session.get('code')
-                position = request.session.get('position')
-
-                print(f'Center_id: {center_id}, Group_id: {group_id}, Member_code: {member_code}, '
-                      f'Member_category: {member_category}, Code: {code}, Position: {position}')
-                member = Member.objects.create(
-                    center_id=center_id,
-                    group_id=group_id,
-                    member_code=member_code,
-                    member_category=member_category,
-                    code=code,
-                    position=position,
-                )
-
+                member_id = request.session.get('member_id')
+                member = Member.objects.get(id=member_id)
+                
                 # Create AddressInformation objects for each type
                 for address_type, address_data in zip(['current', 'permanent', 'old'],
                                                        [address_info.get('current', {}),
@@ -946,12 +959,14 @@ def expenses_info_view(request):
                 IncomeInformation.objects.create(member=member, **income_info)
                 ExpensesInformation.objects.create(member=member, **expenses_info)
 
+                if member_id:
+                  Member.objects.filter(id=member_id).update(temporary=False)
+    
                 # Clear session data
                 for key in required_sessions:
                     del request.session[key]
-
+            messages.success(request, "Member created successfully.")        
             return redirect('member_list')
-
         except Exception as e:
             print(f"Error creating member: {e}")
             form.add_error(None, "An error occurred while creating the member. Please try again.")
@@ -1075,7 +1090,6 @@ def delete_document(request, document_id):
     return JsonResponse({"success": False, "message": "Invalid request."}, status=400)
 
 
-
 # Step 2: Personal Information Update
 class UpdatePersonalInfoView(UpdateView):
     model = PersonalInformation
@@ -1106,6 +1120,7 @@ class UpdatePersonalInfoView(UpdateView):
         personal_info.registered_date = nepali_datetime.date.today()  # Assuming Nepali date is needed
         member_id = self.object.member_id
         personal_info.save()
+        messages.success(self.request, "Personal information updated successfully!")
         # Redirect to the member detail view with the correct URL argument
         return redirect(reverse('update_family_info', kwargs={'member_id': member_id}))
 
@@ -1157,11 +1172,14 @@ class UpdateFamilyInfoView(FormView):
             i += 1
 
         # Save forms
+        print(self.request.POST)
+        print(forms)
         for form in forms:
             family_info = form.save(commit=False)
             family_info.member = member
             family_info.save()
 
+        messages.success(self.request, "Family information updated successfully!")
         # Redirect to the 'update_livestock_info' page after saving the data
         return redirect('update_livestock_info', member_id=member.id)
 
@@ -1185,6 +1203,7 @@ def update_livestock_info_view(request, member_id):
             livestock_info = form.save(commit=False)
             livestock_info.member = member
             livestock_info.save()
+            messages.success(request, "Live stock information updated successfully!")
             return redirect('update_house_info', member_id=member.id)
     else:
         form = LivestockInformationForm(instance=livestock_info)
@@ -1201,6 +1220,7 @@ def update_house_info_view(request, member_id):
             house_info = form.save(commit=False)
             house_info.member = member
             house_info.save()
+            messages.success(request, "House information updated successfully!")
             return redirect('update_land_info', member_id=member.id)
     else:
         form = HouseInformationForm(instance=house_info)
@@ -1217,6 +1237,7 @@ def update_land_info_view(request, member_id):
             land_info = form.save(commit=False)
             land_info.member = member
             land_info.save()
+            messages.success(request, "Land information updated successfully!")
             return redirect('update_income_info', member_id=member.id)
     else:
         form = LandInformationForm(instance=land_info)
@@ -1236,6 +1257,7 @@ def update_income_info(request, member_id):
             income_info = form.save(commit=False)
             income_info.member = member
             income_info.save()
+            messages.success(request, "Income information updated successfully!")
             return redirect('update_expenses_info', member_id=member.id)
     else:
         # Initialize the form with the existing data if available
@@ -1257,6 +1279,7 @@ def update_expenses_info(request, member_id):
             expenses_info = form.save(commit=False)
             expenses_info.member = member
             expenses_info.save()
+            messages.success(request, "Expenses information updated successfully!")
             try:
                 if request.session['demanding_loan']:
                     return redirect('loan_demand_form', member_id=member.id)
@@ -1298,7 +1321,6 @@ def member_detail_view(request, member_id):
     member = get_object_or_404(Member, id=member_id)
     personal_info = member.personalInfo
     address_info = member.address_info.filter(address_type='current').first()
-    print(address_info)
     family_info = FamilyInformation.objects.filter(member=member).all()
     livestock_info = member.livestockInfo
     house_info = member.houseInfo
@@ -1418,7 +1440,7 @@ def change_member_status(request):
                                 voucher_type='Receipt',
                                 category='Service Fee',
                                 amount=TOTAL_FEE,
-                                description=f"Membership and Passbook Fee for {member.code}",
+                                narration=f"Membership and Passbook Fee for {member.code}",
                                 transaction_date=timezone.now(),
                                 created_by=request.user,
                             )
@@ -1432,7 +1454,7 @@ def change_member_status(request):
         elif request.POST.get('create_accounts') == 'no':
             member.status = new_status
             member.save()
-            messages.success(request, f"Member status updated to {new_status} for {member.name}.")
+            messages.success(request, f"Member status updated to {new_status} for {member.personalInfo.first_name}  {member.personalInfo.middle_name}  {member.personalInfo.last_name}.")
             return JsonResponse({'success': True})
 
         # Redirect to the member list with status 'A' (Active)
