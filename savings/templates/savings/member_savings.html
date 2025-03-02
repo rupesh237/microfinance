@@ -8,12 +8,12 @@
 {% endblock title %}
 
 {% block content %}
-    <a href="{% url 'add_savings_account' member_id=member.id %}">Add Savings Account</a>
-    <a href="{% url 'add_fixed_deposit' member_id=member.id %}">Add Fixed Deposit</a>
-    <a href="{% url 'add_recurring_deposit' member_id=member.id %}">Add Recurring Deposit</a>
-    <div class="container">
 
-        <h2>Savings Accounts</h2>
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">Savings Accounts</h1>
+            <a href="{% url 'add_savings_account' member_id=member.id %}" class="btn btn-primary"><i class="bi bi-plus-lg"></i></a>
+        </div>
         <table>
             <thead>
                 <tr>
@@ -60,53 +60,5 @@
                 {% endfor %}
             </tbody>
         </table>
-
-        <h2>Fixed Deposits</h2>
-        {% if fixed_deposits %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Amount</th>
-                    <th>Interest Rate</th>
-                    <th>Maturity Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for fd in fixed_deposits %}
-                <tr>
-                    <td>{{ fd.amount }}</td>
-                    <td>{{ fd.interest_rate }}</td>
-                    <td>{{ fd.maturity_date }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <p>No fixed deposits found.</p>
-        {% endif %}
-
-        <h2>Recurring Deposits</h2>
-        {% if recurring_deposits %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Amount</th>
-                    <th>Duration (Months)</th>
-                    <th>Interest Rate</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for rd in recurring_deposits %}
-                <tr>
-                    <td>{{ rd.amount }}</td>
-                    <td>{{ rd.duration }}</td>
-                    <td>{{ rd.interest_rate }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <p>No recurring deposits found.</p>
-        {% endif %}
     </div>
 {% endblock content %}

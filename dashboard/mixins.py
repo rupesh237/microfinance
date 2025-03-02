@@ -6,7 +6,7 @@ from django.shortcuts import redirect
 from .models import Employee
 
 class RoleRequiredMixin(UserPassesTestMixin):
-    allowed_roles = ['admin', 'manager', 'superuser']
+    allowed_roles = ['admin', 'manager', 'employee' 'superuser']
 
     def test_func(self):
         user = self.request.user

@@ -44,13 +44,10 @@ class InterestTypes(models.TextChoices):
     DECLINING = 'Declining', _('Declining')
     INTEREST_ONLY = 'Interest Only', _('Interest Only')
 
-
 class FdRdStatus(models.TextChoices):
     OPENED = 'Opened', _('Opened')
     PAID = 'Paid', _('Paid')
     CLOSED = 'Closed', _('Closed')
-
-
 
 GENDER_CHOICES = [
         ('Male', 'Male'),
@@ -248,7 +245,7 @@ class Member(models.Model):
         ('A', 'Active'),
         ('IA', 'In-Active'),
         ('RTR', 'Ready To Register'),
-        ('D', 'Dropout'),
+        ('DR', 'Dropout'),
         ('p', 'Public'),
         ('D', 'Death'), 
     ]

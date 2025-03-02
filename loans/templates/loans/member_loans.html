@@ -125,6 +125,7 @@
                     <thead>
                         <tr>
                             <th>Month</th>
+                            <th>Date</th>
                             <th>EMI Amount</th>
                             <th>Principal Component</th>
                             <th>Interest Component</th>
@@ -135,6 +136,7 @@
                         {% for emi in emi_schedules|get_item:loan.id %}
                         <tr>
                             <td>{{ emi.month }}</td>
+                            <td>{{ emi.date }}</td>
                             <td class="emi-amount">{{ emi.emi_amount|floatformat:2 }}</td>
                             <td>{{ emi.principal_component|floatformat:2 }}</td>
                             <td>{{ emi.interest_component|floatformat:2 }}</td>

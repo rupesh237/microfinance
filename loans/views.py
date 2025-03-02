@@ -31,7 +31,11 @@ class LoanListView(LoginRequiredMixin, RoleRequiredMixin, ListView):
     context_object_name = 'loans'
 
     def get_queryset(self):
-        loans = Loan.objects.prefetch_related('emi_payments')
+        user = self.request.user
+        if user.is_superuser:
+            loans = Loan.objects.prefetch_related('emi_payments')
+        else:
+            loans = Loan.objects.filter(member__center__branch=user.employee_detail.branch).prefetch_related('emi_payments')
         
         # Annotate loans with the latest payment
         for loan in loans:

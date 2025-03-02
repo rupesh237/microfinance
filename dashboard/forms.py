@@ -173,10 +173,8 @@ class CenterForm(forms.ModelForm):
         """Returns queryset for the center field based on user role."""
         if not user or not user.is_authenticated:
             return Branch.objects.none()
-
         if user.is_superuser:
             return Branch.objects.all()
-
         try:
             employee = user.employee_detail
             if employee.role == 'admin':

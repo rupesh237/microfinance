@@ -1,21 +1,30 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
 from django.http import JsonResponse, HttpResponseRedirect
+
 from django.contrib.auth import authenticate, login, logout
-from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import User
-from django.core.paginator import Paginator
-from decimal import Decimal
+from django.contrib import messages
 
-import nepali_datetime
+from django.core.exceptions import PermissionDenied
+from django.core.paginator import Paginator
+
 from django.db import transaction
-from django.db.models import Count, Avg
+from django.db.models import Count, Avg, Sum
+
+from django.utils import timezone
+
+from decimal import Decimal
+from datetime import date, timedelta
+from dateutil.relativedelta import relativedelta
+import nepali_datetime
 
 from django.views.generic import (
     CreateView, ListView, UpdateView, DeleteView )
+
+from dashboard.mixins import RoleRequiredMixin
 
 from dashboard.models import (Province, District, Municipality, 
                               Branch, Employee, GRoup, Center,
@@ -24,16 +33,12 @@ from dashboard.models import (Province, District, Municipality,
                               FamilyInformation, FamilyMemberDocument,  
                               LivestockInformation, HouseInformation, LandInformation, 
                               IncomeInformation, ExpensesInformation)
-from savings.models import SavingsAccount, INITIAL_SAVING_ACCOUNT_TYPE, Statement
-from core.models import Teller, Voucher
-
 from dashboard.forms import (BranchForm, EmployeeForm, CenterForm, GroupForm, 
                              PersonalMemberDocumentForm)
 
-from .mixins import RoleRequiredMixin
-
-from django.utils import timezone
-from datetime import date, datetime
+from savings.models import SavingsAccount, CashSheet, PaymentSheet, INITIAL_SAVING_ACCOUNT_TYPE, Statement
+from loans.models import Loan, EMIPayment
+from core.models import Teller, Voucher
 
 
 def user_login(request):
@@ -73,132 +78,238 @@ def dashboard(request):
     except Employee.DoesNotExist:
         messages.error(request, 'Employee profile not found!! please contact to the Admin')        
         return redirect('login')
+
+def calculate_due_principal(branch):
+    """
+    Calculate the total due principal for all loans in a branch.
+    """
+    today = timezone.now().date()
+    time_frame = today - relativedelta(months=1)  # 1 month ago
+    loans = Loan.objects.filter(member__center__branch=branch, status="active")
     
+    due_principal = Decimal('0.00')
+
+    for loan in loans:
+        # Get the last EMI payment
+        last_emi_payment = EMIPayment.objects.filter(loan=loan).order_by('-payment_date').first()
+
+        # Get the EMI schedule breakdown
+        emi_schedule = loan.calculate_emi_breakdown()
+
+        if last_emi_payment:
+            # If the last payment was made over a month ago, check overdue EMIs
+            if last_emi_payment.payment_date < time_frame:
+                for emi in emi_schedule:
+                    if emi['date'] < today:  # EMI date has passed
+                        due_principal += emi['emi_amount']
+        else:
+            # If no payment has been made at all, sum all missed EMIs
+            for emi in emi_schedule:
+                if emi['date'] < today:  # EMI date has passed
+                    due_principal += emi['emi_amount']
+    
+    return due_principal
+
 @login_required
 def admin_dashboard(request):
     branch = request.user.employee_detail.branch
-    members =Member.objects.all().select_related('personalInfo')
-    address_info= None
-    try:
-        for member in members:
-            address_info = member.address_info.filter(address_type='current').first()
-    except:
-        address_info = 'No Address Found!'
-    groups = GRoup.objects.all()
+    members =Member.objects.all()
     centers = Center.objects.all()
-    employees = Employee.objects.all()
 
     #Member Summary
     total_centers = Center.objects.filter(branch=branch).distinct().count()
     active_members = members.filter(center__branch=branch, status="A").count()
     droupout_members = members.filter(center__branch=branch, status="D").count()
     loanee_members = members.filter(center__branch=branch, status="A", loans__isnull=False).count()
-  # Query to count all members in each center for the given branch
+    # Query to count all members in each center for the given branch
     members_per_center = members.filter(center__branch=branch).values('center').annotate(member_count=Count('id'))
     # Calculate the total number of members across all centers
     total_members = sum(item['member_count'] for item in members_per_center)
-
     # Calculate the average number of members per center
     average_members_per_center = round(total_members / total_centers, 2) if total_centers else 0
+    
+    # Deposit and Loan Summary
+    cumulative_savings_deposit = (
+        Statement.objects.filter(member__center__branch=branch, transaction_type="credit")
+        .aggregate(total=Sum('cr_amount'))['total'] or Decimal('0.00')
+    )
+    cumulative_loan_deposit = (
+        EMIPayment.objects.filter(loan__member__center__branch=branch)
+        .aggregate(total_principal_paid=Sum("amount_paid"))['total_principal_paid'] or Decimal('0.00')
+    )
+    total_cumulative_deposit = cumulative_savings_deposit + cumulative_loan_deposit
 
+    cumulative_savings_withdraw = (
+        Statement.objects.filter(member__center__branch=branch, transaction_type="debit")
+        .aggregate(total=Sum('dr_amount'))['total'] or Decimal('0.00')
+    )
+    cumulative_loan_withdraw = (
+        Voucher.objects.filter(branch=branch, voucher_type="Payment", category="Loan")
+        .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    )
+    total_cumulative_withdraw = cumulative_savings_withdraw + cumulative_loan_withdraw
+    total_saving = (
+        CashSheet.objects.filter(member__center__branch=branch)
+        .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    )
 
+    # Loan Summary
+    total_disbursement = (
+        Loan.objects.filter(member__center__branch=branch, status="active")
+        .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    )
+    cumulative_recovery = cumulative_loan_deposit  # Since it's already calculated
+    total_outstanding_loan = total_disbursement - cumulative_recovery
+    overdue_principal = calculate_due_principal(branch=branch)
+    
     return render(request, "dashboard/admin_dashboard.html",{
         'bank': 'Admin',
-        'groups': groups,
-        'centers': centers,
-        'employees': employees,
-        'members': members,
-        'address_info': address_info,
         'total_centers': total_centers,
         'active_members': active_members,
         'droupout_members': droupout_members,
         'loanee_members': loanee_members,
         'average_members_per_center': average_members_per_center,
+        'cummulative_deposit': total_cumulative_deposit,
+        'cummulative_withdraw': total_cumulative_withdraw,
+        'total_saving': total_saving,
+        'total_disbursement': total_disbursement,
+        'cummulative_recovery': cumulative_recovery,
+        'total_outstanding_loan': total_outstanding_loan,
+        'overdue_principal': overdue_principal,
     })
 
 @login_required
 def manager_dashboard(request):
     branch = request.user.employee_detail.branch
-    members =Member.objects.filter(center__branch=branch).select_related('personalInfo')
-    address_info= None
-    try:
-        for member in members:
-            address_info = member.address_info.filter(address_type='current').first()
-    except:
-        address_info = 'No Address Found!'
-    groups = GRoup.objects.filter(center__branch=branch).all()
+    members =Member.objects.filter(center__branch=branch)
     centers = Center.objects.filter(branch=branch).all()
-    employees = Employee.objects.filter(branch=branch).all()
 
     #Member Summary
-    total_centers = Center.objects.filter(branch=branch).distinct().count()
+    total_centers = centers.distinct().count()
     active_members = members.filter(center__branch=branch, status="A").count()
     droupout_members = members.filter(center__branch=branch, status="D").count()
     loanee_members = members.filter(center__branch=branch, status="A", loans__isnull=False).count()
-  # Query to count all members in each center for the given branch
-    members_per_center = members.filter(center__branch=branch).values('center').annotate(member_count=Count('id'))
-    # Calculate the total number of members across all centers
-    total_members = sum(item['member_count'] for item in members_per_center)
-
-    # Calculate the average number of members per center
+    # Query to count all members in each center for the given branch
+    total_members = members.count()
+    members_per_center = members.values('center').annotate(member_count=Count('id'))
     average_members_per_center = round(total_members / total_centers, 2) if total_centers else 0
+
+    # Deposit and Loan Summary
+    cumulative_savings_deposit = (
+        Statement.objects.filter(member__center__branch=branch, transaction_type="credit")
+        .aggregate(total=Sum('cr_amount'))['total'] or Decimal('0.00')
+    )
+    cumulative_loan_deposit = (
+        EMIPayment.objects.filter(loan__member__center__branch=branch)
+        .aggregate(total_principal_paid=Sum("amount_paid"))['total_principal_paid'] or Decimal('0.00')
+    )
+    total_cumulative_deposit = cumulative_savings_deposit + cumulative_loan_deposit
+
+    cumulative_savings_withdraw = (
+        Statement.objects.filter(member__center__branch=branch, transaction_type="debit")
+        .aggregate(total=Sum('dr_amount'))['total'] or Decimal('0.00')
+    )
+    cumulative_loan_withdraw = (
+        Voucher.objects.filter(branch=branch, voucher_type="Payment", category="Loan")
+        .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    )
+    total_cumulative_withdraw = cumulative_savings_withdraw + cumulative_loan_withdraw
+    total_saving = (
+        CashSheet.objects.filter(member__center__branch=branch)
+        .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    )
+
+    # Loan Summary
+    total_disbursement = (
+        Loan.objects.filter(member__center__branch=branch, status="active")
+        .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    )
+    cumulative_recovery = cumulative_loan_deposit  # Since it's already calculated
+    total_outstanding_loan = total_disbursement - cumulative_recovery
+    overdue_principal = calculate_due_principal(branch=branch)
 
     return render(request, "dashboard/manager_dashboard.html",{
         'branch': branch,
         'bank': 'Manager',
-        'groups': groups,
-        'centers': centers,
-        'employees': employees,
-        'members': members,
-        'address_info': address_info,
         'total_centers': total_centers,
         'active_members': active_members,
         'droupout_members': droupout_members,
         'loanee_members': loanee_members,
         'average_members_per_center': average_members_per_center,
+        'cummulative_deposit': total_cumulative_deposit,
+        'cummulative_withdraw': total_cumulative_withdraw,
+        'total_saving': total_saving,
+        'total_disbursement': total_disbursement,
+        'cummulative_recovery': cumulative_recovery,
+        'total_outstanding_loan': total_outstanding_loan,
+        'overdue_principal': overdue_principal,
     })
 
 @login_required
 def employee_dashboard(request):
     branch = request.user.employee_detail.branch
-    members =Member.objects.filter(center__branch=branch).select_related('personalInfo')
-    address_info= None
-    try:
-        for member in members:
-            address_info = member.address_info.filter(address_type='current').first()
-    except:
-        address_info = 'No Address Found!'
-    groups = GRoup.objects.filter(center__branch=branch).all()
+    members =Member.objects.filter(center__branch=branch)
     centers = Center.objects.filter(branch=branch).all()
-    employees = Employee.objects.filter(branch=branch).all()
 
     #Member Summary
-    total_centers = Center.objects.filter(branch=branch).distinct().count()
+    total_centers = centers.distinct().count()
     active_members = members.filter(center__branch=branch, status="A").count()
     droupout_members = members.filter(center__branch=branch, status="D").count()
     loanee_members = members.filter(center__branch=branch, status="A", loans__isnull=False).count()
-  # Query to count all members in each center for the given branch
-    members_per_center = members.filter(center__branch=branch).values('center').annotate(member_count=Count('id'))
-    # Calculate the total number of members across all centers
-    total_members = sum(item['member_count'] for item in members_per_center)
-
-    # Calculate the average number of members per center
+    # Query to count all members in each center for the given branch
+    total_members = members.count()
+    members_per_center = members.values('center').annotate(member_count=Count('id'))
     average_members_per_center = round(total_members / total_centers, 2) if total_centers else 0
 
-    
+    # Deposit and Loan Summary
+    cumulative_savings_deposit = (
+        Statement.objects.filter(member__center__branch=branch, transaction_type="credit")
+        .aggregate(total=Sum('cr_amount'))['total'] or Decimal('0.00')
+    )
+    cumulative_loan_deposit = (
+        EMIPayment.objects.filter(loan__member__center__branch=branch)
+        .aggregate(total_principal_paid=Sum("amount_paid"))['total_principal_paid'] or Decimal('0.00')
+    )
+    total_cumulative_deposit = cumulative_savings_deposit + cumulative_loan_deposit
+
+    cumulative_savings_withdraw = (
+        Statement.objects.filter(member__center__branch=branch, transaction_type="debit")
+        .aggregate(total=Sum('dr_amount'))['total'] or Decimal('0.00')
+    )
+    cumulative_loan_withdraw = (
+        Voucher.objects.filter(branch=branch, voucher_type="Payment", category="Loan")
+        .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    )
+    total_cumulative_withdraw = cumulative_savings_withdraw + cumulative_loan_withdraw
+    total_saving = (
+        CashSheet.objects.filter(member__center__branch=branch)
+        .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    )
+
+    # Loan Summary
+    total_disbursement = (
+        Loan.objects.filter(member__center__branch=branch, status="active")
+        .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    )
+    cumulative_recovery = cumulative_loan_deposit  # Since it's already calculated
+    total_outstanding_loan = total_disbursement - cumulative_recovery
+    overdue_principal = calculate_due_principal(branch=branch)
+        
     return render(request, "dashboard/employee_dashboard.html",{
         'branch': branch,
         'bank': 'Staff',
-        'groups': groups,
-        'centers': centers,
-        'employees': employees,
-        'members': members,
-        'address_info': address_info,
         'total_centers': total_centers,
         'active_members': active_members,
         'droupout_members': droupout_members,
         'loanee_members': loanee_members,
         'average_members_per_center': average_members_per_center,
+        'cummulative_deposit': total_cumulative_deposit,
+        'cummulative_withdraw': total_cumulative_withdraw,
+        'total_saving': total_saving,
+        'total_disbursement': total_disbursement,
+        'cummulative_recovery': cumulative_recovery,
+        'total_outstanding_loan': total_outstanding_loan,
+        'overdue_principal': overdue_principal,
     })
 
 
@@ -223,10 +334,6 @@ def branch_list_view(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    # managers = {}
-    # for branch in branches:
-    #     manager = Employee.objects.filter(branch=branch, role='manager').first()
-    #     managers = branch.id[manager]
     managers = {branch.id: Employee.objects.filter(branch=branch, role='manager').all() for branch in branches}
     return render(request, 'branch/branch_list.html', {'branches': page_obj, 'managers': managers})
 
@@ -257,19 +364,16 @@ class EmployeeListView(LoginRequiredMixin, RoleRequiredMixin, ListView):
     context_object_name = 'employees'
 
     def get_queryset(self):
-        branch = self.request.user.employee_detail.branch
-        user_role = self.request.user.employee_detail.role
-        if user_role =='admin':
+        user = self.request.user
+        if user.is_superuser:
             queryset = Employee.objects.all().order_by('name')
-        elif user_role =='manager' or user_role == 'staff':
-            queryset = Employee.objects.filter(branch=branch).order_by('name')
         else:
-            PermissionDenied
+            queryset = Employee.objects.filter(branch=user.employee_detail.branch).order_by('name')
+
         paginator = Paginator(queryset, 10)
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
         return page_obj
-
 
 class EmployeeCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
     model = Employee
@@ -294,12 +398,12 @@ class EmployeeCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
         employee = form.save(commit=False)
         # Assign the user to the employee
         employee.user = user
-        # Save the employee instance
         employee.save()
+        # Create teller instance for employee
+        teller = Teller.objects.create(employee=user, branch=employee.branch)
+        print(teller)
         messages.success(self.request, 'Employee added successfully!')
         return super().form_valid(form)
-    
-
     def form_invalid(self, form):
         # messages.error(self.request, f'Error adding employee: {form.errors}')
         return super().form_invalid(form)
@@ -329,35 +433,6 @@ class EmployeeDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
         messages.error(self.request, "Employee deleted successfully!")
         return super().form_valid(form)
 
-@login_required
-def add_employee(request):
-    if request.method == "POST":
-        form = EmployeeForm(request.POST, request.FILES)
-        if form.is_valid():
-            cleaned_data = form.cleaned_data
-            # Create the user instance
-            user = User.objects.create_user(
-                username=cleaned_data['email'],
-                email=cleaned_data['email'],
-                password=cleaned_data['password']
-            )
-            # Create the employee instance but do not save to the database yet
-            employee = form.save(commit=False)
-            # Assign the user to the employee
-            employee.user = user
-            # Save the employee instance
-            employee.save()
-            messages.success(request, 'Employee added successfully!')
-            return redirect('employee_list')
-        else:
-            messages.error(request, 'Error while adding Employee, please try again')
-    else:
-        form = EmployeeForm()
-    
-    return render(request, 'employee/add_employee.html', {
-        'form': form
-    })
-
 
 def load_districts(request):
     province_id = request.GET.get('province')
@@ -384,14 +459,12 @@ class CenterListView(LoginRequiredMixin, ListView):
     template_name = 'center/center_list.html'
 
     def get_queryset(self):
-        branch = self.request.user.employee_detail.branch
-        user_role = self.request.user.employee_detail.role
-        if user_role == 'admin':
+        user = self.request.user
+        if user.is_superuser:
             queryset = Center.objects.all().order_by('formed_date')
-        elif user_role =='manager' or user_role =='employee':
-            queryset = Center.objects.filter(branch=branch).all().order_by('formed_date')
         else:
-            raise PermissionDenied
+            queryset = Center.objects.filter(branch=user.employee_detail.branch).all().order_by('formed_date')
+
         paginator = Paginator(queryset, 10)  # 10 centers per page
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
@@ -465,14 +538,12 @@ class GroupListView(LoginRequiredMixin, ListView):
     template_name = 'group/group_list.html'
 
     def get_queryset(self):
-        branch = self.request.user.employee_detail.branch
-        user_role = self.request.user.employee_detail.role
-        if user_role == 'admin':
+        user = self.request.user
+        if user.is_superuser:
             queryset = GRoup.objects.all().order_by('-created_on')
-        elif user_role == 'manager' or user_role == 'employee':
-            queryset = GRoup.objects.filter(center__branch=branch).all().order_by('-created_on')
         else:
-            raise PermissionDenied
+            queryset = GRoup.objects.filter(center__branch=user.employee_detail.branch).all().order_by('-created_on')
+   
         paginator = Paginator(queryset, 10)  # 10 centers per page
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
@@ -1376,22 +1447,35 @@ class MemberListView(ListView):
         context['member_status'] = Member.MEMBER_STATUS 
         return context
 
-
     def get_queryset(self):
+        user = self.request.user
+
         # Prefetch only current addresses
         current_address_prefetch = Prefetch(
             'address_info', 
             queryset=AddressInformation.objects.filter(address_type='current'),
             to_attr='current_address'
         )
-        queryset = Member.objects.all().select_related('personalInfo').prefetch_related(current_address_prefetch).filter(status='A')
+        if user.is_superuser:
+            queryset = Member.objects.all().prefetch_related(current_address_prefetch).filter(status='A').order_by('-registered_date')
+        else:
+            branch = user.employee_detail.branch
+            queryset = Member.objects.filter(center__branch=branch).prefetch_related(current_address_prefetch).filter(status='A').order_by('-registered_date')
+
         status_filter = self.request.GET.get('status')
         # Ensure the filter value is one of the valid status codes
         valid_status_codes = [code for code, label in Member.MEMBER_STATUS]
         if status_filter in valid_status_codes:
-           queryset = Member.objects.all().select_related('personalInfo').prefetch_related(current_address_prefetch).filter(status__iexact=status_filter)
-        return queryset
-    
+            if user.is_superuser:
+                queryset = Member.objects.all().prefetch_related(current_address_prefetch).filter(status__iexact=status_filter).order_by('-registered_date')
+            else:
+                branch = user.employee_detail.branch
+                queryset = Member.objects.filter(center__branch=branch).prefetch_related(current_address_prefetch).filter(status__iexact=status_filter).order_by('-registered_date')
+        
+        paginator = Paginator(queryset, 10)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        return page_obj
 
 def change_member_status(request):
     if request.method == 'POST':
@@ -1402,71 +1486,76 @@ def change_member_status(request):
 
         # Fetch member and validate
         member = get_object_or_404(Member, id=member_id)
-       
-        # Handle account creation and fees
-        if request.POST.get('create_accounts') == 'yes':
-            try:
-                with transaction.atomic():
-                    # Constants for fees
-                    MEMBERSHIP_FEE = 100.00
-                    PASSBOOK_FEE = 25.00
-                    TOTAL_FEE = MEMBERSHIP_FEE + PASSBOOK_FEE
 
-                    # Ensure current teller exists
-                    current_teller = Teller.objects.filter(employee=request.user).first()
-                    print(current_teller)
-                    if not current_teller:
-                        return JsonResponse({'success': False, 'error': 'Current Teller not found'}, status=400)
+        if new_status == "A":
+            if member.status == "A":
+                return JsonResponse({'success': False, 'error': 'This member is already active.'}, status=400)
+            # Handle account creation and fees
+            if request.POST.get('create_accounts') == 'yes':
+                try:
+                    with transaction.atomic():
+                        # Constants for fees
+                        MEMBERSHIP_FEE = 100.00
+                        PASSBOOK_FEE = 25.00
+                        TOTAL_FEE = MEMBERSHIP_FEE + PASSBOOK_FEE
 
-                    # Loop through account types and create accounts
-                    for account_code, account_name in INITIAL_SAVING_ACCOUNT_TYPE:
-                        amount = 200.0 if account_code == "CS" else 10.0 if account_code == "CF" else 0
-                        
-                        # Create savings account
-                        SavingsAccount.objects.create(
-                            member=member,
-                            account_type=account_code,
-                            account_number=f"{member.code}.{account_code}.1",
-                            amount=amount,
-                            balance=0.00,
-                        )
+                        # Ensure current teller exists
+                        current_teller = Teller.objects.filter(employee=request.user).first()
+                        print(current_teller)
+                        if not current_teller:
+                            return JsonResponse({'success': False, 'error': 'Current Teller not found'}, status=400)
 
-                        # Adjust teller balance and create voucher for "CS" account type
-                        if account_code == "CS":
-                            current_teller.balance += Decimal(TOTAL_FEE)
-                            current_teller.save()
-
-                            voucher = Voucher.objects.create(
-                                voucher_type='Receipt',
-                                category='Service Fee',
-                                amount=TOTAL_FEE,
-                                narration=f"Membership and Passbook Fee for {member.code}",
-                                transaction_date=timezone.now(),
-                                created_by=request.user,
+                        # Loop through account types and create accounts
+                        for account_code, account_name in INITIAL_SAVING_ACCOUNT_TYPE:
+                            amount = 200.0 if account_code == "CS" else 10.0 if account_code == "CF" else 0
+                            
+                            # Create savings account
+                            SavingsAccount.objects.create(
+                                member=member,
+                                account_type=account_code,
+                                account_number=f"{member.code}.{account_code}.1",
+                                amount=amount,
+                                balance=0.00,
                             )
-                            print(voucher)
-                    member.status = new_status
-                    member.registered_date = timezone.now().date()
-                    member.save()
-            except Exception as e:
-                print("Error:", str(e))
-                return JsonResponse({'success': False, 'error': str(e)}, status=400)
-        elif request.POST.get('create_accounts') == 'no':
+
+                            # Adjust teller balance and create voucher for "CS" account type
+                            if account_code == "CS":
+                                current_teller.balance += Decimal(TOTAL_FEE)
+                                current_teller.save()
+
+                                voucher = Voucher.objects.create(
+                                    voucher_type='Receipt',
+                                    category='Service Fee',
+                                    amount=TOTAL_FEE,
+                                    narration=f"Membership and Passbook Fee for {member.code}",
+                                    transaction_date=timezone.now(),
+                                    created_by=request.user,
+                                )
+                                print(voucher)
+                        member.status = new_status
+                        member.registered_date = timezone.now().date()
+                        member.save()
+                        messages.success(request, f"Member status updated to {new_status} and accounts created successfully for {member.name}.")
+                        return JsonResponse({'success': True, 'redirect_url': f"{reverse('member_list')}?status={new_status}"})
+                except Exception as e:
+                    print("Error:", str(e))
+                    return JsonResponse({'success': False, 'error': str(e)}, status=400)
+            elif request.POST.get('create_accounts') == 'no':
+                member.status = new_status
+                member.dropout_date = timezone.now().date()
+                member.save()
+                messages.success(request, f"Member status updated to {new_status} for {member.personalInfo.first_name} {member.personalInfo.middle_name} {member.personalInfo.last_name}.")
+                return JsonResponse({'success': True, 'redirect_url': f"{reverse('member_list')}?status={new_status}"})
+        elif new_status == "DR":
+            loans = member.loans.all()
+            if loans:
+                return JsonResponse({'success': False, 'error': 'Clear all loans before dropping this member.'}, status=400)
             member.status = new_status
             member.save()
-            messages.success(request, f"Member status updated to {new_status} for {member.personalInfo.first_name}  {member.personalInfo.middle_name}  {member.personalInfo.last_name}.")
-            return JsonResponse({'success': True})
-
-        # Redirect to the member list with status 'A' (Active)
-        if new_status == 'A':
-            messages.success(request, f"Member status updated to Active and accounts created successfully for {member.name}.")
-            return HttpResponseRedirect(f"{reverse('member_list')}?status=A")
-
-        messages.success(request, f"Member status updated to {new_status} for {member.name}.")
-        return JsonResponse({'success': True})
+            messages.success(request, f"Member: {member.personalInfo.first_name} {member.personalInfo.middle_name} {member.personalInfo.last_name} is now dropped.")
+            return JsonResponse({'success': True, 'redirect_url': f"{reverse('member_list')}?status={new_status}"})
 
     return JsonResponse({'success': False}, status=400)
-
 
 def deposits(request):
     return render(request, 'dashboard/deposits.html')

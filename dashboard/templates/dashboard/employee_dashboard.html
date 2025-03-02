@@ -1,5 +1,6 @@
 {% extends 'base/index.html' %}
 {% load static %}
+{% load humanize %}
 {% block corecss %}
     {% comment %} <link rel="stylesheet" href="{% static 'css/loans.css' %}"> {% endcomment %}
     <link rel="stylesheet" href="{% static 'css/dashboard.css'%}">
@@ -22,13 +23,13 @@
             <div class="summary-box">
                 <h3>Deposit/Loan Summary</h3>
                 <ul>
-                    <li><span class="label">Cummulative deposit:</span> <span class="value">Value</span></li>
-                    <li><span class="label">Cummulative withdraw:</span> <span class="value">Value</span></li>
-                    <li><span class="label">Total Saving:</span> <span class="value">Value</span></li>
-                    <li><span class="label">Total disbursement:</span> <span class="value">Value</span></li>
-                    <li><span class="label">Cummulative Recovery:</span> <span class="value">Value</span></li>
-                    <li><span class="label">Total out standing:</span> <span class="value">Value</span></li>
-                    <li><span class="label">Overdue Principal:</span> <span class="value">Value</span></li>
+                    <li><span class="label">Cummulative deposit:</span> <span class="value">{{cummulative_deposit|floatformat:2|intcomma}}</span></li>
+                    <li><span class="label">Cummulative withdraw:</span> <span class="value">{{cummulative_withdraw|floatformat:2|intcomma}}</span></li>
+                    <li><span class="label">Total Saving:</span> <span class="value">{{total_saving|floatformat:2|intcomma}}</span></li>
+                    <li><span class="label">Total disbursement:</span> <span class="value">{{total_disbursement|floatformat:2|intcomma}}</span></li>
+                    <li><span class="label">Cummulative Recovery:</span> <span class="value">{{cummulative_recovery|floatformat:2|intcomma}}</span></li>
+                    <li><span class="label">Total out standing:</span> <span class="value">{{total_outstanding_loan|floatformat:2|intcomma}}</span></li>
+                    <li><span class="label">Overdue Principal:</span> <span class="value">{{overdue_principal|floatformat:2|intcomma}}</span></li>
                 </ul>
             </div>
             <div class="summary-box">

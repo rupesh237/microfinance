@@ -6,7 +6,7 @@ from datetime import timedelta
 from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
 
-from dashboard.models import Branch, Center, Member
+from dashboard.models import Branch, Employee, Center, Member
 
 # Create your models here.
 class Teller(models.Model):
@@ -18,7 +18,7 @@ class Teller(models.Model):
     created_at = models.DateField(auto_now_add=True)
 
     def __str__(self):
-        return f"Teller -{self.employee.employee_detail.name}-{self.branch.code}"
+        return f"Teller-{self.employee.employee_detail.name}-{self.branch.code}"
 
 class CashVault(models.Model):
     branch = models.OneToOneField(Branch, on_delete=models.CASCADE, related_name="cash_vault")
@@ -92,6 +92,7 @@ class Voucher(models.Model):
         ('Loan', 'Loan'),
         ('Cash and Bank', 'Cash and Bank'),
         ('Service Fee', 'Service Fee'),
+        ('Saving Interest', 'Saving Interest'),
         ('Manual', 'Manual'),
     ]
 
@@ -129,8 +130,9 @@ class Voucher(models.Model):
         super().save(*args, **kwargs)
     
     def generate_voucher_number(self):
+        branch = self.request.user.employee_detail.branch
         today_str = timezone.now().strftime('%Y%m%d')
-        last_voucher = Voucher.objects.filter(transaction_date=timezone.now().date()).order_by('voucher_number').last()
+        last_voucher = Voucher.objects.filter(transaction_date=timezone.now().date(), branch=branch).order_by('voucher_number').last()
         if last_voucher:
             last_sequence = int(last_voucher.voucher_number[-3:])
             next_sequence = last_sequence + 1

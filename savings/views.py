@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.contrib import messages
 from django.urls import reverse_lazy, reverse
 from django.template.loader import get_template
@@ -9,11 +9,12 @@ from django.contrib.auth.decorators import login_required
 from django.views.generic import CreateView, DeleteView
 from django.db import transaction
 from django.utils import timezone
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
+from decimal import Decimal
 
 from dashboard.mixins import RoleRequiredMixin
 
-from .models import SavingsAccount, FixedDeposit, RecurringDeposit, CashSheet, PaymentSheet, CURRENT_ACCOUNT_TYPE, Statement
+from .models import SavingsAccount, FixedDeposit, RecurringDeposit, CashSheet, PaymentSheet, CURRENT_ACCOUNT_TYPE, SAVING_ACCOUNT_TYPE, Statement
 from .forms import SavingsAccountForm, FixedDepositForm, RecurringDepositForm, CashSheetForm, PaymentSheetForm
 from dashboard.models import Member
 
@@ -190,11 +191,101 @@ def delete_cash_sheet(request, member_id, pk ):
         # Delete the CashSheet instance
         cash_sheet.delete()
         messages.success(request, 'Cash Sheet and associated Voucher have been deleted successfully.')
-
-        # Redirect to the success URL
         return redirect(reverse('member-statement', kwargs={'member_id': member_id}))
-    
     return render(request, 'transactions/delete_cash_sheet.html', {'cash_sheet': cash_sheet})
+
+def run_provision(request, member_id, account_id):
+    if request.method == "POST":
+        today = timezone.now().date()
+        three_months_ago = today - timedelta(days=90)
+        
+        # Get savings account
+        account = get_object_or_404(SavingsAccount, id=account_id, member__id=member_id)
+
+        # Define annual interest rate
+        INTEREST_RATE = account.interest_rate
+        total_interest = Decimal("0.0")  # Total accrued interest
+
+        if account.balance <= 0:
+            return JsonResponse({
+                "success": False,
+                "message": "Account balance must be greater than 0.",
+            }, status=400)
+
+        # Get deposits made within the last 3 months
+        last_provision_applied = Statement.objects.filter(account=account, member_id=member_id, transaction_type="credit", category="Interest").order_by("transaction_date").last()
+        if last_provision_applied:
+            last_provision_date = last_provision_applied.transaction_date.date()
+            days_since_last_provision = (today - last_provision_date).days
+            print(days_since_last_provision)
+            if days_since_last_provision < 1:
+                return JsonResponse({
+                    "success": False,
+                    "message": "Provision already applied for this account.",
+                }, status=400)
+            else:
+                deposits = account.cashsheets.filter(
+                    amount__gt=0, transaction_date__date__gte=last_provision_date
+                ).order_by("transaction_date")
+        else:
+            deposits = account.cashsheets.filter(
+                amount__gt=0, transaction_date__date__gte=three_months_ago
+            ).order_by("transaction_date")
+        
+        for deposit in deposits:
+            deposit_amount = deposit.amount
+            deposit_date = deposit.transaction_date.date()
+
+            # Calculate the number of days since this deposit was made
+            provision_days = (today - deposit_date).days
+            print(f"Provision days: {provision_days}")
+
+            # Interest accrued for this deposit amount
+            interest_accrued = (deposit_amount * (INTEREST_RATE / 100) * provision_days) / 365 
+            total_interest += interest_accrued
+
+        # Update account balance with total accrued interest
+        try:
+            with transaction.atomic():
+                prev_balance = account.balance
+                account.balance += total_interest
+                account.save()
+
+                voucher = Voucher.objects.create(
+                    voucher_type='Payment',
+                    category='Saving Interest',
+                    amount=total_interest,
+                    narration=f'Interest Provision for {account.account_number}.',
+                    transaction_date=today,
+                    created_by=request.user,
+                    branch=account.member.center.branch,
+                )
+
+                Statement.objects.create(
+                    account=account,
+                    member=account.member,
+                    transaction_type='credit',
+                    category='Interest',
+                    cr_amount=interest_accrued, 
+                    dr_amount=0.0,
+                    prev_balance=prev_balance,
+                    curr_balance=account.balance,
+                    remarks=voucher.narration,
+                    transaction_date=timezone.now(),
+                    created_by=request.user,
+                    voucher=voucher,
+                )
+
+                return JsonResponse({
+                    "success": True,
+                    "message": f"Provision completed. Total interest accrued: {total_interest:.2f}",
+                    "interest_accrued": float(total_interest),
+                    "new_balance": float(account.balance),
+                })
+        except Exception as e:
+            return JsonResponse({"success": False, "message": str(e)}, status=500)
+
+    return JsonResponse({"success": False, "message": "Invalid request."}, status=400)
 
 
 class PaymentSheetCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
@@ -219,19 +310,27 @@ class PaymentSheetCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
         withdrawn_by = form.cleaned_data.get('withdrawn_by')
         cheque_no = form.cleaned_data.get('cheque_no')
 
+        close_account = self.request.POST.get("close_account") == "true" 
+        status = member.status
+        # print(close_account)
+        # print(self.request.POST)
 
         # Extract only the codes for filtering
         current_account_codes = [code for code, _ in CURRENT_ACCOUNT_TYPE]
+        all_account_codes = [code for code, _ in SAVING_ACCOUNT_TYPE]
 
-        accounts = SavingsAccount.objects.filter(member=self.kwargs['member_id'])
-        current_accounts = [account for account in accounts if account.account_type in current_account_codes]
+        accounts = SavingsAccount.objects.filter(member=self.kwargs['member_id'], status="active")
+        if member.status == "A":
+            member_accounts = [account for account in accounts if account.account_type in current_account_codes]
+        elif member.status == "DR":
+            member_accounts = [account for account in accounts if account.account_type in all_account_codes]
 
         current_teller = Teller.objects.filter(employee=self.request.user).first()
         if current_teller is None:
             messages.error(self.request, "No teller detected for given employee.")
             return redirect('create_payment_sheet', member_id=member.id)
       
-        for account in current_accounts:
+        for account in member_accounts:
             amount_field_name = f'amount_{account.id}'
             amount = form.cleaned_data.get(amount_field_name)
         
@@ -245,50 +344,52 @@ class PaymentSheetCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
                 else:
                     print(f"Processing account {account.id} with amount {amount}")
                     try:
-                            payment_sheet = PaymentSheet(
-                                account=account,
-                                member=member,
-                                created_by=self.request.user,
-                                amount=amount,
-                                remarks=remarks,
-                                withdrawn_by=withdrawn_by,
-                                cheque_no=cheque_no,
-                            )
-                            payment_sheet.save()
-                            voucher = payment_sheet.create_voucher()
-                            print(f"Creating Payment Sheet with account_id: {payment_sheet.account_id}")
+                        payment_sheet = PaymentSheet(
+                            account=account,
+                            member=member,
+                            created_by=self.request.user,
+                            amount=amount,
+                            remarks=remarks,
+                            withdrawn_by=withdrawn_by,
+                            cheque_no=cheque_no,
+                        )
+                        payment_sheet.save()
+                        voucher = payment_sheet.create_voucher()
+                        print(f"Creating Payment Sheet with account_id: {payment_sheet.account_id}")
 
-                            # Update account balance
-                            prev_balance = account.balance
-                            account.balance -= amount
-                            account.save()
+                        # Update account balance
+                        prev_balance = account.balance
+                        account.balance -= amount
 
-                            # Update teller balance
-                            current_teller.balance -= amount
-                            current_teller.save()
+                        if close_account and status=="DR":
+                            account.status = "closed"  # Assuming you have a 'status' field
+                        account.save()
 
-                            # Automatically create a Statement
-                            Statement.objects.create(
-                                account=account,
-                                member=member,
-                                payment_sheet=payment_sheet,
-                                transaction_type='debit',
-                                category='Payment Sheet',
-                                cr_amount=0.0,  # Debits are always 0 in this case, as it's a deduction from the account balance.
-                                dr_amount=amount,
-                                prev_balance=prev_balance,
-                                curr_balance=account.balance,
-                                remarks=payment_sheet.remarks,
-                                by=payment_sheet.withdrawn_by,
-                                transaction_date=payment_sheet.transaction_date,
-                                created_by=self.request.user,
-                                voucher=voucher,
-                            )
-                            print(f"Created Payment Sheet: {payment_sheet}")
+                        # Update teller balance
+                        current_teller.balance -= amount
+                        current_teller.save()
+
+                        # Automatically create a Statement
+                        Statement.objects.create(
+                            account=account,
+                            member=member,
+                            payment_sheet=payment_sheet,
+                            transaction_type='debit',
+                            category='Payment Sheet',
+                            cr_amount=0.0,
+                            dr_amount=amount,
+                            prev_balance=prev_balance,
+                            curr_balance=account.balance,
+                            remarks=payment_sheet.remarks if payment_sheet.remarks is not None else voucher.narration,
+                            by=payment_sheet.withdrawn_by,
+                            transaction_date=payment_sheet.transaction_date,
+                            created_by=self.request.user,
+                            voucher=voucher,
+                        )
+                        print(f"Created Payment Sheet: {payment_sheet}")
+                        messages.success(self.request, "Amount has been withdrawn successfully.")
                     except Exception as e:
-                        print(f"Error creating Payment Sheet: {e}")
-
-        messages.success(self.request, "Amount has been withdrawn successfully.")
+                            print(f"Error creating Payment Sheet: {e}")
         return HttpResponseRedirect(reverse_lazy('create_payment_sheet', kwargs={'member_id': member_id}))
 
     def get_context_data(self, **kwargs):
@@ -302,6 +403,7 @@ class PaymentSheetCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
         # Redirect to a URL that displays the payment sheets for the member
         return reverse_lazy('create_payment_sheet', kwargs={'member_id': member_id})
     
+
 def delete_payment_sheet(request, member_id, pk ):
     payment_sheet = get_object_or_404(PaymentSheet, pk=pk)
 
@@ -331,12 +433,9 @@ def delete_payment_sheet(request, member_id, pk ):
         current_teller.save()
 
         messages.success(request, 'Payment Sheet and associated Voucher have been deleted successfully.')
-
-        # Redirect to the success URL
         return redirect(reverse('member-statement', kwargs={'member_id': member_id}))
     
     return render(request, 'transactions/delete_payment_sheet.html', {'payment_sheet': payment_sheet})
-
 
 @login_required
 def statement_list(request, member_id):
@@ -345,7 +444,7 @@ def statement_list(request, member_id):
     statements = Statement.objects.filter(member_id=member_id).all()
     # Check if there are any GET parameters (filters applied)
     filters_applied = bool(request.GET)
-    
+
     # Initialize the filter with the queryset and the member_id
     statement_filter = StatementFilter(request.GET, queryset=statements if filters_applied else Statement.objects.none(), member_id=member_id)
 

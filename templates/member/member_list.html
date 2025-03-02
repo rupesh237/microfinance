@@ -93,11 +93,40 @@
 
             </tbody>
         </table>
+
+        <!-- Pagination controls -->
+        <nav aria-label="Member list pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if members.has_previous %}
+                    <li class="page-item">
+                        <a href="?page=1" class="page-link">&laquo; First</a>
+                    </li>
+                    <li class="page-item">
+                        <a href="?page={{ members.previous_page_number }}" class="page-link">Previous</a>
+                    </li>
+                {% endif %}
+        
+                <li class="page-item disabled">
+                    <span class="page-link">Page {{ members.number }} of {{ members.paginator.num_pages }}</span>
+                </li>
+        
+                {% if centers.has_next %}
+                    <li class="page-item">
+                        <a href="?page={{ members.next_page_number }}" class="page-link">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a href="?page={{ members.paginator.num_pages }}" class="page-link">Last &raquo;</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        
         <div id="transactions-navbar" class="mt-4" class="disabled">
             <a id="memberCashSheet" href="#" class="mr-3">CASHSHEET</a>
             <a id="memberPaymentSheet" href="#" class="mr-3">PAYMENTSHEET</a>
             <a id="memberStatement" href="#" class="mr-3">STATEMENT</a>
-            <a id="memberLoan" href="#">LOAN</a>
+            <a id="memberLoan" href="#" class="mr-3">LOAN</a>
+            <a id="memberSavingAccounts" href="#">ACCOUNTS</a>
         </div>
 
         <!-- Placeholder for selected member's saving accounts -->
@@ -203,7 +232,6 @@
                 selectedMember.classList.remove('disabled');
                 transactionsNavbar.classList.remove('disabled');
             }
-
         
             let selectedRow = null;
         
@@ -223,6 +251,8 @@
                      memberStatement.href = `{% url 'member-statement' 0 %}`.replace(/0/, memberId);
                      const memberLoan = document.getElementById('memberLoan');
                      memberLoan.href = `{% url 'loan_demand_list' 0 %}`.replace(/0/, memberId);
+                     const memberSavingAccounts = document.getElementById('memberSavingAccounts');
+                     memberSavingAccounts.href = `{% url 'member_savings' 0 %}`.replace(/0/, memberId);
 
                     // Fetch saving accounts data for the selected member
                     fetch(`/get_saving_accounts/${memberId}/`)
@@ -339,12 +369,15 @@
                         // Optionally update the row in the table
                         selectedRow.querySelector('td:nth-child(7)').innerText = newStatusSelect.value; // Update displayed status
                         $(statusModal).modal('hide'); // Hide the modal
+                        window.location.href = data.redirect_url;
                     } else {
-                        alert('Failed to change status.');
+                        // Show error message in an alert
+                        alert(data.error || 'Failed to change status.');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
+                    alert('An unexpected error occurred.');
                 });
             });
         });      

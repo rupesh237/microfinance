@@ -139,7 +139,7 @@ def loan_outstanding_chart(request):
         # Get total principal paid from EMIPayment
         total_principal_paid = (
             EMIPayment.objects.filter(loan__loan_purpose=loan_purpose, loan__member__center__branch=branch)
-            .aggregate(total_principal_paid=Sum("principal_paid"))["total_principal_paid"] or 0
+            .aggregate(total_principal_paid=Sum("amount_paid"))["total_principal_paid"] or 0
         )
         # Calculate remaining principal
         remaining_principal = total_amount - total_principal_paid
@@ -582,7 +582,8 @@ def collection_sheet_by_date(request):
     today = timezone.now().date()
     day = today.day
 
-    centers = Center.objects.annotate(group_count=Count('groups')).filter(group_count__gt=0).order_by('meeting_date')
+    branch = request.user.employee_detail.branch
+    centers = Center.objects.annotate(group_count=Count('groups')).filter(group_count__gt=0, branch=branch).order_by('meeting_date')
     
     # Check if there are any GET parameters (filters applied)
     filters_applied = bool(request.GET)
@@ -591,13 +592,13 @@ def collection_sheet_by_date(request):
         try:
             selected_date = timezone.datetime.strptime(selected_date, "%Y-%m-%d").date()
         except ValueError:
-            selected_date = today.date()  # Default to today if the date is invalid
+            selected_date = today # Default to today if the date is invalid
     else:
-        selected_date = today.date()
+        selected_date = today
     
     meetings_filter = CollectionSheetFilter(
         request.GET,
-        queryset=centers if filters_applied else Center.objects.filter(meeting_date=day).all()
+        queryset=centers if filters_applied else Center.objects.filter(branch=branch, meeting_date=day).all()
     )
 
     # Check if CollectionSheets already exist for today
@@ -605,6 +606,7 @@ def collection_sheet_by_date(request):
     for center in meetings_filter.qs:
         sheets = CollectionSheet.objects.filter(
             center=center,
+            branch=branch,
             meeting_date=selected_date
         ).first()
         centers_with_sheets[center.id] = sheets
@@ -622,13 +624,15 @@ def collection_sheet_by_date(request):
 
 def collection_sheet_by_center(request):
     today = date.today()
-    centers = Center.objects.annotate(group_count=Count('groups')).filter(group_count__gt=0).order_by('meeting_date')
+    branch = request.user.employee_detail.branch
+    centers = Center.objects.annotate(group_count=Count('groups')).filter(group_count__gt=0, branch=branch).order_by('meeting_date')
     # Check if CollectionSheets already exist for today
     centers_with_sheets = {}
     for center in centers:
         formatted_date = date(today.year, today.month, center.meeting_date)
         sheets = CollectionSheet.objects.filter(
             center=center,
+            branch=branch,
             meeting_date=formatted_date
         ).first()
         centers_with_sheets[center.id] = sheets
@@ -640,7 +644,8 @@ def collection_sheet_by_center(request):
     return render(request, 'collection-sheet/collection-sheet-by-center.html', context)
 
 def create_collection_sheet(request, center_id):
-    center = get_object_or_404(Center, id=center_id)
+    branch = request.user.employee_detail.branch
+    center = get_object_or_404(Center, id=center_id, branch=branch)
     groups = center.groups.all()  # Assuming groups are related to the Center model
     members = Member.objects.filter(group__in=groups)
 
@@ -838,10 +843,11 @@ def create_collection_sheet(request, center_id):
     }
     return render(request, 'collection-sheet/create_collection_sheet.html', context=context)
     
-def generate_voucher_number():
+def generate_voucher_number(request):
         today_str = timezone.now().strftime('%Y%m%d')
-        last_voucher = Voucher.objects.filter(transaction_date=timezone.now().date()).order_by('voucher_number').last()
-        # print(f"last Voucher: {last_voucher}")
+        branch = request.user.employee_detail.branch
+        last_voucher = Voucher.objects.filter(transaction_date=timezone.now().date(), branch=branch).order_by('voucher_number').last()
+
         if last_voucher:
             last_sequence = int(last_voucher.voucher_number[-3:])
             next_sequence = last_sequence + 1
@@ -1564,7 +1570,12 @@ def cash_management_view(request):
 
 ## VOUCHERS
 def voucher_list(request):
-    vouchers = Voucher.objects.all()
+    user = request.user
+    if user.is_superuser:
+        vouchers = Voucher.objects.all()
+    else:
+        branch = user.employee_detail.branch
+        vouchers = Voucher.objects.filter(branch=branch).all()
     # Check if there are any GET parameters (filters applied)
     filters_applied = bool(request.GET)
     today = timezone.now().date()
@@ -1572,7 +1583,7 @@ def voucher_list(request):
 
     voucher_filter = VoucherFilter(
         request.GET,
-        queryset=vouchers if filters_applied else Voucher.objects.filter(created_at__date=today).all()
+        queryset=vouchers if filters_applied else vouchers.filter(created_at__date=today).all()
     )
     context = {
                'filter': voucher_filter,

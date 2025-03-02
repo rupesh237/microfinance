@@ -4,7 +4,8 @@ from django.db import models
 from dashboard.models import Member
 from core.models import Voucher
 from decimal import Decimal
-
+from dateutil.relativedelta import relativedelta
+from datetime import timezone
 LOAN_TYPE_CHOICES = [
         ('Flat', 'Flat Interest'),
         ('Declining', 'Declining Balance'),
@@ -68,6 +69,9 @@ class Loan(models.Model):
         breakdown = []
         remaining_principal = self.amount
 
+        payment_date = self.created_date or timezone.now().date()  # Use created_date or fallback to today
+        payment_date += relativedelta(months=1)  # First payment one month after created_date
+
         if self.loan_type == 'Flat':
             emi = self.calculate_emi()
             for month in range(1, self.duration_months + 1):
@@ -81,6 +85,7 @@ class Loan(models.Model):
                 remaining_principal = round(remaining_principal - principal_component, 2)
                 breakdown.append({
                     'month': month,
+                    'date': payment_date,
                     'emi_amount': emi,
                     'principal_component': principal_component,
                     'interest_component': monthly_interest,
@@ -88,7 +93,7 @@ class Loan(models.Model):
                 })
                 if remaining_principal <= 0:
                     break
-
+                payment_date += relativedelta(months=1)  # Increment date by 1 month
         elif self.loan_type == 'Declining':
             principal_component = round(self.amount / self.duration_months, 2)
             for month in range(1, self.duration_months + 1):
@@ -104,6 +109,7 @@ class Loan(models.Model):
                 remaining_principal = round(remaining_principal - principal_component, 2)
                 breakdown.append({
                     'month': month,
+                    'date': payment_date,
                     'emi_amount': emi,
                     'principal_component': principal_component,
                     'interest_component': monthly_interest,
@@ -111,6 +117,7 @@ class Loan(models.Model):
                 })
                 if remaining_principal <= 0:
                     break
+                payment_date += relativedelta(months=1)  # Increment date by 1 month
 
         elif self.loan_type == 'Interest_Only':
             monthly_interest = round(self.amount * (self.interest_rate / 12 / 100), 2)
@@ -125,12 +132,13 @@ class Loan(models.Model):
 
                 breakdown.append({
                     'month': month,
+                    'date': payment_date,
                     'emi_amount': emi,
                     'principal_component': principal_component,
                     'interest_component': monthly_interest,
                     'remaining_principal': max(self.amount - principal_component, Decimal('0.00'))
                 })
-
+                payment_date += relativedelta(months=1)  # Increment date by 1 month
         return breakdown
     
     def get_installment_number(self):

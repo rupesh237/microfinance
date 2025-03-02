@@ -78,10 +78,14 @@ class PaymentSheetForm(forms.ModelForm):
         
         # Extract only the codes for filtering
         current_account_codes = [code for code, _ in CURRENT_ACCOUNT_TYPE]
+        all_saving_account_codes = [code for code, _ in SAVING_ACCOUNT_TYPE]
 
-        accounts = SavingsAccount.objects.filter(member=member)
-        current_accounts = [account for account in accounts if account.account_type in current_account_codes]
-        for account in current_accounts:
+        accounts = SavingsAccount.objects.filter(member=member, status="active")
+        if member.status == "A":
+            member_accounts = [account for account in accounts if account.account_type in current_account_codes]
+        elif member.status == "DR":
+            member_accounts = [account for account in accounts if account.account_type in all_saving_account_codes]
+        for account in member_accounts:
             # Create a unique name for the amount field for each account
             amount_field_name = f'amount_{account.id}'
 
@@ -90,10 +94,8 @@ class PaymentSheetForm(forms.ModelForm):
                 label=f'Amount for {account.account_number}',
                 required=False
             )
-
             # Append a tuple for later use in the template if needed
             self.account_amount_fields.append((account, amount_field_name))
-
 
 class FixedDepositForm(forms.ModelForm):
     class Meta:
