@@ -12,6 +12,7 @@ urlpatterns = [
     path('member/<int:member_id>/cash-sheet/delete/<int:pk>/', views.delete_cash_sheet, name='delete_cash_sheet'),
 
     path('run-provision/<int:member_id>/<int:account_id>/', views.run_provision, name='run_provision'),
+    path('run-charges/<int:member_id>/<int:account_id>/', views.run_charges, name='run_charges'),
 
     path('member/<int:member_id>/payment-sheet/create/', views.PaymentSheetCreateView.as_view(), name='create_payment_sheet'),
     path('member/<int:member_id>/payment-sheet/delete/<int:pk>/', views.delete_payment_sheet, name='delete_payment_sheet'),

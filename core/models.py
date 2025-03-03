@@ -84,6 +84,7 @@ class Voucher(models.Model):
         ('Payment', 'Payment'),
         ('Receipt', 'Receipt'),
         ('Journal', 'Journal'),
+        ('Other', 'Other'),
     ]
     VOUCHER_CATEGORY_CHOICES = [
         ('Cash Sheet', 'Cash Sheet'),
@@ -93,6 +94,7 @@ class Voucher(models.Model):
         ('Cash and Bank', 'Cash and Bank'),
         ('Service Fee', 'Service Fee'),
         ('Saving Interest', 'Saving Interest'),
+        ('Tax Charges', 'Tax Charges'),
         ('Manual', 'Manual'),
     ]
 

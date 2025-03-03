@@ -202,6 +202,7 @@ class Statement(models.Model):
         ('Payment Sheet', 'Payment Sheet'),
         ('Loan', 'Loan'),
         ('Charge', 'Charge'),
+        ('Tax Charges', 'Tax Charges'),
         ('Collection', 'Collection'),
         ('Interest', 'Interest'),
     ]

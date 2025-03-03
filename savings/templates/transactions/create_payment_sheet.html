@@ -56,7 +56,7 @@
                                 <span class="custom-tooltip">Run Provision</span>
                             </div>
                             <div class="tooltip-container">
-                                <i class="bi bi-check2-square"></i>
+                                <i class="bi bi-check2-square run-charges" data-member="{{member.id}}" data-account="{{account.id}}" style="cursor: pointer;"></i>
                                 <span class="custom-tooltip">Run Charges</span>
                             </div>
                             
@@ -88,6 +88,29 @@
             var memberId = $(this).data("member");
             var accountId = $(this).data("account");
             var url = `/savings/run-provision/${memberId}/${accountId}/`;
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: {
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function(response) {
+                    alert(response.message);
+                    location.reload();  // Reload page to update status
+                },
+                error: function(xhr) {
+                    var errorMsg = xhr.responseJSON ? xhr.responseJSON.message : "Something went wrong!";
+                    alert(errorMsg);
+                }
+            });
+        });
+
+        // Run Charges Click Event
+        $(".run-charges").click(function() {
+            var memberId = $(this).data("member");
+            var accountId = $(this).data("account");
+            var url = `/savings/run-charges/${memberId}/${accountId}/`;
 
             $.ajax({
                 type: "POST",

@@ -18,7 +18,7 @@ from .models import SavingsAccount, FixedDeposit, RecurringDeposit, CashSheet, P
 from .forms import SavingsAccountForm, FixedDepositForm, RecurringDepositForm, CashSheetForm, PaymentSheetForm
 from dashboard.models import Member
 
-from core.models import Voucher, Teller
+from core.models import Voucher, Teller, CashVault
 
 from .filters import StatementFilter
 
@@ -247,12 +247,22 @@ def run_provision(request, member_id, account_id):
         # Update account balance with total accrued interest
         try:
             with transaction.atomic():
+                cash_vault = CashVault.objects.filter(branch=account.member.center.branch).first()
+                if cash_vault is None:
+                    return JsonResponse({
+                        "success": False,
+                        "message": "No Vault detected for the system.",
+                    })
+                
+                cash_vault.balance -= total_interest
+                cash_vault.save()
+                
                 prev_balance = account.balance
                 account.balance += total_interest
                 account.save()
 
                 voucher = Voucher.objects.create(
-                    voucher_type='Payment',
+                    voucher_type='Other',
                     category='Saving Interest',
                     amount=total_interest,
                     narration=f'Interest Provision for {account.account_number}.',
@@ -285,6 +295,106 @@ def run_provision(request, member_id, account_id):
         except Exception as e:
             return JsonResponse({"success": False, "message": str(e)}, status=500)
 
+    return JsonResponse({"success": False, "message": "Invalid request."}, status=400)
+
+def run_charges(request, member_id, account_id):
+    if request.method == "POST":
+        today = timezone.now().date()
+        three_months_ago = today - timedelta(days=90)
+        
+        # Get savings account
+        account = get_object_or_404(SavingsAccount, id=account_id, member__id=member_id)
+
+        # Define annual interest rate
+        TAX_RATE = 5
+        total_tax_charges = Decimal("0.0") 
+
+        if account.balance <= 0:
+            return JsonResponse({
+                "success": False,
+                "message": "Account balance must be greater than 0.",
+            }, status=400)
+
+        # Get deposits made within the last 3 months
+        last_charge_applied = Statement.objects.filter(account=account, member_id=member_id, transaction_type="debit", category="Tax Charges").order_by("transaction_date").last()
+        if last_charge_applied:
+            last_charge_date = last_charge_applied.transaction_date.date()
+            days_since_last_charge = (today - last_charge_date).days
+            print(days_since_last_charge)
+            if days_since_last_charge < 1:
+                return JsonResponse({
+                    "success": False,
+                    "message": "Charges already applied for this account.",
+                }, status=400)
+            else:
+                deposits = account.cashsheets.filter(
+                    amount__gt=0, transaction_date__date__gte=last_charge_date
+                ).order_by("transaction_date")
+        else:
+            deposits = account.cashsheets.filter(
+                amount__gt=0, transaction_date__date__gte=three_months_ago
+            ).order_by("transaction_date")
+        
+        for deposit in deposits:
+            deposit_amount = deposit.amount
+            deposit_date = deposit.transaction_date.date()
+            # Calculate the number of days since this deposit was made
+            charge_days = (today - deposit_date).days
+
+            # Tax charges accrued for this deposit amount
+            charges_accrued = (deposit_amount * (TAX_RATE / 100) * charge_days) / 365 
+            total_tax_charges += charges_accrued
+
+        # Update account balance with total accrued interest
+        try:
+            with transaction.atomic():
+                cash_vault = CashVault.objects.filter(branch=account.member.center.branch).first()
+                if cash_vault is None:
+                    return JsonResponse({
+                        "success": False,
+                        "message": "No vault detected for the system.",
+                    })
+                
+                cash_vault.balance += total_tax_charges
+                cash_vault.save()
+
+                prev_balance = account.balance
+                account.balance -= total_tax_charges
+                account.save()
+
+                voucher = Voucher.objects.create(
+                    voucher_type='Other',
+                    category='Tax Charges',
+                    amount=total_tax_charges,
+                    narration=f'Tax Charges for {account.account_number}.',
+                    transaction_date=today,
+                    created_by=request.user,
+                    branch=account.member.center.branch,
+                )
+
+                Statement.objects.create(
+                    account=account,
+                    member=account.member,
+                    transaction_type='debit',
+                    category='Tax Charges',
+                    cr_amount=charges_accrued, 
+                    dr_amount=0.0,
+                    prev_balance=prev_balance,
+                    curr_balance=account.balance,
+                    remarks=voucher.narration,
+                    transaction_date=timezone.now(),
+                    created_by=request.user,
+                    voucher=voucher,
+                )
+
+                return JsonResponse({
+                    "success": True,
+                    "message": f"Tax Charges applied. Total charges accrued: {total_tax_charges:.2f}",
+                    "interest_accrued": float(total_tax_charges),
+                    "new_balance": float(account.balance),
+                })
+        except Exception as e:
+            return JsonResponse({"success": False, "message": str(e)}, status=500)
     return JsonResponse({"success": False, "message": "Invalid request."}, status=400)
 
 
