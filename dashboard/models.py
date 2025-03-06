@@ -116,7 +116,6 @@ class District(models.Model):
     
 class Municipality(models.Model):
     name = models.CharField(max_length=64)
-    
     district = models.ForeignKey(District, on_delete=models.CASCADE, related_name="municipalities")
 
     def __str__(self):

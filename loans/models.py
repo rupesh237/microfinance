@@ -144,6 +144,16 @@ class Loan(models.Model):
     def get_installment_number(self):
         # Count the number of EMIPayment records associated with this loan
         return self.emi_payments.count() + 1
+    
+    @property
+    def total_emi_amount(self):
+        """
+        Calculate the total EMI amount from the breakdown.
+        """
+        breakdown = self.calculate_emi_breakdown()
+        total_emi = sum(item['emi_amount'] for item in breakdown)
+        return round(total_emi, 2)
+
 
 
 class EMIPayment(models.Model):

@@ -30,7 +30,7 @@
                 {% if user.is_superuser %}
                 <li><a href="{% url 'branch_list' %}">Branch</a></li>
                 {% endif %}
-                {% if request.user.employee_detail.role == "admin" %}
+                {% if request.user.employee_detail.role == "admin" or request.user.is_superuser %}
                 <li><a href="{% url 'employee_list' %}">Employee</a></li>
                 {% endif %}
                 <li><a href="{% url 'center_list' %}">Center</a></li>

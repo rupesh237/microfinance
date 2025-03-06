@@ -516,6 +516,17 @@ class IncomeInformationForm(forms.ModelForm):
     class Meta:
         model = IncomeInformation
         fields = ['agriculture_income', 'animal_farming_income', 'business_income', 'abroad_employment_income', 'wages_income', 'personal_job_income', 'government_post', 'pension', 'other']
+        widgets = {
+            'agriculture_income': forms.TextInput(attrs={'placeholder': '(Montly)'}),
+            'animal_farming_income': forms.TextInput(attrs={'placeholder': '(Montly)'}),
+            'business_income': forms.TextInput(attrs={'placeholder': '(Montly)'}),
+            'abroad_employment_income': forms.TextInput(attrs={'placeholder': '(Montly)'}),
+            'wages_income': forms.TextInput(attrs={'placeholder': '(Montly)'}),
+            'personal_job_income': forms.TextInput(attrs={'placeholder': '(Montly)'}),
+            'government_post': forms.TextInput(attrs={'placeholder': '(Montly)'}),
+            'pension': forms.TextInput(attrs={'placeholder': '(Montly)'}),
+            'other': forms.TextInput(attrs={'placeholder': '(Montly)'}),
+        }
 
     def __init__(self, *args, **kwargs):
         super(IncomeInformationForm, self).__init__(*args, **kwargs)
@@ -526,6 +537,17 @@ class ExpensesInformationForm(forms.ModelForm):
     class Meta:
         model = ExpensesInformation
         fields = ['house_expenses', 'education_expenses', 'health_expenses', 'festival_expenses', 'clothes_expenses', 'communication_expenses', 'fuel_expenses', 'entertaiment_expenses', 'other_expenses']
+        widgets = {
+            'house_expenses': forms.TextInput(attrs={'placeholder': '(Montly)'}),
+            'education_expenses': forms.TextInput(attrs={'placeholder': '(Montly)'}),
+            'health_expenses': forms.TextInput(attrs={'placeholder': '(Montly)'}),
+            'festival_expenses': forms.TextInput(attrs={'placeholder': '(Montly)'}),
+            'clothes_expenses': forms.TextInput(attrs={'placeholder': '(Montly)'}),
+            'communication_expenses': forms.TextInput(attrs={'placeholder': '(Montly)'}),
+            'fuel_expenses': forms.TextInput(attrs={'placeholder': '(Montly)'}),
+            'entertaiment_expenses': forms.TextInput(attrs={'placeholder': '(Montly)'}),
+            'other_expenses': forms.TextInput(attrs={'placeholder': '(Montly)'}),
+        }
 
     def __init__(self, *args, **kwargs):
         super(ExpensesInformationForm, self).__init__(*args, **kwargs)

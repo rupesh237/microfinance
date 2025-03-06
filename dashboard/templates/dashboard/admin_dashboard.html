@@ -36,11 +36,11 @@
             <div class="summary-box">
                 <h3>Financial Summary</h3>
                 <ul>
-                    <li><span class="label">Income:</span> <span class="value">Value</span></li>
-                    <li><span class="label">Expenses:</span> <span class="value">Value</span></li>
-                    <li><span class="label">Net profit:</span> <span class="value">Value</span></li>
-                    <li><span class="label">Financial expenses:</span> <span class="value">Value</span></li>
-                    <li><span class="label">Operating expenses:</span> <span class="value">Value</span></li>
+                    <li><span class="label">Income:</span> <span class="value">{{total_emi|floatformat:2|intcomma}}</span></li>
+                    <li><span class="label">Expenses:</span> <span class="value">{{total_disbursement|floatformat:2|intcomma}}</span></li>
+                    <li><span class="label">Net profit:</span> <span class="value">{{net_profit|floatformat:2|intcomma}}</span></li>
+                    <li><span class="label">Financial expenses:</span> <span class="value">Undefined</span></li>
+                    <li><span class="label">Operating expenses:</span> <span class="value">Undefined</span></li>
                 </ul>
             </div>
         </div>

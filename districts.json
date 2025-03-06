@@ -1,0 +1,464 @@
+[
+    {
+      "id": 1,
+      "province_id": 1,
+      "name": "Bhojpur",
+      "headquarter": "Bhojpur"
+    },
+    {
+      "id": 2,
+      "province_id": 1,
+      "name": "Dhankuta",
+      "headquarter": "Dhankuta"
+    },
+    {
+      "id": 3,
+      "province_id": 1,
+      "name": "Ilam",
+      "headquarter": "Ilam"
+    },
+    {
+      "id": 4,
+      "province_id": 1,
+      "name": "Jhapa",
+      "headquarter": "Bhadrapur"
+    },
+    {
+      "id": 5,
+      "province_id": 1,
+      "name": "Khotang",
+      "headquarter": "Diktel"
+    },
+    {
+      "id": 6,
+      "province_id": 1,
+      "name": "Morang",
+      "headquarter": "Biratnagar"
+    },
+    {
+      "id": 7,
+      "province_id": 1,
+      "name": "Okhaldhunga",
+      "headquarter": "Siddhicharan"
+    },
+    {
+      "id": 8,
+      "province_id": 1,
+      "name": "Pachthar",
+      "headquarter": "Phidim"
+    },
+    {
+      "id": 9,
+      "province_id": 1,
+      "name": "Sankhuwasabha",
+      "headquarter": "Khandbari"
+    },
+    {
+      "id": 10,
+      "province_id": 1,
+      "name": "Solukhumbu",
+      "headquarter": "Salleri"
+    },
+    {
+      "id": 11,
+      "province_id": 1,
+      "name": "Sunsari",
+      "headquarter": "Inaruwa"
+    },
+    {
+      "id": 12,
+      "province_id": 1,
+      "name": "Taplejung",
+      "headquarter": "Taplejung"
+    },
+    {
+      "id": 13,
+      "province_id": 1,
+      "name": "Terhathum",
+      "headquarter": "Myanglung"
+    },
+    {
+      "id": 14,
+      "province_id": 1,
+      "name": "Udayapur",
+      "headquarter": "Gaighat"
+    },
+    {
+      "id": 15,
+      "province_id": 2,
+      "name": "Parsa",
+      "headquarter": "Birgunj"
+    },
+    {
+      "id": 16,
+      "province_id": 2,
+      "name": "Bara",
+      "headquarter": "Kalaiya"
+    },
+    {
+      "id": 17,
+      "province_id": 2,
+      "name": "Rautahat",
+      "headquarter": "Gaur"
+    },
+    {
+      "id": 18,
+      "province_id": 2,
+      "name": "Sarlahi",
+      "headquarter": "Malangawa"
+    },
+    {
+      "id": 19,
+      "province_id": 2,
+      "name": "Siraha",
+      "headquarter": "Siraha"
+    },
+    {
+      "id": 20,
+      "province_id": 2,
+      "name": "Dhanusha",
+      "headquarter": "Janakpur"
+    },
+    {
+      "id": 21,
+      "province_id": 2,
+      "name": "Saptari",
+      "headquarter": "Rajbiraj"
+    },
+    {
+      "id": 22,
+      "province_id": 2,
+      "name": "Mahottari",
+      "headquarter": "Jaleshwar"
+    },
+    {
+      "id": 23,
+      "province_id": 3,
+      "name": "Bhaktapur",
+      "headquarter": "Bhaktapur"
+    },
+    {
+      "id": 24,
+      "province_id": 3,
+      "name": "Chitwan",
+      "headquarter": "Bharatpur"
+    },
+    {
+      "id": 25,
+      "province_id": 3,
+      "name": "Dhading",
+      "headquarter": "Nilkantha"
+    },
+    {
+      "id": 26,
+      "province_id": 3,
+      "name": "Dolakha",
+      "headquarter": "Bhimeshwar"
+    },
+    {
+      "id": 27,
+      "province_id": 3,
+      "name": "Kathmandu",
+      "headquarter": "Kathmandu"
+    },
+    {
+      "id": 28,
+      "province_id": 3,
+      "name": "Kavrepalanchok",
+      "headquarter": "Dhulikhel"
+    },
+    {
+      "id": 29,
+      "province_id": 3,
+      "name": "Lalitpur",
+      "headquarter": "Lalitpur"
+    },
+    {
+      "id": 30,
+      "province_id": 3,
+      "name": "Makwanpur",
+      "headquarter": "Hetauda"
+    },
+    {
+      "id": 31,
+      "province_id": 3,
+      "name": "Nuwakot",
+      "headquarter": "Bidur"
+    },
+    {
+      "id": 32,
+      "province_id": 3,
+      "name": "Ramechap",
+      "headquarter": "Manthali"
+    },
+    {
+      "id": 33,
+      "province_id": 3,
+      "name": "Rasuwa",
+      "headquarter": "Dhunche"
+    },
+    {
+      "id": 34,
+      "province_id": 3,
+      "name": "Sindhuli",
+      "headquarter": "Kamalamai"
+    },
+    {
+      "id": 35,
+      "province_id": 3,
+      "name": "Sindhupalchok",
+      "headquarter": "Chautara"
+    },
+    {
+      "id": 36,
+      "province_id": 4,
+      "name": "Baglung",
+      "headquarter": "Baglung"
+    },
+    {
+      "id": 37,
+      "province_id": 4,
+      "name": "Gorkha",
+      "headquarter": "Gorkha"
+    },
+    {
+      "id": 38,
+      "province_id": 4,
+      "name": "Kaski",
+      "headquarter": "Pokhara"
+    },
+    {
+      "id": 39,
+      "province_id": 4,
+      "name": "Lamjung",
+      "headquarter": "Besisahar"
+    },
+    {
+      "id": 40,
+      "province_id": 4,
+      "name": "Manang",
+      "headquarter": "Chame"
+    },
+    {
+      "id": 41,
+      "province_id": 4,
+      "name": "Mustang",
+      "headquarter": "Jomsom"
+    },
+    {
+      "id": 42,
+      "province_id": 4,
+      "name": "Myagdi",
+      "headquarter": "Beni"
+    },
+    {
+      "id": 43,
+      "province_id": 4,
+      "name": "Nawalpur",
+      "headquarter": "Kawasoti"
+    },
+    {
+      "id": 44,
+      "province_id": 4,
+      "name": "Parwat",
+      "headquarter": "Kusma"
+    },
+    {
+      "id": 45,
+      "province_id": 4,
+      "name": "Syangja",
+      "headquarter": "Putalibazar"
+    },
+    {
+      "id": 46,
+      "province_id": 4,
+      "name": "Tanahun",
+      "headquarter": "Damauli"
+    },
+    {
+      "id": 47,
+      "province_id": 5,
+      "name": "Kapilvastu",
+      "headquarter": "Taulihawa"
+    },
+    {
+      "id": 48,
+      "province_id": 5,
+      "name": "Parasi",
+      "headquarter": "Ramgram"
+    },
+    {
+      "id": 49,
+      "province_id": 5,
+      "name": "Rupandehi",
+      "headquarter": "Siddharthanagar"
+    },
+    {
+      "id": 50,
+      "province_id": 5,
+      "name": "Arghakhanchi",
+      "headquarter": "Sandhikharka"
+    },
+    {
+      "id": 51,
+      "province_id": 5,
+      "name": "Gulmi",
+      "headquarter": "Tamghas"
+    },
+    {
+      "id": 52,
+      "province_id": 5,
+      "name": "Palpa",
+      "headquarter": "Tansen"
+    },
+    {
+      "id": 53,
+      "province_id": 5,
+      "name": "Dang",
+      "headquarter": "Ghorahi"
+    },
+    {
+      "id": 54,
+      "province_id": 5,
+      "name": "Pyuthan",
+      "headquarter": "Pyuthan"
+    },
+    {
+      "id": 55,
+      "province_id": 5,
+      "name": "Rolpa",
+      "headquarter": "Liwang"
+    },
+    {
+      "id": 56,
+      "province_id": 5,
+      "name": "Eastern Rukum",
+      "headquarter": "Rukumkot"
+    },
+    {
+      "id": 57,
+      "province_id": 5,
+      "name": "Banke",
+      "headquarter": "Nepalganj"
+    },
+    {
+      "id": 58,
+      "province_id": 5,
+      "name": "Bardiya",
+      "headquarter": "Gulariya"
+    },
+    {
+      "id": 59,
+      "province_id": 6,
+      "name": "Western Rukum",
+      "headquarter": "Musikot"
+    },
+    {
+      "id": 60,
+      "province_id": 6,
+      "name": "Salyan",
+      "headquarter": "Salyan"
+    },
+    {
+      "id": 61,
+      "province_id": 6,
+      "name": "Dolpa",
+      "headquarter": "Dunai"
+    },
+    {
+      "id": 62,
+      "province_id": 6,
+      "name": "Humla",
+      "headquarter": "Simikot"
+    },
+    {
+      "id": 63,
+      "province_id": 6,
+      "name": "Jumla",
+      "headquarter": "Chandannath"
+    },
+    {
+      "id": 64,
+      "province_id": 6,
+      "name": "Kalikot",
+      "headquarter": "Manma"
+    },
+    {
+      "id": 65,
+      "province_id": 6,
+      "name": "Mugu",
+      "headquarter": "Gamgadhi"
+    },
+    {
+      "id": 66,
+      "province_id": 6,
+      "name": "Surkhet",
+      "headquarter": "Birendranagar"
+    },
+    {
+      "id": 67,
+      "province_id": 6,
+      "name": "Dailekh",
+      "headquarter": "Dailekh"
+    },
+    {
+      "id": 68,
+      "province_id": 6,
+      "name": "Jajarkot",
+      "headquarter": "Khalanga"
+    },
+    {
+      "id": 69,
+      "province_id": 7,
+      "name": "Darchula",
+      "headquarter": "Darchula"
+    },
+    {
+      "id": 70,
+      "province_id": 7,
+      "name": "Bajhang",
+      "headquarter": "Jayaprithvi"
+    },
+    {
+      "id": 71,
+      "province_id": 7,
+      "name": "Bajura",
+      "headquarter": "Badimalika"
+    },
+    {
+      "id": 72,
+      "province_id": 7,
+      "name": "Baitadi",
+      "headquarter": "Dasharathchand"
+    },
+    {
+      "id": 73,
+      "province_id": 7,
+      "name": "Doti",
+      "headquarter": "Dipayal Silgadhi"
+    },
+    {
+      "id": 74,
+      "province_id": 7,
+      "name": "Acham",
+      "headquarter": "Mangalsen"
+    },
+    {
+      "id": 75,
+      "province_id": 7,
+      "name": "Dadeldhura",
+      "headquarter": "Amargadhi"
+    },
+    {
+      "id": 76,
+      "province_id": 7,
+      "name": "Kanchanpur",
+      "headquarter": "Bheemdatta"
+    },
+    {
+      "id": 77,
+      "province_id": 7,
+      "name": "Kailali",
+      "headquarter": "Dhangadhi"
+    }
+  ]

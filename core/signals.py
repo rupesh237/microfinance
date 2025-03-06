@@ -16,7 +16,7 @@ def update_daily_cash_summary_for_vault(sender, instance, **kwargs):
     daily_summary, _ = DailyCashSummary.objects.get_or_create(
         branch=branch,
         date=date,
-        defaults={'opening_vault_balance': instance.cash_vault.current_balance},
+        defaults={'opening_vault_balance': instance.cash_vault.balance},
     )
 
     # Update vault balance

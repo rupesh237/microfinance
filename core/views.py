@@ -1369,7 +1369,7 @@ def create_vault_transaction(request, vault, teller, transaction_type, amount):
         except Exception as e:
             print(f'Error creating vault transaction: {e}')
     elif transaction_type == 'Withdraw':
-        if Decimal(amount) > vault.current_balance:
+        if Decimal(amount) > vault.balance:
             messages.error(request, f'Insufficient balance in vault.')
             return None
         
@@ -1383,7 +1383,7 @@ def create_vault_transaction(request, vault, teller, transaction_type, amount):
                 )
             
             # update cashvault balance
-            vault.current_balance -= Decimal(amount)
+            vault.balance -= Decimal(amount)
             vault.last_updated = datetime.now()
             vault.save()
 
@@ -1428,7 +1428,7 @@ def update_vault_transaction(request, transaction_id):
     try:
         # Update vault balance
         vault = vault_transaction.cash_vault
-        vault.current_balance += vault_transaction.amount
+        vault.balance += vault_transaction.amount
         vault.pending_amount -= vault_transaction.amount
         vault.last_updated = datetime.now()
         vault.save()
@@ -1440,7 +1440,6 @@ def update_vault_transaction(request, transaction_id):
         # print(f'Error updating vault transaction: {e}')
         messages.error(request, f'Error updating vault transaction: {e}')
         return redirect(reverse('cash_management_view'))
-
     return redirect(reverse('cash_management_view'))
 
 def update_teller_transaction(request, transaction_id):
@@ -1449,11 +1448,9 @@ def update_teller_transaction(request, transaction_id):
     if type == 'TellerToTeller':
         try:
             teller_to_teller_transaction = TellerToTellerTransaction.objects.get(id=transaction_id)
-            print(teller_to_teller_transaction)
 
             # Update teller balances
             to_teller = teller_to_teller_transaction.to_teller
-            print(to_teller)
             to_teller.balance += teller_to_teller_transaction.amount
             to_teller.pending_amount -= teller_to_teller_transaction.amount
             to_teller.save()
@@ -1467,11 +1464,9 @@ def update_teller_transaction(request, transaction_id):
     elif type == 'VaultToTeller':
         try:
             vault_transaction = VaultTransaction.objects.get(id=transaction_id)
-            print(vault_transaction)
 
             # Update teller balances
             teller = vault_transaction.teller
-            print(teller)
             teller.balance += vault_transaction.amount
             teller.pending_amount -= vault_transaction.amount
             teller.save()
@@ -1564,7 +1559,6 @@ def cash_management_view(request):
                 messages.error(request, f'Error processing transaction: {e}')
         
         return redirect(reverse('cash_management_view'))
-
     return render(request, 'cash_management/cash_management_view.html', context=context)
 
 
@@ -1580,7 +1574,6 @@ def voucher_list(request):
     filters_applied = bool(request.GET)
     today = timezone.now().date()
 
-
     voucher_filter = VoucherFilter(
         request.GET,
         queryset=vouchers if filters_applied else vouchers.filter(created_at__date=today).all()
@@ -1595,7 +1588,6 @@ def voucher_list(request):
 
 def add_voucher(request):
     return render(request, 'vouchers/add-voucher.html')
-
 
 ## RECEIPTS ##
 def create_receipt(request):
