@@ -1,0 +1,6026 @@
+[
+    {
+      "id": 1,
+      "district_id": 1,
+      "category_id": 3,
+      "name": "Shadanand",
+      "area_sq_km": "241.15",
+      "wards": "14"
+    },
+    {
+      "id": 2,
+      "district_id": 1,
+      "category_id": 3,
+      "name": "Bhojpur",
+      "area_sq_km": "159.51",
+      "wards": "12"
+    },
+    {
+      "id": 3,
+      "district_id": 1,
+      "category_id": 4,
+      "name": "Hatuwagadhi",
+      "area_sq_km": "142.61",
+      "wards": "9"
+    },
+    {
+      "id": 4,
+      "district_id": 1,
+      "category_id": 4,
+      "name": "Ramprasad Rai",
+      "area_sq_km": "158.83",
+      "wards": "8"
+    },
+    {
+      "id": 5,
+      "district_id": 1,
+      "category_id": 4,
+      "name": "Aamchok",
+      "area_sq_km": "184.89",
+      "wards": "10"
+    },
+    {
+      "id": 6,
+      "district_id": 1,
+      "category_id": 4,
+      "name": "Tyamke Maiyum",
+      "area_sq_km": "173.41",
+      "wards": "9"
+    },
+    {
+      "id": 7,
+      "district_id": 1,
+      "category_id": 4,
+      "name": "Arun",
+      "area_sq_km": "154.76",
+      "wards": "7"
+    },
+    {
+      "id": 8,
+      "district_id": 1,
+      "category_id": 4,
+      "name": "Pauwadungma",
+      "area_sq_km": "118.86",
+      "wards": "6"
+    },
+    {
+      "id": 9,
+      "district_id": 1,
+      "category_id": 4,
+      "name": "Salpasilichho",
+      "area_sq_km": "193.33",
+      "wards": "6"
+    },
+    {
+      "id": 10,
+      "district_id": 2,
+      "category_id": 3,
+      "name": "Dhankuta",
+      "area_sq_km": "111",
+      "wards": "10"
+    },
+    {
+      "id": 11,
+      "district_id": 2,
+      "category_id": 3,
+      "name": "Pakhribas",
+      "area_sq_km": "144.29",
+      "wards": "10"
+    },
+    {
+      "id": 12,
+      "district_id": 2,
+      "category_id": 3,
+      "name": "Mahalaxmi",
+      "area_sq_km": "129.39",
+      "wards": "9"
+    },
+    {
+      "id": 13,
+      "district_id": 2,
+      "category_id": 4,
+      "name": "Sangurigadhi",
+      "area_sq_km": "166.44",
+      "wards": "10"
+    },
+    {
+      "id": 14,
+      "district_id": 2,
+      "category_id": 4,
+      "name": "Chaubise",
+      "area_sq_km": "147.6",
+      "wards": "8"
+    },
+    {
+      "id": 15,
+      "district_id": 2,
+      "category_id": 4,
+      "name": "Sahidbhumi",
+      "area_sq_km": "99.55",
+      "wards": "7"
+    },
+    {
+      "id": 16,
+      "district_id": 2,
+      "category_id": 4,
+      "name": "Chhathar Jorpati",
+      "area_sq_km": "102.83",
+      "wards": "6"
+    },
+    {
+      "id": 17,
+      "district_id": 3,
+      "category_id": 3,
+      "name": "Suryodaya",
+      "area_sq_km": "252.52",
+      "wards": "14"
+    },
+    {
+      "id": 18,
+      "district_id": 3,
+      "category_id": 3,
+      "name": "Ilam",
+      "area_sq_km": "173.32",
+      "wards": "12"
+    },
+    {
+      "id": 19,
+      "district_id": 3,
+      "category_id": 3,
+      "name": "Deumai",
+      "area_sq_km": "191.63",
+      "wards": "9"
+    },
+    {
+      "id": 20,
+      "district_id": 3,
+      "category_id": 4,
+      "name": "Maijogmai",
+      "area_sq_km": "172.41",
+      "wards": "6"
+    },
+    {
+      "id": 21,
+      "district_id": 3,
+      "category_id": 4,
+      "name": "Phakphokthum",
+      "area_sq_km": "108.79",
+      "wards": "7"
+    },
+    {
+      "id": 22,
+      "district_id": 3,
+      "category_id": 3,
+      "name": "Mai",
+      "area_sq_km": "246.11",
+      "wards": "10"
+    },
+    {
+      "id": 23,
+      "district_id": 3,
+      "category_id": 4,
+      "name": "Chulachuli",
+      "area_sq_km": "108.46",
+      "wards": "6"
+    },
+    {
+      "id": 24,
+      "district_id": 3,
+      "category_id": 4,
+      "name": "Rong",
+      "area_sq_km": "155.06",
+      "wards": "6"
+    },
+    {
+      "id": 25,
+      "district_id": 3,
+      "category_id": 4,
+      "name": "Mangsebung",
+      "area_sq_km": "142.41",
+      "wards": "6"
+    },
+    {
+      "id": 26,
+      "district_id": 3,
+      "category_id": 4,
+      "name": "Sandakpur",
+      "area_sq_km": "156.01",
+      "wards": "5"
+    },
+    {
+      "id": 27,
+      "district_id": 4,
+      "category_id": 3,
+      "name": "Mechinagar",
+      "area_sq_km": "192.85",
+      "wards": "15"
+    },
+    {
+      "id": 28,
+      "district_id": 4,
+      "category_id": 3,
+      "name": "Birtamod",
+      "area_sq_km": "78.24",
+      "wards": "10"
+    },
+    {
+      "id": 29,
+      "district_id": 4,
+      "category_id": 3,
+      "name": "Damak",
+      "area_sq_km": "70.76",
+      "wards": "10"
+    },
+    {
+      "id": 30,
+      "district_id": 4,
+      "category_id": 3,
+      "name": "Bhadrapur",
+      "area_sq_km": "93.35",
+      "wards": "10"
+    },
+    {
+      "id": 31,
+      "district_id": 4,
+      "category_id": 3,
+      "name": "Shivasatakshi",
+      "area_sq_km": "145.87",
+      "wards": "11"
+    },
+    {
+      "id": 32,
+      "district_id": 4,
+      "category_id": 3,
+      "name": "Arjundhara",
+      "area_sq_km": "109.86",
+      "wards": "11"
+    },
+    {
+      "id": 33,
+      "district_id": 4,
+      "category_id": 3,
+      "name": "Gauradaha",
+      "area_sq_km": "149.86",
+      "wards": "9"
+    },
+    {
+      "id": 34,
+      "district_id": 4,
+      "category_id": 3,
+      "name": "Kankai",
+      "area_sq_km": "80.98",
+      "wards": "9"
+    },
+    {
+      "id": 35,
+      "district_id": 4,
+      "category_id": 4,
+      "name": "Kamal",
+      "area_sq_km": "104.57",
+      "wards": "7"
+    },
+    {
+      "id": 36,
+      "district_id": 4,
+      "category_id": 4,
+      "name": "Buddha Shanti",
+      "area_sq_km": "79.78",
+      "wards": "7"
+    },
+    {
+      "id": 37,
+      "district_id": 4,
+      "category_id": 4,
+      "name": "Kachankawal",
+      "area_sq_km": "109.45",
+      "wards": "7"
+    },
+    {
+      "id": 38,
+      "district_id": 4,
+      "category_id": 4,
+      "name": "Jhapa",
+      "area_sq_km": "94.12",
+      "wards": "7"
+    },
+    {
+      "id": 39,
+      "district_id": 4,
+      "category_id": 4,
+      "name": "Barhadashi",
+      "area_sq_km": "88.44",
+      "wards": "7"
+    },
+    {
+      "id": 40,
+      "district_id": 4,
+      "category_id": 4,
+      "name": "Gaurigunj",
+      "area_sq_km": "101.35",
+      "wards": "6"
+    },
+    {
+      "id": 41,
+      "district_id": 4,
+      "category_id": 4,
+      "name": "Haldibari",
+      "area_sq_km": "117.34",
+      "wards": "5"
+    },
+    {
+      "id": 42,
+      "district_id": 5,
+      "category_id": 3,
+      "name": "Diktel Rupakot Majhuwagadhi",
+      "area_sq_km": "246.51",
+      "wards": "15"
+    },
+    {
+      "id": 43,
+      "district_id": 5,
+      "category_id": 3,
+      "name": "Halesi Tuwachung",
+      "area_sq_km": "280.17",
+      "wards": "11"
+    },
+    {
+        "id": 44,
+        "district_id": 5,
+        "category_id": 4,
+        "name": "Khotehang",
+        "area_sq_km": "164.09",
+        "wards": "9"
+    },
+    {
+        "id": 45,
+        "district_id": 5,
+        "category_id": 4,
+        "name": "Diprung Chuichumma",
+        "area_sq_km": "136.48",
+        "wards": "7"
+    },
+    {
+        "id": 46,
+        "district_id": 5,
+        "category_id": 4,
+        "name": "Aiselukharka",
+        "area_sq_km": "125.93",
+        "wards": "7"
+    },
+    {
+        "id": 47,
+        "district_id": 5,
+        "category_id": 4,
+        "name": "Jantedhunga",
+        "area_sq_km": "128.62",
+        "wards": "6"
+    },
+    {
+        "id": 48,
+        "district_id": 5,
+        "category_id": 4,
+        "name": "Kepilasgadhi",
+        "area_sq_km": "191.28",
+        "wards": "7"
+    },
+    {
+        "id": 49,
+        "district_id": 5,
+        "category_id": 4,
+        "name": "Barahpokhari",
+        "area_sq_km": "141.6",
+        "wards": "6"
+    },
+    {
+        "id": 50,
+        "district_id": 5,
+        "category_id": 4,
+        "name": "Rawa Besi",
+        "area_sq_km": "97.44",
+        "wards": "6"
+    },
+    {
+        "id": 51,
+        "district_id": 5,
+        "category_id": 4,
+        "name": "Sakela",
+        "area_sq_km": "79.99",
+        "wards": "5"
+    },
+    {
+        "id": 52,
+        "district_id": 6,
+        "category_id": 3,
+        "name": "Sundar Haraicha",
+        "area_sq_km": "110.16",
+        "wards": "12"
+    },
+    {
+        "id": 53,
+        "district_id": 6,
+        "category_id": 3,
+        "name": "Belbari",
+        "area_sq_km": "132.79",
+        "wards": "11"
+    },
+    {
+        "id": 54,
+        "district_id": 6,
+        "category_id": 3,
+        "name": "Pathari Shanischare",
+        "area_sq_km": "79.81",
+        "wards": "10"
+    },
+    {
+        "id": 55,
+        "district_id": 6,
+        "category_id": 3,
+        "name": "Ratuwamai",
+        "area_sq_km": "142.15",
+        "wards": "10"
+    },
+    {
+        "id": 56,
+        "district_id": 6,
+        "category_id": 3,
+        "name": "Urlabari",
+        "area_sq_km": "74.62",
+        "wards": "9"
+    },
+    {
+        "id": 57,
+        "district_id": 6,
+        "category_id": 3,
+        "name": "Rangeli",
+        "area_sq_km": "111.78",
+        "wards": "9"
+    },
+    {
+        "id": 58,
+        "district_id": 6,
+        "category_id": 3,
+        "name": "Sunawarshi",
+        "area_sq_km": "106.4",
+        "wards": "9"
+    },
+    {
+        "id": 59,
+        "district_id": 6,
+        "category_id": 3,
+        "name": "Letang",
+        "area_sq_km": "119.23",
+        "wards": "9"
+    },
+    {
+        "id": 60,
+        "district_id": 6,
+        "category_id": 1,
+        "name": "Biratnagar",
+        "area_sq_km": "77",
+        "wards": "19"
+    },
+    {
+        "id": 61,
+        "district_id": 6,
+        "category_id": 4,
+        "name": "Jahada",
+        "area_sq_km": "62.38",
+        "wards": "7"
+    },
+    {
+        "id": 62,
+        "district_id": 6,
+        "category_id": 4,
+        "name": "Budi Ganga",
+        "area_sq_km": "56.41",
+        "wards": "7"
+    },
+    {
+        "id": 63,
+        "district_id": 6,
+        "category_id": 4,
+        "name": "Katahari",
+        "area_sq_km": "51.59",
+        "wards": "7"
+    },
+    {
+        "id": 64,
+        "district_id": 6,
+        "category_id": 4,
+        "name": "Dhanpalthan",
+        "area_sq_km": "70.26",
+        "wards": "7"
+    },
+    {
+      "id": 65,
+      "district_id": 6,
+      "category_id": 4,
+      "name": "Kanepokhari",
+      "area_sq_km": "82.83",
+      "wards": "7"
+    },
+    {
+      "id": 66,
+      "district_id": 6,
+      "category_id": 4,
+      "name": "Gramthan",
+      "area_sq_km": "71.84",
+      "wards": "7"
+    },
+    {
+      "id": 67,
+      "district_id": 6,
+      "category_id": 4,
+      "name": "Kerabari",
+      "area_sq_km": "219.83",
+      "wards": "10"
+    },
+    {
+      "id": 68,
+      "district_id": 6,
+      "category_id": 4,
+      "name": "Miklajung",
+      "area_sq_km": "157.98",
+      "wards": "9"
+    },
+    {
+      "id": 69,
+      "district_id": 7,
+      "category_id": 3,
+      "name": "Siddhicharan",
+      "area_sq_km": "167.88",
+      "wards": "12"
+    },
+    {
+      "id": 70,
+      "district_id": 7,
+      "category_id": 4,
+      "name": "Khiji Demba",
+      "area_sq_km": "179.77",
+      "wards": "9"
+    },
+    {
+      "id": 71,
+      "district_id": 7,
+      "category_id": 4,
+      "name": "Chisankhugadhi",
+      "area_sq_km": "126.91",
+      "wards": "8"
+    },
+    {
+      "id": 72,
+      "district_id": 7,
+      "category_id": 4,
+      "name": "Molung",
+      "area_sq_km": "112",
+      "wards": "8"
+    },
+    {
+      "id": 73,
+      "district_id": 7,
+      "category_id": 4,
+      "name": "Sunkoshi",
+      "area_sq_km": "143.75",
+      "wards": "10"
+    },
+    {
+      "id": 74,
+      "district_id": 7,
+      "category_id": 4,
+      "name": "Champadevi",
+      "area_sq_km": "126.91",
+      "wards": "10"
+    },
+    {
+      "id": 75,
+      "district_id": 7,
+      "category_id": 4,
+      "name": "Manebhanjyang",
+      "area_sq_km": "146.61",
+      "wards": "9"
+    },
+    {
+      "id": 76,
+      "district_id": 7,
+      "category_id": 4,
+      "name": "Likhu",
+      "area_sq_km": "88.03",
+      "wards": "9"
+    },
+    {
+      "id": 77,
+      "district_id": 8,
+      "category_id": 3,
+      "name": "Phidim",
+      "area_sq_km": "192.5",
+      "wards": "14"
+    },
+    {
+      "id": 78,
+      "district_id": 8,
+      "category_id": 4,
+      "name": "Miklajung",
+      "area_sq_km": "166.61",
+      "wards": "8"
+    },
+    {
+      "id": 79,
+      "district_id": 8,
+      "category_id": 4,
+      "name": "Phalgunanda",
+      "area_sq_km": "107.53",
+      "wards": "7"
+    },
+    {
+      "id": 80,
+      "district_id": 8,
+      "category_id": 4,
+      "name": "Hilihang",
+      "area_sq_km": "123.01",
+      "wards": "7"
+    },
+    {
+      "id": 81,
+      "district_id": 8,
+      "category_id": 4,
+      "name": "Phalelung",
+      "area_sq_km": "207.14",
+      "wards": "8"
+    },
+    {
+      "id": 82,
+      "district_id": 8,
+      "category_id": 4,
+      "name": "Yangwarak",
+      "area_sq_km": "208.63",
+      "wards": "6"
+    },
+    {
+      "id": 83,
+      "district_id": 8,
+      "category_id": 4,
+      "name": "Kummayak",
+      "area_sq_km": "129.3",
+      "wards": "5"
+    },
+    {
+      "id": 84,
+      "district_id": 8,
+      "category_id": 4,
+      "name": "Tumbewa",
+      "area_sq_km": "117.34",
+      "wards": "5"
+    },
+    {
+      "id": 85,
+      "district_id": 9,
+      "category_id": 3,
+      "name": "Khandbari",
+      "area_sq_km": "122.78",
+      "wards": "11"
+    },
+    {
+      "id": 86,
+      "district_id": 9,
+      "category_id": 3,
+      "name": "Chainpur",
+      "area_sq_km": "223.69",
+      "wards": "11"
+    },
+    {
+      "id": 87,
+      "district_id": 9,
+      "category_id": 3,
+      "name": "Dharmadevi",
+      "area_sq_km": "132.82",
+      "wards": "9"
+    },
+    {
+      "id": 88,
+      "district_id": 9,
+      "category_id": 3,
+      "name": "Panchkhapan",
+      "area_sq_km": "148.03",
+      "wards": "9"
+    },
+    {
+      "id": 89,
+      "district_id": 9,
+      "category_id": 3,
+      "name": "Madi",
+      "area_sq_km": "110.1",
+      "wards": "9"
+    },
+    {
+      "id": 90,
+      "district_id": 9,
+      "category_id": 4,
+      "name": "Makalu",
+      "area_sq_km": "519.45",
+      "wards": "6"
+    },
+    {
+      "id": 91,
+      "district_id": 9,
+      "category_id": 4,
+      "name": "Silichong",
+      "area_sq_km": "293.26",
+      "wards": "5"
+    },
+    {
+      "id": 92,
+      "district_id": 9,
+      "category_id": 4,
+      "name": "Sabhapokhari",
+      "area_sq_km": "222.08",
+      "wards": "6"
+    },
+    {
+      "id": 93,
+      "district_id": 9,
+      "category_id": 4,
+      "name": "Chichila",
+      "area_sq_km": "88.63",
+      "wards": "5"
+    },
+    {
+      "id": 94,
+      "district_id": 9,
+      "category_id": 4,
+      "name": "BhotKhola",
+      "area_sq_km": "639.01",
+      "wards": "5"
+    },
+    {
+      "id": 95,
+      "district_id": 10,
+      "category_id": 3,
+      "name": "Solu Dudhkunda",
+      "area_sq_km": "538.09",
+      "wards": "11"
+    },
+    {
+      "id": 96,
+      "district_id": 10,
+      "category_id": 4,
+      "name": "Mapya Dudhkoshi",
+      "area_sq_km": "167.67",
+      "wards": "7"
+    },
+    {
+      "id": 97,
+      "district_id": 10,
+      "category_id": 4,
+      "name": "Necha Salyan",
+      "area_sq_km": "94.49",
+      "wards": "5"
+    },
+    {
+      "id": 98,
+      "district_id": 10,
+      "category_id": 4,
+      "name": "Thulung Dudhkoshi",
+      "area_sq_km": "144.6",
+      "wards": "9"
+    },
+    {
+      "id": 99,
+      "district_id": 10,
+      "category_id": 4,
+      "name": "Maha Kulung",
+      "area_sq_km": "648.05",
+      "wards": "5"
+    },
+    {
+      "id": 100,
+      "district_id": 10,
+      "category_id": 4,
+      "name": "Sotang",
+      "area_sq_km": "103",
+      "wards": "5"
+    },
+    {
+      "id": 101,
+      "district_id": 10,
+      "category_id": 4,
+      "name": "Khumbu PasangLhamu",
+      "area_sq_km": "1539.11",
+      "wards": "5"
+    },
+    {
+      "id": 102,
+      "district_id": 10,
+      "category_id": 4,
+      "name": "Likhu Pike",
+      "area_sq_km": "124.38",
+      "wards": "5"
+    },
+    {
+      "id": 103,
+      "district_id": 11,
+      "category_id": 3,
+      "name": "BarahaKshetra",
+      "area_sq_km": "222.09",
+      "wards": "11"
+    },
+    {
+      "id": 104,
+      "district_id": 11,
+      "category_id": 3,
+      "name": "Inaruwa",
+      "area_sq_km": "77.92",
+      "wards": "10"
+    },
+    {
+      "id": 105,
+      "district_id": 11,
+      "category_id": 3,
+      "name": "Duhabi",
+      "area_sq_km": "76.67",
+      "wards": "12"
+    },
+    {
+      "id": 106,
+      "district_id": 11,
+      "category_id": 3,
+      "name": "Ramdhuni",
+      "area_sq_km": "91.69",
+      "wards": "9"
+    },
+    {
+      "id": 107,
+      "district_id": 11,
+      "category_id": 2,
+      "name": "Itahari",
+      "area_sq_km": "93.78",
+      "wards": "20"
+    },
+    {
+      "id": 108,
+      "district_id": 11,
+      "category_id": 2,
+      "name": "Dharan",
+      "area_sq_km": "192.32",
+      "wards": "20"
+    },
+    {
+      "id": 109,
+      "district_id": 11,
+      "category_id": 4,
+      "name": "Koshi",
+      "area_sq_km": "75.98",
+      "wards": "8"
+    },
+    {
+      "id": 110,
+      "district_id": 11,
+      "category_id": 4,
+      "name": "Harinagar",
+      "area_sq_km": "52.29",
+      "wards": "7"
+    },
+    {
+      "id": 111,
+      "district_id": 11,
+      "category_id": 4,
+      "name": "Bhokraha Narsingh",
+      "area_sq_km": "63.37",
+      "wards": "8"
+    },
+    {
+      "id": 112,
+      "district_id": 11,
+      "category_id": 4,
+      "name": "Dewangunj",
+      "area_sq_km": "53.56",
+      "wards": "7"
+    },
+    {
+      "id": 113,
+      "district_id": 11,
+      "category_id": 4,
+      "name": "Gadhi",
+      "area_sq_km": "67.7",
+      "wards": "6"
+    },
+    {
+      "id": 114,
+      "district_id": 11,
+      "category_id": 4,
+      "name": "Barju",
+      "area_sq_km": "69.43",
+      "wards": "6"
+    },
+    {
+      "id": 115,
+      "district_id": 12,
+      "category_id": 3,
+      "name": "Phungling",
+      "area_sq_km": "125.57",
+      "wards": "11"
+    },
+    {
+      "id": 116,
+      "district_id": 12,
+      "category_id": 4,
+      "name": "Sirijangha",
+      "area_sq_km": "481.09",
+      "wards": "8"
+    },
+    {
+      "id": 117,
+      "district_id": 12,
+      "category_id": 4,
+      "name": "Aathrai Triveni",
+      "area_sq_km": "88.83",
+      "wards": "5"
+    },
+    {
+      "id": 118,
+      "district_id": 12,
+      "category_id": 4,
+      "name": "Pathibhara Yangwarak",
+      "area_sq_km": "93.76",
+      "wards": "6"
+    },
+    {
+      "id": 119,
+      "district_id": 12,
+      "category_id": 4,
+      "name": "Meringden",
+      "area_sq_km": "210.33",
+      "wards": "6"
+    },
+    {
+      "id": 120,
+      "district_id": 12,
+      "category_id": 4,
+      "name": "Sidingwa",
+      "area_sq_km": "206",
+      "wards": "7"
+    },
+    {
+      "id": 121,
+      "district_id": 12,
+      "category_id": 4,
+      "name": "Phaktanglung",
+      "area_sq_km": "1858.51",
+      "wards": "7"
+    },
+    {
+      "id": 122,
+      "district_id": 12,
+      "category_id": 4,
+      "name": "Maiwa Khola",
+      "area_sq_km": "138",
+      "wards": "6"
+    },
+    {
+      "id": 123,
+      "district_id": 12,
+      "category_id": 4,
+      "name": "Mikwa Khola",
+      "area_sq_km": "442.96",
+      "wards": "5"
+    },
+    {
+      "id": 124,
+      "district_id": 13,
+      "category_id": 3,
+      "name": "Myanglung",
+      "area_sq_km": "100.21",
+      "wards": "10"
+    },
+    {
+      "id": 125,
+      "district_id": 13,
+      "category_id": 3,
+      "name": "Laligurans",
+      "area_sq_km": "90.27",
+      "wards": "9"
+    },
+    {
+      "id": 126,
+      "district_id": 13,
+      "category_id": 4,
+      "name": "Aathrai",
+      "area_sq_km": "167.07",
+      "wards": "7"
+    },
+    {
+      "id": 127,
+      "district_id": 13,
+      "category_id": 4,
+      "name": "Phedap",
+      "area_sq_km": "110.83",
+      "wards": "5"
+    },
+    {
+      "id": 128,
+      "district_id": 13,
+      "category_id": 4,
+      "name": "Chhathar",
+      "area_sq_km": "133.93",
+      "wards": "6"
+    },
+    {
+      "id": 129,
+      "district_id": 13,
+      "category_id": 4,
+      "name": "Menchayayem",
+      "area_sq_km": "70.09",
+      "wards": "6"
+    },
+    {
+      "id": 130,
+      "district_id": 14,
+      "category_id": 3,
+      "name": "Triyuga",
+      "area_sq_km": "547.43",
+      "wards": "16"
+    },
+    {
+      "id": 131,
+      "district_id": 14,
+      "category_id": 3,
+      "name": "Katari",
+      "area_sq_km": "424.89",
+      "wards": "14"
+    },
+    {
+      "id": 132,
+      "district_id": 14,
+      "category_id": 3,
+      "name": "Chaudandigadhi",
+      "area_sq_km": "283.78",
+      "wards": "10"
+    },
+    {
+      "id": 133,
+      "district_id": 14,
+      "category_id": 3,
+      "name": "Belaka",
+      "area_sq_km": "344.73",
+      "wards": "9"
+    },
+    {
+      "id": 134,
+      "district_id": 14,
+      "category_id": 4,
+      "name": "Udayapurgadhi",
+      "area_sq_km": "269.51",
+      "wards": "8"
+    },
+    {
+      "id": 135,
+      "district_id": 14,
+      "category_id": 4,
+      "name": "Rautamai",
+      "area_sq_km": "204.08",
+      "wards": "8"
+    },
+    {
+      "id": 136,
+      "district_id": 14,
+      "category_id": 4,
+      "name": "Tapli",
+      "area_sq_km": "119.11",
+      "wards": "5"
+    },
+    {
+      "id": 137,
+      "district_id": 14,
+      "category_id": 4,
+      "name": "Limchungbung",
+      "area_sq_km": "106.8",
+      "wards": "5"
+    },
+    {
+      "id": 138,
+      "district_id": 15,
+      "category_id": 1,
+      "name": "Birgunj",
+      "area_sq_km": "132.07",
+      "wards": "32"
+    },
+    {
+      "id": 139,
+      "district_id": 15,
+      "category_id": 3,
+      "name": "Bahudarmai",
+      "area_sq_km": "31.55",
+      "wards": "9"
+    },
+    {
+      "id": 140,
+      "district_id": 15,
+      "category_id": 3,
+      "name": "Parsagadhi",
+      "area_sq_km": "99.69",
+      "wards": "9"
+    },
+    {
+      "id": 141,
+      "district_id": 15,
+      "category_id": 3,
+      "name": "Pokhariya",
+      "area_sq_km": "32.47",
+      "wards": "10"
+    },
+    {
+      "id": 142,
+      "district_id": 15,
+      "category_id": 4,
+      "name": "Bindabasini",
+      "area_sq_km": "26.04",
+      "wards": "5"
+    },
+    {
+      "id": 143,
+      "district_id": 15,
+      "category_id": 4,
+      "name": "Dhobini",
+      "area_sq_km": "24.41",
+      "wards": "5"
+    },
+    {
+      "id": 144,
+      "district_id": 15,
+      "category_id": 4,
+      "name": "Chhipaharmai",
+      "area_sq_km": "24.9",
+      "wards": "5"
+    },
+    {
+      "id": 145,
+      "district_id": 15,
+      "category_id": 4,
+      "name": "Jagarnathpur",
+      "area_sq_km": "45.29",
+      "wards": "6"
+    },
+    {
+      "id": 146,
+      "district_id": 15,
+      "category_id": 4,
+      "name": "Jirabhawani",
+      "area_sq_km": "55.39",
+      "wards": "5"
+    },
+    {
+      "id": 147,
+      "district_id": 15,
+      "category_id": 4,
+      "name": "Kalikamai",
+      "area_sq_km": "24.33",
+      "wards": "5"
+    },
+    {
+      "id": 148,
+      "district_id": 15,
+      "category_id": 4,
+      "name": "Pakaha Mainpur",
+      "area_sq_km": "21.26",
+      "wards": "5"
+    },
+    {
+      "id": 149,
+      "district_id": 15,
+      "category_id": 4,
+      "name": "Paterwa Sugauli",
+      "area_sq_km": "64.29",
+      "wards": "5"
+    },
+    {
+      "id": 150,
+      "district_id": 15,
+      "category_id": 4,
+      "name": "Sakhuwa Prasauni",
+      "area_sq_km": "74.27",
+      "wards": "6"
+    },
+    {
+      "id": 151,
+      "district_id": 15,
+      "category_id": 4,
+      "name": "Thori",
+      "area_sq_km": "128.67",
+      "wards": "5"
+    },
+    {
+      "id": 152,
+      "district_id": 16,
+      "category_id": 2,
+      "name": "Kalaiya",
+      "area_sq_km": "108.94",
+      "wards": "27"
+    },
+    {
+      "id": 153,
+      "district_id": 16,
+      "category_id": 2,
+      "name": "Jitpur Simara",
+      "area_sq_km": "312.18",
+      "wards": "24"
+    },
+    {
+      "id": 154,
+      "district_id": 16,
+      "category_id": 3,
+      "name": "Kolhabi",
+      "area_sq_km": "157.4",
+      "wards": "11"
+    },
+    {
+      "id": 155,
+      "district_id": 16,
+      "category_id": 3,
+      "name": "Nijgadh",
+      "area_sq_km": "289.43",
+      "wards": "13"
+    },
+    {
+      "id": 156,
+      "district_id": 16,
+      "category_id": 3,
+      "name": "Mahagadhimai",
+      "area_sq_km": "55.32",
+      "wards": "11"
+    },
+    {
+      "id": 157,
+      "district_id": 16,
+      "category_id": 3,
+      "name": "Simaraungadh",
+      "area_sq_km": "42.65",
+      "wards": "11"
+    },
+    {
+      "id": 158,
+      "district_id": 16,
+      "category_id": 3,
+      "name": "Pacharauta",
+      "area_sq_km": "44.01",
+      "wards": "9"
+    },
+    {
+      "id": 159,
+      "district_id": 16,
+      "category_id": 4,
+      "name": "Pheta",
+      "area_sq_km": "23.65",
+      "wards": "7"
+    },
+    {
+      "id": 160,
+      "district_id": 16,
+      "category_id": 4,
+      "name": "Bishrampur",
+      "area_sq_km": "19.81",
+      "wards": "5"
+    },
+    {
+      "id": 161,
+      "district_id": 16,
+      "category_id": 4,
+      "name": "Prasauni",
+      "area_sq_km": "20.24",
+      "wards": "7"
+    },
+    {
+      "id": 162,
+      "district_id": 16,
+      "category_id": 4,
+      "name": "Adarsh Kotwal",
+      "area_sq_km": "36.25",
+      "wards": "8"
+    },
+    {
+      "id": 163,
+      "district_id": 16,
+      "category_id": 4,
+      "name": "Karaiyamai",
+      "area_sq_km": "47.69",
+      "wards": "8"
+    },
+    {
+      "id": 164,
+      "district_id": 16,
+      "category_id": 4,
+      "name": "Devtal",
+      "area_sq_km": "23.31",
+      "wards": "7"
+    },
+    {
+      "id": 165,
+      "district_id": 16,
+      "category_id": 4,
+      "name": "Parwanipur",
+      "area_sq_km": "15.48",
+      "wards": "5"
+    },
+    {
+      "id": 166,
+      "district_id": 16,
+      "category_id": 4,
+      "name": "Baragadhi",
+      "area_sq_km": "39.29",
+      "wards": "6"
+    },
+    {
+      "id": 167,
+      "district_id": 16,
+      "category_id": 4,
+      "name": "Suwarna",
+      "area_sq_km": "36.84",
+      "wards": "8"
+    },
+    {
+      "id": 168,
+      "district_id": 17,
+      "category_id": 3,
+      "name": "Baudhimai",
+      "area_sq_km": "35.343",
+      "wards": "9"
+    },
+    {
+      "id": 169,
+      "district_id": 17,
+      "category_id": 3,
+      "name": "Brindaban",
+      "area_sq_km": "95.4",
+      "wards": "9"
+    },
+    {
+      "id": 170,
+      "district_id": 17,
+      "category_id": 3,
+      "name": "Chandrapur",
+      "area_sq_km": "249.96",
+      "wards": "10"
+    },
+    {
+      "id": 171,
+      "district_id": 17,
+      "category_id": 3,
+      "name": "Dewahi Gonahi",
+      "area_sq_km": "33.99",
+      "wards": "9"
+    },
+    {
+      "id": 172,
+      "district_id": 17,
+      "category_id": 3,
+      "name": "Gadhimai",
+      "area_sq_km": "49.44",
+      "wards": "9"
+    },
+    {
+      "id": 173,
+      "district_id": 17,
+      "category_id": 3,
+      "name": "Guruda",
+      "area_sq_km": "44.46",
+      "wards": "9"
+    },
+    {
+      "id": 174,
+      "district_id": 17,
+      "category_id": 3,
+      "name": "Gaur",
+      "area_sq_km": "21.53",
+      "wards": "9"
+    },
+    {
+      "id": 175,
+      "district_id": 17,
+      "category_id": 3,
+      "name": "Gujara",
+      "area_sq_km": "150.33",
+      "wards": "9"
+    },
+    {
+      "id": 176,
+      "district_id": 17,
+      "category_id": 3,
+      "name": "Ishanath",
+      "area_sq_km": "35.17",
+      "wards": "9"
+    },
+    {
+      "id": 177,
+      "district_id": 17,
+      "category_id": 3,
+      "name": "Katahariya",
+      "area_sq_km": "40.69",
+      "wards": "9"
+    },
+    {
+      "id": 178,
+      "district_id": 17,
+      "category_id": 3,
+      "name": "Madhav Narayan",
+      "area_sq_km": "48.53",
+      "wards": "9"
+    },
+    {
+      "id": 179,
+      "district_id": 17,
+      "category_id": 3,
+      "name": "Maulapur",
+      "area_sq_km": "34.75",
+      "wards": "9"
+    },
+    {
+      "id": 180,
+      "district_id": 17,
+      "category_id": 3,
+      "name": "Paroha",
+      "area_sq_km": "37.45",
+      "wards": "9"
+    },
+    {
+      "id": 181,
+      "district_id": 17,
+      "category_id": 3,
+      "name": "Phatuwa Bijayapur",
+      "area_sq_km": "65.24",
+      "wards": "11"
+    },
+    {
+      "id": 182,
+      "district_id": 17,
+      "category_id": 3,
+      "name": "Rajdevi",
+      "area_sq_km": "28.21",
+      "wards": "9"
+    },
+    {
+      "id": 183,
+      "district_id": 17,
+      "category_id": 3,
+      "name": "Rajpur",
+      "area_sq_km": "31.41",
+      "wards": "9"
+    },
+    {
+      "id": 184,
+      "district_id": 17,
+      "category_id": 4,
+      "name": "Durga Bhagwati",
+      "area_sq_km": "19.8",
+      "wards": "5"
+    },
+    {
+      "id": 185,
+      "district_id": 17,
+      "category_id": 4,
+      "name": "Yamunamai",
+      "area_sq_km": "16.7",
+      "wards": "5"
+    },
+    {
+      "id": 186,
+      "district_id": 18,
+      "category_id": 3,
+      "name": "Bagmati",
+      "area_sq_km": "101.18",
+      "wards": "12"
+    },
+    {
+      "id": 187,
+      "district_id": 18,
+      "category_id": 3,
+      "name": "Balara",
+      "area_sq_km": "48.55",
+      "wards": "11"
+    },
+    {
+      "id": 188,
+      "district_id": 18,
+      "category_id": 3,
+      "name": "Barahathwa",
+      "area_sq_km": "107.05",
+      "wards": "18"
+    },
+    {
+      "id": 189,
+      "district_id": 18,
+      "category_id": 3,
+      "name": "Godaita",
+      "area_sq_km": "48.62",
+      "wards": "12"
+    },
+    {
+      "id": 190,
+      "district_id": 18,
+      "category_id": 3,
+      "name": "Hariwan",
+      "area_sq_km": "86.12",
+      "wards": "11"
+    },
+    {
+      "id": 191,
+      "district_id": 18,
+      "category_id": 3,
+      "name": "Haripur",
+      "area_sq_km": "66.86",
+      "wards": "9"
+    },
+    {
+      "id": 192,
+      "district_id": 18,
+      "category_id": 3,
+      "name": "Haripurwa",
+      "area_sq_km": "30.5",
+      "wards": "9"
+    },
+    {
+      "id": 193,
+      "district_id": 18,
+      "category_id": 3,
+      "name": "Ishowrpur",
+      "area_sq_km": "163.83",
+      "wards": "15"
+    },
+    {
+      "id": 194,
+      "district_id": 18,
+      "category_id": 3,
+      "name": "Kabilasi",
+      "area_sq_km": "48.11",
+      "wards": "10"
+    },
+    {
+      "id": 195,
+      "district_id": 18,
+      "category_id": 3,
+      "name": "Lalbandi",
+      "area_sq_km": "238.5",
+      "wards": "17"
+    },
+    {
+      "id": 196,
+      "district_id": 18,
+      "category_id": 3,
+      "name": "Malangawa",
+      "area_sq_km": "30.44",
+      "wards": "12"
+    },
+    {
+      "id": 197,
+      "district_id": 18,
+      "category_id": 4,
+      "name": "Basbariya",
+      "area_sq_km": "29.42",
+      "wards": "6"
+    },
+    {
+      "id": 198,
+      "district_id": 18,
+      "category_id": 4,
+      "name": "Bisnu",
+      "area_sq_km": "28.09",
+      "wards": "8"
+    },
+    {
+      "id": 199,
+      "district_id": 18,
+      "category_id": 4,
+      "name": "Brahampuri",
+      "area_sq_km": "33.89",
+      "wards": "7"
+    },
+    {
+      "id": 200,
+      "district_id": 18,
+      "category_id": 4,
+      "name": "Chakraghatta",
+      "area_sq_km": "25.14",
+      "wards": "9"
+    },
+    {
+      "id": 201,
+      "district_id": 18,
+      "category_id": 4,
+      "name": "Chandranagar",
+      "area_sq_km": "47.5",
+      "wards": "7"
+    },
+    {
+      "id": 202,
+      "district_id": 18,
+      "category_id": 4,
+      "name": "Dhankaul",
+      "area_sq_km": "45.94",
+      "wards": "7"
+    },
+    {
+      "id": 203,
+      "district_id": 18,
+      "category_id": 4,
+      "name": "Kaudena",
+      "area_sq_km": "25.33",
+      "wards": "7"
+    },
+    {
+      "id": 204,
+      "district_id": 18,
+      "category_id": 4,
+      "name": "Parsa",
+      "area_sq_km": "23.12",
+      "wards": "6"
+    },
+    {
+      "id": 205,
+      "district_id": 18,
+      "category_id": 4,
+      "name": "Ramnagar",
+      "area_sq_km": "26.44",
+      "wards": "7"
+    },
+    {
+      "id": 206,
+      "district_id": 19,
+      "category_id": 3,
+      "name": "Lahan",
+      "area_sq_km": "167.17",
+      "wards": "24"
+    },
+    {
+      "id": 207,
+      "district_id": 19,
+      "category_id": 3,
+      "name": "Dhangadhimai",
+      "area_sq_km": "159.51",
+      "wards": "14"
+    },
+    {
+      "id": 208,
+      "district_id": 19,
+      "category_id": 3,
+      "name": "Siraha",
+      "area_sq_km": "94.2",
+      "wards": "22"
+    },
+    {
+      "id": 209,
+      "district_id": 19,
+      "category_id": 3,
+      "name": "Golbazar",
+      "area_sq_km": "111.94",
+      "wards": "13"
+    },
+    {
+      "id": 210,
+      "district_id": 19,
+      "category_id": 3,
+      "name": "Mirchaiya",
+      "area_sq_km": "91.97",
+      "wards": "12"
+    },
+    {
+      "id": 211,
+      "district_id": 19,
+      "category_id": 3,
+      "name": "Kalyanpur",
+      "area_sq_km": "76.81",
+      "wards": "12"
+    },
+    {
+      "id": 212,
+      "district_id": 19,
+      "category_id": 3,
+      "name": "Karjanha",
+      "area_sq_km": "76.84",
+      "wards": "11"
+    },
+    {
+      "id": 213,
+      "district_id": 19,
+      "category_id": 3,
+      "name": "Sukhipur",
+      "area_sq_km": "54.78",
+      "wards": "10"
+    },
+    {
+      "id": 214,
+      "district_id": 19,
+      "category_id": 4,
+      "name": "Bhagwanpur",
+      "area_sq_km": "33.03",
+      "wards": "5"
+    },
+    {
+      "id": 215,
+      "district_id": 19,
+      "category_id": 4,
+      "name": "Aurahi",
+      "area_sq_km": "35.87",
+      "wards": "5"
+    },
+    {
+      "id": 216,
+      "district_id": 19,
+      "category_id": 4,
+      "name": "Bishnupur",
+      "area_sq_km": "26.34",
+      "wards": "5"
+    },
+    {
+      "id": 217,
+      "district_id": 19,
+      "category_id": 4,
+      "name": "Bariyarpatti",
+      "area_sq_km": "37.72",
+      "wards": "5"
+    },
+    {
+      "id": 218,
+      "district_id": 19,
+      "category_id": 4,
+      "name": "Lakshmipur Patari",
+      "area_sq_km": "42.33",
+      "wards": "6"
+    },
+    {
+      "id": 219,
+      "district_id": 19,
+      "category_id": 4,
+      "name": "Naraha",
+      "area_sq_km": "29.28",
+      "wards": "5"
+    },
+    {
+      "id": 220,
+      "district_id": 19,
+      "category_id": 4,
+      "name": "SakhuwanankarKatti",
+      "area_sq_km": "32.84",
+      "wards": "5"
+    },
+    {
+      "id": 221,
+      "district_id": 19,
+      "category_id": 4,
+      "name": "Arnama",
+      "area_sq_km": "37.76",
+      "wards": "5"
+    },
+    {
+      "id": 222,
+      "district_id": 19,
+      "category_id": 4,
+      "name": "Navarajpur",
+      "area_sq_km": "32.18",
+      "wards": "5"
+    },
+    {
+      "id": 223,
+      "district_id": 20,
+      "category_id": 2,
+      "name": "Janakpurdham",
+      "area_sq_km": "91.97",
+      "wards": "25"
+    },
+    {
+      "id": 224,
+      "district_id": 20,
+      "category_id": 3,
+      "name": "Chhireshwarnath",
+      "area_sq_km": "50.85",
+      "wards": "10"
+    },
+    {
+      "id": 225,
+      "district_id": 20,
+      "category_id": 3,
+      "name": "Ganeshman Charnath",
+      "area_sq_km": "244.31",
+      "wards": "11"
+    },
+    {
+      "id": 226,
+      "district_id": 20,
+      "category_id": 3,
+      "name": "Dhanushadham",
+      "area_sq_km": "91.64",
+      "wards": "9"
+    },
+    {
+      "id": 227,
+      "district_id": 20,
+      "category_id": 3,
+      "name": "Nagarain",
+      "area_sq_km": "39",
+      "wards": "9"
+    },
+    {
+      "id": 228,
+      "district_id": 20,
+      "category_id": 3,
+      "name": "Bideha",
+      "area_sq_km": "45.51",
+      "wards": "9"
+    },
+    {
+      "id": 229,
+      "district_id": 20,
+      "category_id": 3,
+      "name": "Mithila",
+      "area_sq_km": "187.93",
+      "wards": "11"
+    },
+    {
+      "id": 230,
+      "district_id": 20,
+      "category_id": 3,
+      "name": "Sahidnagar",
+      "area_sq_km": "57.37",
+      "wards": "9"
+    },
+    {
+      "id": 231,
+      "district_id": 20,
+      "category_id": 3,
+      "name": "Sabaila",
+      "area_sq_km": "64.47",
+      "wards": "13"
+    },
+    {
+      "id": 232,
+      "district_id": 20,
+      "category_id": 3,
+      "name": "Kamala",
+      "area_sq_km": "65.85",
+      "wards": "9"
+    },
+    {
+      "id": 233,
+      "district_id": 20,
+      "category_id": 3,
+      "name": "MithilaBihari",
+      "area_sq_km": "37.6",
+      "wards": "10"
+    },
+    {
+      "id": 234,
+      "district_id": 20,
+      "category_id": 3,
+      "name": "Hansapur",
+      "area_sq_km": "48.71",
+      "wards": "9"
+    },
+    {
+      "id": 235,
+      "district_id": 20,
+      "category_id": 4,
+      "name": "Janaknandani",
+      "area_sq_km": "27.62",
+      "wards": "6"
+    },
+    {
+      "id": 236,
+      "district_id": 20,
+      "category_id": 4,
+      "name": "Bateshwar",
+      "area_sq_km": "31.66",
+      "wards": "5"
+    },
+    {
+      "id": 237,
+      "district_id": 20,
+      "category_id": 4,
+      "name": "Mukhiyapatti Musharniya",
+      "area_sq_km": "26.84",
+      "wards": "6"
+    },
+    {
+      "id": 238,
+      "district_id": 20,
+      "category_id": 4,
+      "name": "Lakshminya",
+      "area_sq_km": "30.66",
+      "wards": "7"
+    },
+    {
+      "id": 239,
+      "district_id": 20,
+      "category_id": 4,
+      "name": "Aaurahi",
+      "area_sq_km": "25.56",
+      "wards": "6"
+    },
+    {
+      "id": 240,
+      "district_id": 20,
+      "category_id": 4,
+      "name": "Dhanauji",
+      "area_sq_km": "22",
+      "wards": "5"
+    },
+    {
+      "id": 241,
+      "district_id": 21,
+      "category_id": 3,
+      "name": "Bodebarsain",
+      "area_sq_km": "58.93",
+      "wards": "10"
+    },
+    {
+      "id": 242,
+      "district_id": 21,
+      "category_id": 3,
+      "name": "Dakneshwori",
+      "area_sq_km": "69.11",
+      "wards": "10"
+    },
+    {
+      "id": 243,
+      "district_id": 21,
+      "category_id": 3,
+      "name": "Hanumannagar Kankalini",
+      "area_sq_km": "118.19",
+      "wards": "14"
+    },
+    {
+      "id": 244,
+      "district_id": 21,
+      "category_id": 3,
+      "name": "Kanchanrup",
+      "area_sq_km": "117.34",
+      "wards": "12"
+    },
+    {
+      "id": 245,
+      "district_id": 21,
+      "category_id": 3,
+      "name": "Khadak",
+      "area_sq_km": "96.77",
+      "wards": "11"
+    },
+    {
+      "id": 246,
+      "district_id": 21,
+      "category_id": 3,
+      "name": "Shambhunath",
+      "area_sq_km": "108.71",
+      "wards": "12"
+    },
+    {
+      "id": 247,
+      "district_id": 21,
+      "category_id": 3,
+      "name": "Saptakoshi",
+      "area_sq_km": "60.25",
+      "wards": "11"
+    },
+    {
+      "id": 248,
+      "district_id": 21,
+      "category_id": 3,
+      "name": "Surunga",
+      "area_sq_km": "107.04",
+      "wards": "11"
+    },
+    {
+      "id": 249,
+      "district_id": 21,
+      "category_id": 3,
+      "name": "Rajbiraj",
+      "area_sq_km": "55",
+      "wards": "16"
+    },
+    {
+      "id": 250,
+      "district_id": 21,
+      "category_id": 4,
+      "name": "Agnisaira Krishnasavaran",
+      "area_sq_km": "103.08",
+      "wards": "6"
+    },
+    {
+      "id": 251,
+      "district_id": 21,
+      "category_id": 4,
+      "name": "Balan-Bihul",
+      "area_sq_km": "33.04",
+      "wards": "6"
+    },
+    {
+      "id": 252,
+      "district_id": 21,
+      "category_id": 4,
+      "name": "Rajgadh",
+      "area_sq_km": "47.9",
+      "wards": "6"
+    },
+    {
+      "id": 253,
+      "district_id": 21,
+      "category_id": 4,
+      "name": "Bishnupur",
+      "area_sq_km": "37",
+      "wards": "7"
+    },
+    {
+      "id": 254,
+      "district_id": 21,
+      "category_id": 4,
+      "name": "Chhinnamasta",
+      "area_sq_km": "38.71",
+      "wards": "7"
+    },
+    {
+      "id": 255,
+      "district_id": 21,
+      "category_id": 4,
+      "name": "Mahadeva",
+      "area_sq_km": "34.97",
+      "wards": "6"
+    },
+    {
+      "id": 256,
+      "district_id": 21,
+      "category_id": 4,
+      "name": "Rupani",
+      "area_sq_km": "56.08",
+      "wards": "6"
+    },
+    {
+      "id": 257,
+      "district_id": 21,
+      "category_id": 4,
+      "name": "Tilathi Koiladi",
+      "area_sq_km": "32.91",
+      "wards": "8"
+    },
+    {
+      "id": 258,
+      "district_id": 21,
+      "category_id": 4,
+      "name": "Tirhut",
+      "area_sq_km": "37.81",
+      "wards": "5"
+    },
+    {
+      "id": 259,
+      "district_id": 22,
+      "category_id": 3,
+      "name": "Aaurahi",
+      "area_sq_km": "35.76",
+      "wards": "9"
+    },
+    {
+      "id": 260,
+      "district_id": 22,
+      "category_id": 3,
+      "name": "Balawa",
+      "area_sq_km": "44.07",
+      "wards": "11"
+    },
+    {
+      "id": 261,
+      "district_id": 22,
+      "category_id": 3,
+      "name": "Bardibas",
+      "area_sq_km": "315.57",
+      "wards": "14"
+    },
+    {
+      "id": 262,
+      "district_id": 22,
+      "category_id": 3,
+      "name": "Bhangaha",
+      "area_sq_km": "77.21",
+      "wards": "9"
+    },
+    {
+      "id": 263,
+      "district_id": 22,
+      "category_id": 3,
+      "name": "Gaushala",
+      "area_sq_km": "144.73",
+      "wards": "12"
+    },
+    {
+      "id": 264,
+      "district_id": 22,
+      "category_id": 3,
+      "name": "Jaleshor",
+      "area_sq_km": "44.26",
+      "wards": "12"
+    },
+    {
+      "id": 265,
+      "district_id": 22,
+      "category_id": 3,
+      "name": "Loharpatti",
+      "area_sq_km": "50.06",
+      "wards": "9"
+    },
+    {
+      "id": 266,
+      "district_id": 22,
+      "category_id": 3,
+      "name": "Manara Shiswa",
+      "area_sq_km": "49.73",
+      "wards": "10"
+    },
+    {
+      "id": 267,
+      "district_id": 22,
+      "category_id": 3,
+      "name": "Matihani",
+      "area_sq_km": "29.02",
+      "wards": "9"
+    },
+    {
+      "id": 268,
+      "district_id": 22,
+      "category_id": 3,
+      "name": "Ramgopalpur",
+      "area_sq_km": "39.54",
+      "wards": "9"
+    },
+    {
+      "id": 269,
+      "district_id": 22,
+      "category_id": 4,
+      "name": "Ekdara",
+      "area_sq_km": "24",
+      "wards": "6"
+    },
+    {
+      "id": 270,
+      "district_id": 22,
+      "category_id": 4,
+      "name": "Mahottari",
+      "area_sq_km": "28.08",
+      "wards": "6"
+    },
+    {
+      "id": 271,
+      "district_id": 22,
+      "category_id": 4,
+      "name": "Pipara",
+      "area_sq_km": "39.98",
+      "wards": "7"
+    },
+    {
+      "id": 272,
+      "district_id": 22,
+      "category_id": 4,
+      "name": "Samsi",
+      "area_sq_km": "21.57",
+      "wards": "7"
+    },
+    {
+      "id": 273,
+      "district_id": 22,
+      "category_id": 4,
+      "name": "Sonama",
+      "area_sq_km": "57.77",
+      "wards": "8"
+    },
+    {
+      "id": 274,
+      "district_id": 23,
+      "category_id": 3,
+      "name": "Bhaktapur",
+      "area_sq_km": "6.89",
+      "wards": "10"
+    },
+    {
+      "id": 275,
+      "district_id": 23,
+      "category_id": 3,
+      "name": "Changunarayan",
+      "area_sq_km": "62.98",
+      "wards": "9"
+    },
+    {
+      "id": 276,
+      "district_id": 23,
+      "category_id": 3,
+      "name": "Suryabinayak",
+      "area_sq_km": "42.45",
+      "wards": "10"
+    },
+    {
+      "id": 277,
+      "district_id": 23,
+      "category_id": 3,
+      "name": "Madhyapur Thimi",
+      "area_sq_km": "11.47",
+      "wards": "9"
+    },
+    {
+      "id": 278,
+      "district_id": 24,
+      "category_id": 1,
+      "name": "Bharatpur",
+      "area_sq_km": "432.95",
+      "wards": "29"
+    },
+    {
+      "id": 279,
+      "district_id": 24,
+      "category_id": 3,
+      "name": "Kalika",
+      "area_sq_km": "149.08",
+      "wards": "11"
+    },
+    {
+      "id": 280,
+      "district_id": 24,
+      "category_id": 3,
+      "name": "Khairhani",
+      "area_sq_km": "85.55",
+      "wards": "13"
+    },
+    {
+      "id": 281,
+      "district_id": 24,
+      "category_id": 3,
+      "name": "Madi",
+      "area_sq_km": "218.24",
+      "wards": "9"
+    },
+    {
+      "id": 282,
+      "district_id": 24,
+      "category_id": 3,
+      "name": "Ratnagar",
+      "area_sq_km": "68.68",
+      "wards": "16"
+    },
+    {
+      "id": 283,
+      "district_id": 24,
+      "category_id": 3,
+      "name": "Rapti",
+      "area_sq_km": "212.31",
+      "wards": "13"
+    },
+    {
+      "id": 284,
+      "district_id": 24,
+      "category_id": 4,
+      "name": "Ichchhakamana",
+      "area_sq_km": "166.73",
+      "wards": "7"
+    },
+    {
+      "id": 285,
+      "district_id": 25,
+      "category_id": 3,
+      "name": "Dhunibeshi",
+      "area_sq_km": "96.3",
+      "wards": "9"
+    },
+    {
+      "id": 286,
+      "district_id": 25,
+      "category_id": 3,
+      "name": "Nilkantha",
+      "area_sq_km": "197.7",
+      "wards": "14"
+    },
+    {
+      "id": 287,
+      "district_id": 25,
+      "category_id": 4,
+      "name": "Khaniyabas",
+      "area_sq_km": "120.8",
+      "wards": "5"
+    },
+    {
+      "id": 288,
+      "district_id": 25,
+      "category_id": 4,
+      "name": "Gajuri",
+      "area_sq_km": "138.66",
+      "wards": "8"
+    },
+    {
+      "id": 289,
+      "district_id": 25,
+      "category_id": 4,
+      "name": "Galchhi",
+      "area_sq_km": "129.08",
+      "wards": "8"
+    },
+    {
+      "id": 290,
+      "district_id": 25,
+      "category_id": 4,
+      "name": "Gangajamuna",
+      "area_sq_km": "152.72",
+      "wards": "7"
+    },
+    {
+      "id": 291,
+      "district_id": 25,
+      "category_id": 4,
+      "name": "Jwalamukhi",
+      "area_sq_km": "114.04",
+      "wards": "7"
+    },
+    {
+      "id": 292,
+      "district_id": 25,
+      "category_id": 4,
+      "name": "Thakre",
+      "area_sq_km": "96.41",
+      "wards": "11"
+    },
+    {
+      "id": 293,
+      "district_id": 25,
+      "category_id": 4,
+      "name": "Netrawati Dabjong",
+      "area_sq_km": "181.78",
+      "wards": "5"
+    },
+    {
+      "id": 294,
+      "district_id": 25,
+      "category_id": 4,
+      "name": "Benighat Rorang",
+      "area_sq_km": "206.52",
+      "wards": "10"
+    },
+    {
+      "id": 295,
+      "district_id": 25,
+      "category_id": 4,
+      "name": "Rubi Valley",
+      "area_sq_km": "401.85",
+      "wards": "6"
+    },
+    {
+      "id": 296,
+      "district_id": 25,
+      "category_id": 4,
+      "name": "Siddhalek",
+      "area_sq_km": "106.09",
+      "wards": "7"
+    },
+    {
+      "id": 297,
+      "district_id": 25,
+      "category_id": 4,
+      "name": "Tripurasundari",
+      "area_sq_km": "271.23",
+      "wards": "7"
+    },
+    {
+      "id": 298,
+      "district_id": 26,
+      "category_id": 3,
+      "name": "Bhimeswor",
+      "area_sq_km": "132.5",
+      "wards": "9"
+    },
+    {
+      "id": 299,
+      "district_id": 26,
+      "category_id": 3,
+      "name": "Jiri",
+      "area_sq_km": "211.27",
+      "wards": "9"
+    },
+    {
+      "id": 300,
+      "district_id": 26,
+      "category_id": 4,
+      "name": "Kalinchok",
+      "area_sq_km": "132.49",
+      "wards": "9"
+    },
+    {
+      "id": 301,
+      "district_id": 26,
+      "category_id": 4,
+      "name": "Melung",
+      "area_sq_km": "86.54",
+      "wards": "7"
+    },
+    {
+      "id": 302,
+      "district_id": 26,
+      "category_id": 4,
+      "name": "Bigu",
+      "area_sq_km": "663.2",
+      "wards": "8"
+    },
+    {
+      "id": 303,
+      "district_id": 26,
+      "category_id": 4,
+      "name": "Gaurishankar",
+      "area_sq_km": "681.39",
+      "wards": "9"
+    },
+    {
+      "id": 304,
+      "district_id": 26,
+      "category_id": 4,
+      "name": "Baiteshowr",
+      "area_sq_km": "80.41",
+      "wards": "8"
+    },
+    {
+      "id": 305,
+      "district_id": 26,
+      "category_id": 4,
+      "name": "Sailung",
+      "area_sq_km": "128.67",
+      "wards": "8"
+    },
+    {
+      "id": 306,
+      "district_id": 26,
+      "category_id": 4,
+      "name": "Tamakoshi",
+      "area_sq_km": "153.06",
+      "wards": "7"
+    },
+    {
+      "id": 307,
+      "district_id": 27,
+      "category_id": 1,
+      "name": "Kathmandu",
+      "area_sq_km": "49.45",
+      "wards": "32"
+    },
+    {
+      "id": 308,
+      "district_id": 27,
+      "category_id": 3,
+      "name": "Gokarneshwar",
+      "area_sq_km": "58.5",
+      "wards": "9"
+    },
+    {
+      "id": 309,
+      "district_id": 27,
+      "category_id": 3,
+      "name": "Kirtipur",
+      "area_sq_km": "14.76",
+      "wards": "10"
+    },
+    {
+      "id": 310,
+      "district_id": 27,
+      "category_id": 3,
+      "name": "Kageshwari-Manohara",
+      "area_sq_km": "27.38",
+      "wards": "9"
+    },
+    {
+      "id": 311,
+      "district_id": 27,
+      "category_id": 3,
+      "name": "Chandragiri",
+      "area_sq_km": "43.92",
+      "wards": "15"
+    },
+    {
+      "id": 312,
+      "district_id": 27,
+      "category_id": 3,
+      "name": "Tokha",
+      "area_sq_km": "17.11",
+      "wards": "11"
+    },
+    {
+      "id": 313,
+      "district_id": 27,
+      "category_id": 3,
+      "name": "Tarakeshwar",
+      "area_sq_km": "54.95",
+      "wards": "11"
+    },
+    {
+      "id": 314,
+      "district_id": 27,
+      "category_id": 3,
+      "name": "Dakshinkali",
+      "area_sq_km": "42.68",
+      "wards": "9"
+    },
+    {
+      "id": 315,
+      "district_id": 27,
+      "category_id": 3,
+      "name": "Nagarjun",
+      "area_sq_km": "29.85",
+      "wards": "10"
+    },
+    {
+      "id": 316,
+      "district_id": 27,
+      "category_id": 3,
+      "name": "Budhalikantha",
+      "area_sq_km": "34.8",
+      "wards": "13"
+    },
+    {
+      "id": 317,
+      "district_id": 27,
+      "category_id": 3,
+      "name": "Shankharapur",
+      "area_sq_km": "60.21",
+      "wards": "9"
+    },
+    {
+      "id": 318,
+      "district_id": 28,
+      "category_id": 3,
+      "name": "Dhulikhel",
+      "area_sq_km": "55",
+      "wards": "12"
+    },
+    {
+      "id": 319,
+      "district_id": 28,
+      "category_id": 3,
+      "name": "Namobuddha",
+      "area_sq_km": "102",
+      "wards": "11"
+    },
+    {
+      "id": 320,
+      "district_id": 28,
+      "category_id": 3,
+      "name": "Panauti",
+      "area_sq_km": "118",
+      "wards": "12"
+    },
+    {
+      "id": 321,
+      "district_id": 28,
+      "category_id": 3,
+      "name": "Panchkhal",
+      "area_sq_km": "103",
+      "wards": "13"
+    },
+    {
+      "id": 322,
+      "district_id": 28,
+      "category_id": 3,
+      "name": "Banepa",
+      "area_sq_km": "55",
+      "wards": "14"
+    },
+    {
+      "id": 323,
+      "district_id": 28,
+      "category_id": 3,
+      "name": "Mandandeupur",
+      "area_sq_km": "89",
+      "wards": "12"
+    },
+    {
+      "id": 324,
+      "district_id": 28,
+      "category_id": 4,
+      "name": "Khani Khola",
+      "area_sq_km": "132",
+      "wards": "7"
+    },
+    {
+      "id": 325,
+      "district_id": 28,
+      "category_id": 4,
+      "name": "Chauri Deurali",
+      "area_sq_km": "98",
+      "wards": "9"
+    },
+    {
+      "id": 326,
+      "district_id": 28,
+      "category_id": 4,
+      "name": "Temal",
+      "area_sq_km": "89",
+      "wards": "9"
+    },
+    {
+      "id": 327,
+      "district_id": 28,
+      "category_id": 4,
+      "name": "Bethanchok",
+      "area_sq_km": "101",
+      "wards": "6"
+    },
+    {
+      "id": 328,
+      "district_id": 28,
+      "category_id": 4,
+      "name": "Bhumlu",
+      "area_sq_km": "91",
+      "wards": "10"
+    },
+    {
+      "id": 329,
+      "district_id": 28,
+      "category_id": 4,
+      "name": "Mahabharat",
+      "area_sq_km": "186",
+      "wards": "8"
+    },
+    {
+      "id": 330,
+      "district_id": 28,
+      "category_id": 4,
+      "name": "Roshi",
+      "area_sq_km": "176",
+      "wards": "12"
+    },
+    {
+      "id": 331,
+      "district_id": 29,
+      "category_id": 1,
+      "name": "Lalitpur",
+      "area_sq_km": "36.12",
+      "wards": "29"
+    },
+    {
+      "id": 332,
+      "district_id": 29,
+      "category_id": 3,
+      "name": "Mahalaxmi",
+      "area_sq_km": "26.51",
+      "wards": "10"
+    },
+    {
+      "id": 333,
+      "district_id": 29,
+      "category_id": 3,
+      "name": "Godawari",
+      "area_sq_km": "96.11",
+      "wards": "14"
+    },
+    {
+      "id": 334,
+      "district_id": 29,
+      "category_id": 4,
+      "name": "Konjyosom",
+      "area_sq_km": "44.16",
+      "wards": "5"
+    },
+    {
+      "id": 335,
+      "district_id": 29,
+      "category_id": 4,
+      "name": "Bagmati",
+      "area_sq_km": "111.49",
+      "wards": "7"
+    },
+    {
+      "id": 336,
+      "district_id": 29,
+      "category_id": 4,
+      "name": "Mahankal",
+      "area_sq_km": "82.44",
+      "wards": "6"
+    },
+    {
+      "id": 337,
+      "district_id": 30,
+      "category_id": 2,
+      "name": "Hetauda",
+      "area_sq_km": "261.59",
+      "wards": "19"
+    },
+    {
+      "id": 338,
+      "district_id": 30,
+      "category_id": 3,
+      "name": "Thaha",
+      "area_sq_km": "191.12",
+      "wards": "12"
+    },
+    {
+      "id": 339,
+      "district_id": 30,
+      "category_id": 4,
+      "name": "Bhimphedi",
+      "area_sq_km": "245.27",
+      "wards": "9"
+    },
+    {
+      "id": 340,
+      "district_id": 30,
+      "category_id": 4,
+      "name": "Makawanpurgadhi",
+      "area_sq_km": "148.72",
+      "wards": "8"
+    },
+    {
+      "id": 341,
+      "district_id": 30,
+      "category_id": 4,
+      "name": "Manahari",
+      "area_sq_km": "199.52",
+      "wards": "9"
+    },
+    {
+      "id": 342,
+      "district_id": 30,
+      "category_id": 4,
+      "name": "Raksirang",
+      "area_sq_km": "226.7",
+      "wards": "9"
+    },
+    {
+      "id": 343,
+      "district_id": 30,
+      "category_id": 4,
+      "name": "Bakaiya",
+      "area_sq_km": "393.75",
+      "wards": "12"
+    },
+    {
+      "id": 344,
+      "district_id": 30,
+      "category_id": 4,
+      "name": "Bagmati",
+      "area_sq_km": "311.79",
+      "wards": "9"
+    },
+    {
+      "id": 345,
+      "district_id": 30,
+      "category_id": 4,
+      "name": "Kailash",
+      "area_sq_km": "204.48",
+      "wards": "10"
+    },
+    {
+      "id": 346,
+      "district_id": 30,
+      "category_id": 4,
+      "name": "Indrasarowar",
+      "area_sq_km": "97.34",
+      "wards": "5"
+    },
+    {
+      "id": 347,
+      "district_id": 31,
+      "category_id": 3,
+      "name": "Bidur",
+      "area_sq_km": "130.01",
+      "wards": "13"
+    },
+    {
+      "id": 348,
+      "district_id": 31,
+      "category_id": 3,
+      "name": "Belkotgadhi",
+      "area_sq_km": "155.6",
+      "wards": "13"
+    },
+    {
+      "id": 349,
+      "district_id": 31,
+      "category_id": 4,
+      "name": "Kakani",
+      "area_sq_km": "87.97",
+      "wards": "8"
+    },
+    {
+      "id": 350,
+      "district_id": 31,
+      "category_id": 4,
+      "name": "Panchakanya",
+      "area_sq_km": "53.47",
+      "wards": "5"
+    },
+    {
+      "id": 351,
+      "district_id": 31,
+      "category_id": 4,
+      "name": "Likhu",
+      "area_sq_km": "47.88",
+      "wards": "6"
+    },
+    {
+      "id": 352,
+      "district_id": 31,
+      "category_id": 4,
+      "name": "Dupcheshwar",
+      "area_sq_km": "131.62",
+      "wards": "7"
+    },
+    {
+      "id": 353,
+      "district_id": 31,
+      "category_id": 4,
+      "name": "Shivapuri",
+      "area_sq_km": "101.5",
+      "wards": "8"
+    },
+    {
+      "id": 354,
+      "district_id": 31,
+      "category_id": 4,
+      "name": "Tadi",
+      "area_sq_km": "69.8",
+      "wards": "6"
+    },
+    {
+      "id": 355,
+      "district_id": 31,
+      "category_id": 4,
+      "name": "Suryagadhi",
+      "area_sq_km": "49.09",
+      "wards": "5"
+    },
+    {
+      "id": 356,
+      "district_id": 31,
+      "category_id": 4,
+      "name": "Tarkeshwar",
+      "area_sq_km": "72.62",
+      "wards": "6"
+    },
+    {
+      "id": 357,
+      "district_id": 31,
+      "category_id": 4,
+      "name": "Kispang",
+      "area_sq_km": "82.57",
+      "wards": "5"
+    },
+    {
+      "id": 358,
+      "district_id": 31,
+      "category_id": 4,
+      "name": "Myagang",
+      "area_sq_km": "97.83",
+      "wards": "6"
+    },
+    {
+      "id": 359,
+      "district_id": 32,
+      "category_id": 3,
+      "name": "Manthali",
+      "area_sq_km": "211.78",
+      "wards": "14"
+    },
+    {
+      "id": 360,
+      "district_id": 32,
+      "category_id": 3,
+      "name": "Ramechhap",
+      "area_sq_km": "202.45",
+      "wards": "9"
+    },
+    {
+      "id": 361,
+      "district_id": 32,
+      "category_id": 4,
+      "name": "Umakunda",
+      "area_sq_km": "451.99",
+      "wards": "7"
+    },
+    {
+      "id": 362,
+      "district_id": 32,
+      "category_id": 4,
+      "name": "Khandadevi",
+      "area_sq_km": "150.7",
+      "wards": "9"
+    },
+    {
+      "id": 363,
+      "district_id": 32,
+      "category_id": 4,
+      "name": "Doramba",
+      "area_sq_km": "140.88",
+      "wards": "7"
+    },
+    {
+      "id": 364,
+      "district_id": 32,
+      "category_id": 4,
+      "name": "Gokulganga",
+      "area_sq_km": "198.4",
+      "wards": "6"
+    },
+    {
+      "id": 365,
+      "district_id": 32,
+      "category_id": 4,
+      "name": "LikhuTamakoshi",
+      "area_sq_km": "124.51",
+      "wards": "7"
+    },
+    {
+      "id": 366,
+      "district_id": 32,
+      "category_id": 4,
+      "name": "Sunapati",
+      "area_sq_km": "86.98",
+      "wards": "5"
+    },
+    {
+      "id": 367,
+      "district_id": 33,
+      "category_id": 4,
+      "name": "Kalika",
+      "area_sq_km": "192.54",
+      "wards": "5"
+    },
+    {
+      "id": 368,
+      "district_id": 33,
+      "category_id": 4,
+      "name": "Gosaikunda",
+      "area_sq_km": "978.77",
+      "wards": "6"
+    },
+    {
+      "id": 369,
+      "district_id": 33,
+      "category_id": 4,
+      "name": "Naukunda",
+      "area_sq_km": "126.99",
+      "wards": "6"
+    },
+    {
+      "id": 370,
+      "district_id": 33,
+      "category_id": 4,
+      "name": "Parbatikunda",
+      "area_sq_km": "682.23",
+      "wards": "5"
+    },
+    {
+      "id": 371,
+      "district_id": 33,
+      "category_id": 4,
+      "name": "Uttargaya",
+      "area_sq_km": "104.51",
+      "wards": "5"
+    },
+    {
+      "id": 372,
+      "district_id": 34,
+      "category_id": 3,
+      "name": "Kamalamai",
+      "area_sq_km": "428.57",
+      "wards": "14"
+    },
+    {
+      "id": 373,
+      "district_id": 34,
+      "category_id": 3,
+      "name": "Dudhauli",
+      "area_sq_km": "390.39",
+      "wards": "14"
+    },
+    {
+      "id": 374,
+      "district_id": 34,
+      "category_id": 4,
+      "name": "Sunkoshi",
+      "area_sq_km": "154.68",
+      "wards": "7"
+    },
+    {
+      "id": 375,
+      "district_id": 34,
+      "category_id": 4,
+      "name": "Hariharpurgadhi",
+      "area_sq_km": "343.9",
+      "wards": "8"
+    },
+    {
+      "id": 376,
+      "district_id": 34,
+      "category_id": 4,
+      "name": "Tinpatan",
+      "area_sq_km": "280.26",
+      "wards": "11"
+    },
+    {
+      "id": 377,
+      "district_id": 34,
+      "category_id": 4,
+      "name": "Marin",
+      "area_sq_km": "324.55",
+      "wards": "7"
+    },
+    {
+      "id": 378,
+      "district_id": 34,
+      "category_id": 4,
+      "name": "Golanjor",
+      "area_sq_km": "184.13",
+      "wards": "7"
+    },
+    {
+      "id": 379,
+      "district_id": 34,
+      "category_id": 4,
+      "name": "Phikkal",
+      "area_sq_km": "186.06",
+      "wards": "6"
+    },
+    {
+      "id": 380,
+      "district_id": 34,
+      "category_id": 4,
+      "name": "Ghyanglekh",
+      "area_sq_km": "166.77",
+      "wards": "5"
+    },
+    {
+      "id": 381,
+      "district_id": 35,
+      "category_id": 3,
+      "name": "Chautara Sangachowkgadi",
+      "area_sq_km": "165.25",
+      "wards": "14"
+    },
+    {
+      "id": 382,
+      "district_id": 35,
+      "category_id": 3,
+      "name": "Bahrabise",
+      "area_sq_km": "96.73",
+      "wards": "9"
+    },
+    {
+      "id": 383,
+      "district_id": 35,
+      "category_id": 3,
+      "name": "Melamchi",
+      "area_sq_km": "158.17",
+      "wards": "13"
+    },
+    {
+      "id": 384,
+      "district_id": 35,
+      "category_id": 4,
+      "name": "Balephi",
+      "area_sq_km": "61.6",
+      "wards": "8"
+    },
+    {
+      "id": 385,
+      "district_id": 35,
+      "category_id": 4,
+      "name": "Sunkoshi",
+      "area_sq_km": "71.84",
+      "wards": "7"
+    },
+    {
+      "id": 386,
+      "district_id": 35,
+      "category_id": 4,
+      "name": "Indrawati",
+      "area_sq_km": "105.09",
+      "wards": "12"
+    },
+    {
+      "id": 387,
+      "district_id": 35,
+      "category_id": 4,
+      "name": "Jugal",
+      "area_sq_km": "273.62",
+      "wards": "7"
+    },
+    {
+      "id": 388,
+      "district_id": 35,
+      "category_id": 4,
+      "name": "Panchpokhari",
+      "area_sq_km": "187.29",
+      "wards": "8"
+    },
+    {
+      "id": 389,
+      "district_id": 35,
+      "category_id": 4,
+      "name": "Bhotekoshi",
+      "area_sq_km": "278.31",
+      "wards": "5"
+    },
+    {
+      "id": 390,
+      "district_id": 35,
+      "category_id": 4,
+      "name": "Lisankhu",
+      "area_sq_km": "98.61",
+      "wards": "7"
+    },
+    {
+      "id": 391,
+      "district_id": 35,
+      "category_id": 4,
+      "name": "Helambu",
+      "area_sq_km": "287.26",
+      "wards": "7"
+    },
+    {
+      "id": 392,
+      "district_id": 35,
+      "category_id": 4,
+      "name": "Tripurasundari",
+      "area_sq_km": "94.28",
+      "wards": "6"
+    },
+    {
+      "id": 393,
+      "district_id": 36,
+      "category_id": 3,
+      "name": "Baglung",
+      "area_sq_km": "98.01",
+      "wards": "14"
+    },
+    {
+      "id": 394,
+      "district_id": 36,
+      "category_id": 3,
+      "name": "Dhorpatan",
+      "area_sq_km": "222.85",
+      "wards": "9"
+    },
+    {
+      "id": 395,
+      "district_id": 36,
+      "category_id": 3,
+      "name": "Galkot",
+      "area_sq_km": "194.39",
+      "wards": "11"
+    },
+    {
+      "id": 396,
+      "district_id": 36,
+      "category_id": 3,
+      "name": "Jaimuni",
+      "area_sq_km": "118.71",
+      "wards": "10"
+    },
+    {
+      "id": 397,
+      "district_id": 36,
+      "category_id": 4,
+      "name": "Bareng",
+      "area_sq_km": "75.28",
+      "wards": "5"
+    },
+    {
+      "id": 398,
+      "district_id": 36,
+      "category_id": 4,
+      "name": "Khathekhola",
+      "area_sq_km": "82.88",
+      "wards": "8"
+    },
+    {
+      "id": 399,
+      "district_id": 36,
+      "category_id": 4,
+      "name": "Taman Khola",
+      "area_sq_km": "178.02",
+      "wards": "6"
+    },
+    {
+      "id": 400,
+      "district_id": 36,
+      "category_id": 4,
+      "name": "Tara Khola",
+      "area_sq_km": "129.53",
+      "wards": "5"
+    },
+    {
+      "id": 401,
+      "district_id": 36,
+      "category_id": 4,
+      "name": "Nishi Khola",
+      "area_sq_km": "244.37",
+      "wards": "7"
+    },
+    {
+      "id": 402,
+      "district_id": 36,
+      "category_id": 4,
+      "name": "Badigad",
+      "area_sq_km": "178.68",
+      "wards": "10"
+    },
+    {
+      "id": 403,
+      "district_id": 37,
+      "category_id": 3,
+      "name": "Gorkha",
+      "area_sq_km": "131.86",
+      "wards": "14"
+    },
+    {
+      "id": 404,
+      "district_id": 37,
+      "category_id": 3,
+      "name": "Palungtar",
+      "area_sq_km": "158.62",
+      "wards": "10"
+    },
+    {
+      "id": 405,
+      "district_id": 37,
+      "category_id": 4,
+      "name": "Sulikot",
+      "area_sq_km": "200.63",
+      "wards": "8"
+    },
+    {
+      "id": 406,
+      "district_id": 37,
+      "category_id": 4,
+      "name": "Siranchowk",
+      "area_sq_km": "121.66",
+      "wards": "8"
+    },
+    {
+      "id": 407,
+      "district_id": 37,
+      "category_id": 4,
+      "name": "Ajirkot",
+      "area_sq_km": "198.05",
+      "wards": "5"
+    },
+    {
+      "id": 408,
+      "district_id": 37,
+      "category_id": 4,
+      "name": "Chumnubri",
+      "area_sq_km": "1648.65",
+      "wards": "7"
+    },
+    {
+      "id": 409,
+      "district_id": 37,
+      "category_id": 4,
+      "name": "Dharche",
+      "area_sq_km": "651.52",
+      "wards": "7"
+    },
+    {
+      "id": 410,
+      "district_id": 37,
+      "category_id": 4,
+      "name": "Bhimsen Thapa",
+      "area_sq_km": "101.25",
+      "wards": "8"
+    },
+    {
+      "id": 411,
+      "district_id": 37,
+      "category_id": 4,
+      "name": "Sahid Lakhan",
+      "area_sq_km": "147.97",
+      "wards": "9"
+    },
+    {
+      "id": 412,
+      "district_id": 37,
+      "category_id": 4,
+      "name": "Aarughat",
+      "area_sq_km": "160.79",
+      "wards": "10"
+    },
+    {
+      "id": 413,
+      "district_id": 37,
+      "category_id": 4,
+      "name": "Gandaki",
+      "area_sq_km": "123.86",
+      "wards": "8"
+    },
+    {
+      "id": 414,
+      "district_id": 38,
+      "category_id": 1,
+      "name": "Pokhara",
+      "area_sq_km": "464.24",
+      "wards": "33"
+    },
+    {
+      "id": 415,
+      "district_id": 38,
+      "category_id": 4,
+      "name": "Annapurna",
+      "area_sq_km": "417.73",
+      "wards": "11"
+    },
+    {
+      "id": 416,
+      "district_id": 38,
+      "category_id": 4,
+      "name": "Machhapuchchhre",
+      "area_sq_km": "544.58",
+      "wards": "9"
+    },
+    {
+      "id": 417,
+      "district_id": 38,
+      "category_id": 4,
+      "name": "Madi",
+      "area_sq_km": "563",
+      "wards": "12"
+    },
+    {
+      "id": 418,
+      "district_id": 38,
+      "category_id": 4,
+      "name": "Rupa",
+      "area_sq_km": "94.81",
+      "wards": "7"
+    },
+    {
+      "id": 419,
+      "district_id": 39,
+      "category_id": 3,
+      "name": "Besisahar",
+      "area_sq_km": "127.64",
+      "wards": "11"
+    },
+    {
+      "id": 420,
+      "district_id": 39,
+      "category_id": 3,
+      "name": "Madhya Nepal",
+      "area_sq_km": "113.86",
+      "wards": "10"
+    },
+    {
+      "id": 421,
+      "district_id": 39,
+      "category_id": 3,
+      "name": "Rainas",
+      "area_sq_km": "71.97",
+      "wards": "10"
+    },
+    {
+      "id": 422,
+      "district_id": 39,
+      "category_id": 3,
+      "name": "Sundarbazar",
+      "area_sq_km": "72.05",
+      "wards": "11"
+    },
+    {
+      "id": 423,
+      "district_id": 39,
+      "category_id": 4,
+      "name": "Dordi",
+      "area_sq_km": "350.93",
+      "wards": "9"
+    },
+    {
+      "id": 424,
+      "district_id": 39,
+      "category_id": 4,
+      "name": "Dudhpokhari",
+      "area_sq_km": "155.33",
+      "wards": "6"
+    },
+    {
+      "id": 425,
+      "district_id": 39,
+      "category_id": 4,
+      "name": "Kwhlosothar",
+      "area_sq_km": "175.37",
+      "wards": "9"
+    },
+    {
+      "id": 426,
+      "district_id": 39,
+      "category_id": 4,
+      "name": "Marsyangdi",
+      "area_sq_km": "597.25",
+      "wards": "9"
+    },
+    {
+      "id": 427,
+      "district_id": 40,
+      "category_id": 4,
+      "name": "Chame",
+      "area_sq_km": "78.86",
+      "wards": "5"
+    },
+    {
+      "id": 428,
+      "district_id": 40,
+      "category_id": 4,
+      "name": "Nason",
+      "area_sq_km": "709.58",
+      "wards": "9"
+    },
+    {
+      "id": 429,
+      "district_id": 40,
+      "category_id": 4,
+      "name": "NarpaBhumi",
+      "area_sq_km": "837.54",
+      "wards": "5"
+    },
+    {
+      "id": 430,
+      "district_id": 40,
+      "category_id": 4,
+      "name": "Manang Ngisyang",
+      "area_sq_km": "694.63",
+      "wards": "9"
+    },
+    {
+      "id": 431,
+      "district_id": 41,
+      "category_id": 4,
+      "name": "Gharpajhong",
+      "area_sq_km": "316",
+      "wards": "5"
+    },
+    {
+      "id": 432,
+      "district_id": 41,
+      "category_id": 4,
+      "name": "Thasang",
+      "area_sq_km": "289",
+      "wards": "5"
+    },
+    {
+      "id": 433,
+      "district_id": 41,
+      "category_id": 4,
+      "name": "Barhagaun Muktichhetra",
+      "area_sq_km": "886",
+      "wards": "5"
+    },
+    {
+      "id": 434,
+      "district_id": 41,
+      "category_id": 4,
+      "name": "Lomanthang",
+      "area_sq_km": "727",
+      "wards": "5"
+    },
+    {
+      "id": 435,
+      "district_id": 41,
+      "category_id": 4,
+      "name": "Lo-Ghekar Damodarkunda",
+      "area_sq_km": "1344",
+      "wards": "5"
+    },
+    {
+      "id": 436,
+      "district_id": 42,
+      "category_id": 3,
+      "name": "Beni",
+      "area_sq_km": "76.57",
+      "wards": "10"
+    },
+    {
+      "id": 437,
+      "district_id": 42,
+      "category_id": 4,
+      "name": "Annapurna",
+      "area_sq_km": "556.41",
+      "wards": "8"
+    },
+    {
+      "id": 438,
+      "district_id": 42,
+      "category_id": 4,
+      "name": "Dhaulagiri",
+      "area_sq_km": "1037",
+      "wards": "7"
+    },
+    {
+      "id": 439,
+      "district_id": 42,
+      "category_id": 4,
+      "name": "Mangala",
+      "area_sq_km": "89",
+      "wards": "5"
+    },
+    {
+      "id": 440,
+      "district_id": 42,
+      "category_id": 4,
+      "name": "Malika",
+      "area_sq_km": "147",
+      "wards": "7"
+    },
+    {
+      "id": 441,
+      "district_id": 42,
+      "category_id": 4,
+      "name": "Raghuganga",
+      "area_sq_km": "379",
+      "wards": "8"
+    },
+    {
+      "id": 442,
+      "district_id": 43,
+      "category_id": 3,
+      "name": "Kawasoti",
+      "area_sq_km": "108.34",
+      "wards": "17"
+    },
+    {
+      "id": 443,
+      "district_id": 43,
+      "category_id": 3,
+      "name": "Gaindakot",
+      "area_sq_km": "159.93",
+      "wards": "18"
+    },
+    {
+      "id": 444,
+      "district_id": 43,
+      "category_id": 3,
+      "name": "Devachuli",
+      "area_sq_km": "112.72",
+      "wards": "17"
+    },
+    {
+      "id": 445,
+      "district_id": 43,
+      "category_id": 3,
+      "name": "Madhya Bindu",
+      "area_sq_km": "233.35",
+      "wards": "15"
+    },
+    {
+      "id": 446,
+      "district_id": 43,
+      "category_id": 4,
+      "name": "Baudikali",
+      "area_sq_km": "91.87",
+      "wards": "6"
+    },
+    {
+      "id": 447,
+      "district_id": 43,
+      "category_id": 4,
+      "name": "Bulingtar",
+      "area_sq_km": "147.68",
+      "wards": "6"
+    },
+    {
+      "id": 448,
+      "district_id": 43,
+      "category_id": 4,
+      "name": "Binayi Tribeni",
+      "area_sq_km": "288.06",
+      "wards": "7"
+    },
+    {
+      "id": 449,
+      "district_id": 43,
+      "category_id": 4,
+      "name": "Hupsekot",
+      "area_sq_km": "189.21",
+      "wards": "6"
+    },
+    {
+      "id": 450,
+      "district_id": 44,
+      "category_id": 3,
+      "name": "Kushma",
+      "area_sq_km": "93.18",
+      "wards": "14"
+    },
+    {
+      "id": 451,
+      "district_id": 44,
+      "category_id": 3,
+      "name": "Phalewas",
+      "area_sq_km": "85.7",
+      "wards": "11"
+    },
+    {
+      "id": 452,
+      "district_id": 44,
+      "category_id": 4,
+      "name": "Jaljala",
+      "area_sq_km": "82.26",
+      "wards": "9"
+    },
+    {
+      "id": 453,
+      "district_id": 44,
+      "category_id": 4,
+      "name": "Paiyun",
+      "area_sq_km": "42.65",
+      "wards": "7"
+    },
+    {
+      "id": 454,
+      "district_id": 44,
+      "category_id": 4,
+      "name": "Mahashila",
+      "area_sq_km": "49.38",
+      "wards": "6"
+    },
+    {
+      "id": 455,
+      "district_id": 44,
+      "category_id": 4,
+      "name": "Modi",
+      "area_sq_km": "143.6",
+      "wards": "8"
+    },
+    {
+      "id": 456,
+      "district_id": 44,
+      "category_id": 4,
+      "name": "Bihadi",
+      "area_sq_km": "44.8",
+      "wards": "6"
+    },
+    {
+      "id": 457,
+      "district_id": 45,
+      "category_id": 3,
+      "name": "Galyang",
+      "area_sq_km": "122.71",
+      "wards": "11"
+    },
+    {
+      "id": 458,
+      "district_id": 45,
+      "category_id": 3,
+      "name": "Chapakot",
+      "area_sq_km": "120.59",
+      "wards": "10"
+    },
+    {
+      "id": 459,
+      "district_id": 45,
+      "category_id": 3,
+      "name": "Putalibazar",
+      "area_sq_km": "147.21",
+      "wards": "14"
+    },
+    {
+      "id": 460,
+      "district_id": 45,
+      "category_id": 3,
+      "name": "Bheerkot",
+      "area_sq_km": "78.23",
+      "wards": "9"
+    },
+    {
+      "id": 461,
+      "district_id": 45,
+      "category_id": 3,
+      "name": "Waling",
+      "area_sq_km": "128.4",
+      "wards": "14"
+    },
+    {
+      "id": 462,
+      "district_id": 45,
+      "category_id": 4,
+      "name": "Arjun Chaupari",
+      "area_sq_km": "57.22",
+      "wards": "6"
+    },
+    {
+      "id": 463,
+      "district_id": 45,
+      "category_id": 4,
+      "name": "Aandhikhola",
+      "area_sq_km": "69.61",
+      "wards": "6"
+    },
+    {
+      "id": 464,
+      "district_id": 45,
+      "category_id": 4,
+      "name": "Kaligandaki",
+      "area_sq_km": "73.51",
+      "wards": "7"
+    },
+    {
+      "id": 465,
+      "district_id": 45,
+      "category_id": 4,
+      "name": "Phedikhola",
+      "area_sq_km": "56.73",
+      "wards": "5"
+    },
+    {
+      "id": 466,
+      "district_id": 45,
+      "category_id": 4,
+      "name": "Harinas",
+      "area_sq_km": "87.48",
+      "wards": "7"
+    },
+    {
+      "id": 467,
+      "district_id": 45,
+      "category_id": 4,
+      "name": "Biruwa",
+      "area_sq_km": "95.79",
+      "wards": "8"
+    },
+    {
+      "id": 468,
+      "district_id": 46,
+      "category_id": 3,
+      "name": "Bhanu",
+      "area_sq_km": "184",
+      "wards": "13"
+    },
+    {
+      "id": 469,
+      "district_id": 46,
+      "category_id": 3,
+      "name": "Bhimad",
+      "area_sq_km": "129",
+      "wards": "9"
+    },
+    {
+      "id": 470,
+      "district_id": 46,
+      "category_id": 3,
+      "name": "Byas",
+      "area_sq_km": "248",
+      "wards": "14"
+    },
+    {
+      "id": 471,
+      "district_id": 46,
+      "category_id": 3,
+      "name": "Suklagandaki",
+      "area_sq_km": "165",
+      "wards": "12"
+    },
+    {
+      "id": 472,
+      "district_id": 46,
+      "category_id": 4,
+      "name": "AnbuKhaireni",
+      "area_sq_km": "128",
+      "wards": "6"
+    },
+    {
+      "id": 473,
+      "district_id": 46,
+      "category_id": 4,
+      "name": "Devghat",
+      "area_sq_km": "159",
+      "wards": "5"
+    },
+    {
+      "id": 474,
+      "district_id": 46,
+      "category_id": 4,
+      "name": "Bandipur",
+      "area_sq_km": "102",
+      "wards": "6"
+    },
+    {
+      "id": 475,
+      "district_id": 46,
+      "category_id": 4,
+      "name": "Rishing",
+      "area_sq_km": "215",
+      "wards": "8"
+    },
+    {
+      "id": 476,
+      "district_id": 46,
+      "category_id": 4,
+      "name": "Ghiring",
+      "area_sq_km": "126",
+      "wards": "5"
+    },
+    {
+      "id": 477,
+      "district_id": 46,
+      "category_id": 4,
+      "name": "Myagde",
+      "area_sq_km": "115",
+      "wards": "7"
+    },
+    {
+      "id": 478,
+      "district_id": 47,
+      "category_id": 3,
+      "name": "Kapilvastu",
+      "area_sq_km": "136.91",
+      "wards": "12"
+    },
+    {
+      "id": 479,
+      "district_id": 47,
+      "category_id": 3,
+      "name": "Banganga",
+      "area_sq_km": "233.68",
+      "wards": "11"
+    },
+    {
+      "id": 480,
+      "district_id": 47,
+      "category_id": 3,
+      "name": "Buddhabhumi",
+      "area_sq_km": "366.67",
+      "wards": "10"
+    },
+    {
+      "id": 481,
+      "district_id": 47,
+      "category_id": 3,
+      "name": "Shivaraj",
+      "area_sq_km": "284.07",
+      "wards": "11"
+    },
+    {
+      "id": 482,
+      "district_id": 47,
+      "category_id": 3,
+      "name": "Krishnanagar",
+      "area_sq_km": "96.66",
+      "wards": "12"
+    },
+    {
+      "id": 483,
+      "district_id": 47,
+      "category_id": 3,
+      "name": "Maharajgunj",
+      "area_sq_km": "112.21",
+      "wards": "11"
+    },
+    {
+      "id": 484,
+      "district_id": 47,
+      "category_id": 4,
+      "name": "Mayadevi",
+      "area_sq_km": "88.53",
+      "wards": "8"
+    },
+    {
+      "id": 485,
+      "district_id": 47,
+      "category_id": 4,
+      "name": "Yashodhara",
+      "area_sq_km": "67.56",
+      "wards": "8"
+    },
+    {
+      "id": 486,
+      "district_id": 47,
+      "category_id": 4,
+      "name": "Suddhodan",
+      "area_sq_km": "91.69",
+      "wards": "6"
+    },
+    {
+      "id": 487,
+      "district_id": 47,
+      "category_id": 4,
+      "name": "Bijaynagar",
+      "area_sq_km": "173.19",
+      "wards": "7"
+    },
+    {
+      "id": 488,
+      "district_id": 48,
+      "category_id": 3,
+      "name": "Bardaghat",
+      "area_sq_km": "162.05",
+      "wards": "16"
+    },
+    {
+      "id": 489,
+      "district_id": 48,
+      "category_id": 3,
+      "name": "Ramgram",
+      "area_sq_km": "128.32",
+      "wards": "18"
+    },
+    {
+      "id": 490,
+      "district_id": 48,
+      "category_id": 3,
+      "name": "Sunwal",
+      "area_sq_km": "139.1",
+      "wards": "13"
+    },
+    {
+      "id": 491,
+      "district_id": 48,
+      "category_id": 4,
+      "name": "Susta",
+      "area_sq_km": "91.24",
+      "wards": "5"
+    },
+    {
+      "id": 492,
+      "district_id": 48,
+      "category_id": 4,
+      "name": "Palhi Nandan",
+      "area_sq_km": "44.67",
+      "wards": "6"
+    },
+    {
+      "id": 493,
+      "district_id": 48,
+      "category_id": 4,
+      "name": "Pratappur",
+      "area_sq_km": "87.55",
+      "wards": "9"
+    },
+    {
+      "id": 494,
+      "district_id": 48,
+      "category_id": 4,
+      "name": "Sarawal",
+      "area_sq_km": "73.19",
+      "wards": "7"
+    },
+    {
+      "id": 495,
+      "district_id": 49,
+      "category_id": 2,
+      "name": "Butwal",
+      "area_sq_km": "101.61",
+      "wards": "19"
+    },
+    {
+      "id": 496,
+      "district_id": 49,
+      "category_id": 3,
+      "name": "Devdaha",
+      "area_sq_km": "136.95",
+      "wards": "12"
+    },
+    {
+      "id": 497,
+      "district_id": 49,
+      "category_id": 3,
+      "name": "Lumbini Sanskritik",
+      "area_sq_km": "112.21",
+      "wards": "13"
+    },
+    {
+      "id": 498,
+      "district_id": 49,
+      "category_id": 3,
+      "name": "Sainamaina",
+      "area_sq_km": "162.18",
+      "wards": "11"
+    },
+    {
+      "id": 499,
+      "district_id": 49,
+      "category_id": 3,
+      "name": "Siddharthanagar",
+      "area_sq_km": "36.03",
+      "wards": "13"
+    },
+    {
+      "id": 500,
+      "district_id": 49,
+      "category_id": 3,
+      "name": "Tilottama",
+      "area_sq_km": "126.19",
+      "wards": "17"
+    },
+    {
+      "id": 501,
+      "district_id": 49,
+      "category_id": 4,
+      "name": "Gaidahawa",
+      "area_sq_km": "96.79",
+      "wards": "9"
+    },
+    {
+      "id": 502,
+      "district_id": 49,
+      "category_id": 4,
+      "name": "Kanchan",
+      "area_sq_km": "58.51",
+      "wards": "5"
+    },
+    {
+      "id": 503,
+      "district_id": 49,
+      "category_id": 4,
+      "name": "Kotahimai",
+      "area_sq_km": "58.26",
+      "wards": "7"
+    },
+    {
+      "id": 504,
+      "district_id": 49,
+      "category_id": 4,
+      "name": "Marchawari",
+      "area_sq_km": "48.55",
+      "wards": "7"
+    },
+    {
+      "id": 505,
+      "district_id": 49,
+      "category_id": 4,
+      "name": "Mayadevi",
+      "area_sq_km": "72.44",
+      "wards": "8"
+    },
+    {
+      "id": 506,
+      "district_id": 49,
+      "category_id": 4,
+      "name": "Omsatiya",
+      "area_sq_km": "48.54",
+      "wards": "6"
+    },
+    {
+      "id": 507,
+      "district_id": 49,
+      "category_id": 4,
+      "name": "Rohini",
+      "area_sq_km": "64.62",
+      "wards": "7"
+    },
+    {
+      "id": 508,
+      "district_id": 49,
+      "category_id": 4,
+      "name": "Sammarimai",
+      "area_sq_km": "50.78",
+      "wards": "7"
+    },
+    {
+      "id": 509,
+      "district_id": 49,
+      "category_id": 4,
+      "name": "Siyari",
+      "area_sq_km": "66.17",
+      "wards": "7"
+    },
+    {
+      "id": 510,
+      "district_id": 49,
+      "category_id": 4,
+      "name": "Suddodhan",
+      "area_sq_km": "57.66",
+      "wards": "7"
+    },
+    {
+      "id": 511,
+      "district_id": 50,
+      "category_id": 3,
+      "name": "Sandhikharka",
+      "area_sq_km": "129.42",
+      "wards": "12"
+    },
+    {
+      "id": 512,
+      "district_id": 50,
+      "category_id": 3,
+      "name": "Sitganga",
+      "area_sq_km": "610.43",
+      "wards": "14"
+    },
+    {
+      "id": 513,
+      "district_id": 50,
+      "category_id": 3,
+      "name": "Bhumikasthan",
+      "area_sq_km": "159.13",
+      "wards": "10"
+    },
+    {
+      "id": 514,
+      "district_id": 50,
+      "category_id": 4,
+      "name": "Chhatradev",
+      "area_sq_km": "87.62",
+      "wards": "8"
+    },
+    {
+      "id": 515,
+      "district_id": 50,
+      "category_id": 4,
+      "name": "Panini",
+      "area_sq_km": "151.42",
+      "wards": "8"
+    },
+    {
+      "id": 516,
+      "district_id": 50,
+      "category_id": 4,
+      "name": "Malarani",
+      "area_sq_km": "101.06",
+      "wards": "9"
+    },
+    {
+      "id": 517,
+      "district_id": 51,
+      "category_id": 3,
+      "name": "Resunga",
+      "area_sq_km": "83.74",
+      "wards": "14"
+    },
+    {
+      "id": 518,
+      "district_id": 51,
+      "category_id": 3,
+      "name": "Musikot",
+      "area_sq_km": "114.74",
+      "wards": "9"
+    },
+    {
+      "id": 519,
+      "district_id": 51,
+      "category_id": 4,
+      "name": "Rurukshetra",
+      "area_sq_km": "67.38",
+      "wards": "6"
+    },
+    {
+      "id": 520,
+      "district_id": 51,
+      "category_id": 4,
+      "name": "Chhatrakot",
+      "area_sq_km": "87.01",
+      "wards": "6"
+    },
+    {
+      "id": 521,
+      "district_id": 51,
+      "category_id": 4,
+      "name": "Gulmidarbar",
+      "area_sq_km": "79.99",
+      "wards": "7"
+    },
+    {
+      "id": 522,
+      "district_id": 51,
+      "category_id": 4,
+      "name": "Chandrakot",
+      "area_sq_km": "105.73",
+      "wards": "8"
+    },
+    {
+      "id": 523,
+      "district_id": 51,
+      "category_id": 4,
+      "name": "Satyawati",
+      "area_sq_km": "115.92",
+      "wards": "8"
+    },
+    {
+      "id": 524,
+      "district_id": 51,
+      "category_id": 4,
+      "name": "Dhurkot",
+      "area_sq_km": "86.32",
+      "wards": "7"
+    },
+    {
+      "id": 525,
+      "district_id": 51,
+      "category_id": 4,
+      "name": "Kaligandaki",
+      "area_sq_km": "101.04",
+      "wards": "7"
+    },
+    {
+      "id": 526,
+      "district_id": 51,
+      "category_id": 4,
+      "name": "Isma",
+      "area_sq_km": "81.88",
+      "wards": "6"
+    },
+    {
+      "id": 527,
+      "district_id": 51,
+      "category_id": 4,
+      "name": "Malika",
+      "area_sq_km": "92.49",
+      "wards": "8"
+    },
+    {
+      "id": 528,
+      "district_id": 51,
+      "category_id": 4,
+      "name": "Madane",
+      "area_sq_km": "94.52",
+      "wards": "7"
+    },
+    {
+      "id": 529,
+      "district_id": 52,
+      "category_id": 3,
+      "name": "Tansen",
+      "area_sq_km": "109.8",
+      "wards": "14"
+    },
+    {
+      "id": 530,
+      "district_id": 52,
+      "category_id": 3,
+      "name": "Rampur",
+      "area_sq_km": "123.34",
+      "wards": "10"
+    },
+    {
+      "id": 531,
+      "district_id": 52,
+      "category_id": 4,
+      "name": "Rainadevi Chhahara",
+      "area_sq_km": "175.78",
+      "wards": "8"
+    },
+    {
+      "id": 532,
+      "district_id": 52,
+      "category_id": 4,
+      "name": "Ripdikot",
+      "area_sq_km": "124.55",
+      "wards": "8"
+    },
+    {
+      "id": 533,
+      "district_id": 52,
+      "category_id": 4,
+      "name": "Bagnaskali",
+      "area_sq_km": "84.17",
+      "wards": "9"
+    },
+    {
+      "id": 534,
+      "district_id": 52,
+      "category_id": 4,
+      "name": "Rambha",
+      "area_sq_km": "94.12",
+      "wards": "5"
+    },
+    {
+      "id": 535,
+      "district_id": 52,
+      "category_id": 4,
+      "name": "Purbakhola",
+      "area_sq_km": "138.05",
+      "wards": "6"
+    },
+    {
+      "id": 536,
+      "district_id": 52,
+      "category_id": 4,
+      "name": "Nisdi",
+      "area_sq_km": "194.5",
+      "wards": "7"
+    },
+    {
+      "id": 537,
+      "district_id": 52,
+      "category_id": 4,
+      "name": "Mathagadhi",
+      "area_sq_km": "215.49",
+      "wards": "8"
+    },
+    {
+      "id": 538,
+      "district_id": 52,
+      "category_id": 4,
+      "name": "Tinahu",
+      "area_sq_km": "202",
+      "wards": "6"
+    },
+    {
+      "id": 539,
+      "district_id": 53,
+      "category_id": 2,
+      "name": "Ghorahi",
+      "area_sq_km": "522.21",
+      "wards": "19"
+    },
+    {
+      "id": 540,
+      "district_id": 53,
+      "category_id": 2,
+      "name": "Tulsipur",
+      "area_sq_km": "384.63",
+      "wards": "19"
+    },
+    {
+      "id": 541,
+      "district_id": 53,
+      "category_id": 3,
+      "name": "Lamahi",
+      "area_sq_km": "326.66",
+      "wards": "9"
+    },
+    {
+      "id": 542,
+      "district_id": 53,
+      "category_id": 4,
+      "name": "Gadhawa",
+      "area_sq_km": "358.57",
+      "wards": "8"
+    },
+    {
+      "id": 543,
+      "district_id": 53,
+      "category_id": 4,
+      "name": "Rajpur",
+      "area_sq_km": "577.33",
+      "wards": "7"
+    },
+    {
+      "id": 544,
+      "district_id": 53,
+      "category_id": 4,
+      "name": "Shantinagar",
+      "area_sq_km": "116.02",
+      "wards": "7"
+    },
+    {
+      "id": 545,
+      "district_id": 53,
+      "category_id": 4,
+      "name": "Rapti",
+      "area_sq_km": "161.07",
+      "wards": "9"
+    },
+    {
+      "id": 546,
+      "district_id": 53,
+      "category_id": 4,
+      "name": "Banglachuli",
+      "area_sq_km": "245.14",
+      "wards": "8"
+    },
+    {
+      "id": 547,
+      "district_id": 53,
+      "category_id": 4,
+      "name": "Dangisharan",
+      "area_sq_km": "110.7",
+      "wards": "7"
+    },
+    {
+      "id": 548,
+      "district_id": 53,
+      "category_id": 4,
+      "name": "Babai",
+      "area_sq_km": "257.48",
+      "wards": "7"
+    },
+    {
+      "id": 549,
+      "district_id": 54,
+      "category_id": 3,
+      "name": "Sworgadwari",
+      "area_sq_km": "224.7",
+      "wards": "9"
+    },
+    {
+      "id": 550,
+      "district_id": 54,
+      "category_id": 3,
+      "name": "Pyuthan",
+      "area_sq_km": "128.96",
+      "wards": "10"
+    },
+    {
+      "id": 551,
+      "district_id": 54,
+      "category_id": 4,
+      "name": "Mandavi",
+      "area_sq_km": "113.08",
+      "wards": "5"
+    },
+    {
+      "id": 552,
+      "district_id": 54,
+      "category_id": 4,
+      "name": "Sarumarani",
+      "area_sq_km": "157.97",
+      "wards": "6"
+    },
+    {
+      "id": 553,
+      "district_id": 54,
+      "category_id": 4,
+      "name": "Ayirawati",
+      "area_sq_km": "156.75",
+      "wards": "6"
+    },
+    {
+      "id": 554,
+      "district_id": 54,
+      "category_id": 4,
+      "name": "Mallarani",
+      "area_sq_km": "80.09",
+      "wards": "5"
+    },
+    {
+      "id": 555,
+      "district_id": 54,
+      "category_id": 4,
+      "name": "Jhimruk",
+      "area_sq_km": "106.93",
+      "wards": "8"
+    },
+    {
+      "id": 556,
+      "district_id": 54,
+      "category_id": 4,
+      "name": "Naubahini",
+      "area_sq_km": "213.41",
+      "wards": "8"
+    },
+    {
+      "id": 557,
+      "district_id": 54,
+      "category_id": 4,
+      "name": "Gaumukhi",
+      "area_sq_km": "139.04",
+      "wards": "7"
+    },
+    {
+      "id": 558,
+      "district_id": 55,
+      "category_id": 3,
+      "name": "Rolpa",
+      "area_sq_km": "270.42",
+      "wards": "10"
+    },
+    {
+      "id": 559,
+      "district_id": 55,
+      "category_id": 4,
+      "name": "Runtigadi",
+      "area_sq_km": "232.69",
+      "wards": "9"
+    },
+    {
+      "id": 560,
+      "district_id": 55,
+      "category_id": 4,
+      "name": "Triveni",
+      "area_sq_km": "205.39",
+      "wards": "7"
+    },
+    {
+      "id": 561,
+      "district_id": 55,
+      "category_id": 4,
+      "name": "Sunil Smiriti",
+      "area_sq_km": "156.55",
+      "wards": "8"
+    },
+    {
+      "id": 562,
+      "district_id": 55,
+      "category_id": 4,
+      "name": "Lungri",
+      "area_sq_km": "135.23",
+      "wards": "7"
+    },
+    {
+      "id": 563,
+      "district_id": 55,
+      "category_id": 4,
+      "name": "Sunchhahari",
+      "area_sq_km": "277.62",
+      "wards": "7"
+    },
+    {
+      "id": 564,
+      "district_id": 55,
+      "category_id": 4,
+      "name": "Thawang",
+      "area_sq_km": "191.07",
+      "wards": "5"
+    },
+    {
+      "id": 565,
+      "district_id": 55,
+      "category_id": 4,
+      "name": "Madi",
+      "area_sq_km": "129.05",
+      "wards": "6"
+    },
+    {
+      "id": 566,
+      "district_id": 55,
+      "category_id": 4,
+      "name": "GangaDev",
+      "area_sq_km": "124.38",
+      "wards": "7"
+    },
+    {
+      "id": 567,
+      "district_id": 55,
+      "category_id": 4,
+      "name": "Pariwartan",
+      "area_sq_km": "163.01",
+      "wards": "6"
+    },
+    {
+      "id": 568,
+      "district_id": 56,
+      "category_id": 4,
+      "name": "Putha Uttarganga",
+      "area_sq_km": "560.34",
+      "wards": "14"
+    },
+    {
+      "id": 569,
+      "district_id": 56,
+      "category_id": 4,
+      "name": "Bhume",
+      "area_sq_km": "273.67",
+      "wards": "9"
+    },
+    {
+      "id": 570,
+      "district_id": 56,
+      "category_id": 4,
+      "name": "Sisne",
+      "area_sq_km": "327.12",
+      "wards": "8"
+    },
+    {
+      "id": 571,
+      "district_id": 57,
+      "category_id": 2,
+      "name": "Nepalgunj",
+      "area_sq_km": "85.94",
+      "wards": "23"
+    },
+    {
+      "id": 572,
+      "district_id": 57,
+      "category_id": 3,
+      "name": "Kohalpur",
+      "area_sq_km": "184.26",
+      "wards": "15"
+    },
+    {
+      "id": 573,
+      "district_id": 57,
+      "category_id": 4,
+      "name": "Rapti-Sonari",
+      "area_sq_km": "1041.73",
+      "wards": "9"
+    },
+    {
+      "id": 574,
+      "district_id": 57,
+      "category_id": 4,
+      "name": "Narainapur",
+      "area_sq_km": "172.34",
+      "wards": "6"
+    },
+    {
+      "id": 575,
+      "district_id": 57,
+      "category_id": 4,
+      "name": "Duduwa",
+      "area_sq_km": "91.1",
+      "wards": "6"
+    },
+    {
+      "id": 576,
+      "district_id": 57,
+      "category_id": 4,
+      "name": "Janaki",
+      "area_sq_km": "63.32",
+      "wards": "6"
+    },
+    {
+      "id": 577,
+      "district_id": 57,
+      "category_id": 4,
+      "name": "Khajura",
+      "area_sq_km": "101.91",
+      "wards": "8"
+    },
+    {
+      "id": 578,
+      "district_id": 57,
+      "category_id": 4,
+      "name": "Baijanath",
+      "area_sq_km": "141.67",
+      "wards": "8"
+    },
+    {
+      "id": 579,
+      "district_id": 58,
+      "category_id": 3,
+      "name": "Gulariya",
+      "area_sq_km": "118.21",
+      "wards": "12"
+    },
+    {
+      "id": 580,
+      "district_id": 58,
+      "category_id": 3,
+      "name": "Rajapur",
+      "area_sq_km": "127.08",
+      "wards": "10"
+    },
+    {
+      "id": 581,
+      "district_id": 58,
+      "category_id": 3,
+      "name": "Madhuwan",
+      "area_sq_km": "129.73",
+      "wards": "9"
+    },
+    {
+      "id": 582,
+      "district_id": 58,
+      "category_id": 3,
+      "name": "Thakurbaba",
+      "area_sq_km": "104.57",
+      "wards": "9"
+    },
+    {
+      "id": 583,
+      "district_id": 58,
+      "category_id": 3,
+      "name": "Basgadhi",
+      "area_sq_km": "206.08",
+      "wards": "9"
+    },
+    {
+      "id": 584,
+      "district_id": 58,
+      "category_id": 3,
+      "name": "Barbardiya",
+      "area_sq_km": "226.09",
+      "wards": "11"
+    },
+    {
+      "id": 585,
+      "district_id": 58,
+      "category_id": 4,
+      "name": "Badhaiyatal",
+      "area_sq_km": "115.19",
+      "wards": "9"
+    },
+    {
+      "id": 586,
+      "district_id": 58,
+      "category_id": 4,
+      "name": "Geruwa",
+      "area_sq_km": "78.41",
+      "wards": "6"
+    },
+    {
+      "id": 587,
+      "district_id": 59,
+      "category_id": 3,
+      "name": "Aathabiskot",
+      "area_sq_km": "560.34",
+      "wards": "14"
+    },
+    {
+      "id": 588,
+      "district_id": 59,
+      "category_id": 3,
+      "name": "Musikot",
+      "area_sq_km": "136.06",
+      "wards": "14"
+    },
+    {
+      "id": 589,
+      "district_id": 59,
+      "category_id": 3,
+      "name": "Chaurjahari",
+      "area_sq_km": "107.38",
+      "wards": "14"
+    },
+    {
+      "id": 590,
+      "district_id": 59,
+      "category_id": 4,
+      "name": "SaniBheri",
+      "area_sq_km": "133.8",
+      "wards": "11"
+    },
+    {
+      "id": 591,
+      "district_id": 59,
+      "category_id": 4,
+      "name": "Triveni",
+      "area_sq_km": "85.49",
+      "wards": "10"
+    },
+    {
+      "id": 592,
+      "district_id": 59,
+      "category_id": 4,
+      "name": "Banphikot",
+      "area_sq_km": "190.42",
+      "wards": "10"
+    },
+    {
+      "id": 593,
+      "district_id": 60,
+      "category_id": 4,
+      "name": "Kumakh",
+      "area_sq_km": "177.28",
+      "wards": "7"
+    },
+    {
+      "id": 594,
+      "district_id": 60,
+      "category_id": 4,
+      "name": "Kalimati",
+      "area_sq_km": "500.72",
+      "wards": "7"
+    },
+    {
+      "id": 595,
+      "district_id": 60,
+      "category_id": 4,
+      "name": "Chhatreshwari",
+      "area_sq_km": "150.69",
+      "wards": "7"
+    },
+    {
+      "id": 596,
+      "district_id": 60,
+      "category_id": 4,
+      "name": "Darma",
+      "area_sq_km": "81.46",
+      "wards": "6"
+    },
+    {
+      "id": 597,
+      "district_id": 60,
+      "category_id": 4,
+      "name": "Kapurkot",
+      "area_sq_km": "119.21",
+      "wards": "6"
+    },
+    {
+      "id": 598,
+      "district_id": 60,
+      "category_id": 4,
+      "name": "Triveni",
+      "area_sq_km": "119.11",
+      "wards": "6"
+    },
+    {
+      "id": 599,
+      "district_id": 60,
+      "category_id": 4,
+      "name": "Siddha Kumakh",
+      "area_sq_km": "89.36",
+      "wards": "5"
+    },
+    {
+      "id": 600,
+      "district_id": 60,
+      "category_id": 3,
+      "name": "Bagchaur",
+      "area_sq_km": "163.14",
+      "wards": "12"
+    },
+    {
+      "id": 601,
+      "district_id": 60,
+      "category_id": 3,
+      "name": "Shaarda",
+      "area_sq_km": "198.34",
+      "wards": "15"
+    },
+    {
+      "id": 602,
+      "district_id": 60,
+      "category_id": 3,
+      "name": "Bangad Kupinde",
+      "area_sq_km": "338.21",
+      "wards": "12"
+    },
+    {
+      "id": 603,
+      "district_id": 61,
+      "category_id": 4,
+      "name": "Mudkechula",
+      "area_sq_km": "250.08",
+      "wards": "9"
+    },
+    {
+      "id": 604,
+      "district_id": 61,
+      "category_id": 4,
+      "name": "Kaike",
+      "area_sq_km": "466.6",
+      "wards": "7"
+    },
+    {
+      "id": 605,
+      "district_id": 61,
+      "category_id": 4,
+      "name": "She Phoksundo",
+      "area_sq_km": "123.07",
+      "wards": "9"
+    },
+    {
+      "id": 606,
+      "district_id": 61,
+      "category_id": 4,
+      "name": "Jagadulla",
+      "area_sq_km": "83.31",
+      "wards": "6"
+    },
+    {
+      "id": 607,
+      "district_id": 61,
+      "category_id": 4,
+      "name": "Dolpo Buddha",
+      "area_sq_km": "377.38",
+      "wards": "6"
+    },
+    {
+      "id": 608,
+      "district_id": 61,
+      "category_id": 4,
+      "name": "Chharka Tongsong",
+      "area_sq_km": "345.57",
+      "wards": "6"
+    },
+    {
+      "id": 609,
+      "district_id": 61,
+      "category_id": 3,
+      "name": "Thuli Bheri",
+      "area_sq_km": "421.34",
+      "wards": "11"
+    },
+    {
+      "id": 610,
+      "district_id": 61,
+      "category_id": 3,
+      "name": "Tripurasundari",
+      "area_sq_km": "393.54",
+      "wards": "11"
+    },
+    {
+      "id": 611,
+      "district_id": 62,
+      "category_id": 4,
+      "name": "Simkot",
+      "area_sq_km": "785.89",
+      "wards": "8"
+    },
+    {
+      "id": 612,
+      "district_id": 62,
+      "category_id": 4,
+      "name": "Sarkegad",
+      "area_sq_km": "306.7",
+      "wards": "8"
+    },
+    {
+      "id": 613,
+      "district_id": 62,
+      "category_id": 4,
+      "name": "Adanchuli",
+      "area_sq_km": "150.61",
+      "wards": "6"
+    },
+    {
+      "id": 614,
+      "district_id": 62,
+      "category_id": 4,
+      "name": "Kharpunath",
+      "area_sq_km": "880",
+      "wards": "5"
+    },
+    {
+      "id": 615,
+      "district_id": 62,
+      "category_id": 4,
+      "name": "Tanjakot",
+      "area_sq_km": "159.1",
+      "wards": "5"
+    },
+    {
+      "id": 616,
+      "district_id": 62,
+      "category_id": 4,
+      "name": "Chankheli",
+      "area_sq_km": "1310.41",
+      "wards": "6"
+    },
+    {
+      "id": 617,
+      "district_id": 62,
+      "category_id": 4,
+      "name": "Namkha",
+      "area_sq_km": "2419.64",
+      "wards": "6"
+    },
+    {
+      "id": 618,
+      "district_id": 63,
+      "category_id": 4,
+      "name": "Tatopani",
+      "area_sq_km": "525.56",
+      "wards": "8"
+    },
+    {
+      "id": 619,
+      "district_id": 63,
+      "category_id": 4,
+      "name": "Patarasi",
+      "area_sq_km": "814.07",
+      "wards": "7"
+    },
+    {
+      "id": 620,
+      "district_id": 63,
+      "category_id": 4,
+      "name": "Tila",
+      "area_sq_km": "175.49",
+      "wards": "9"
+    },
+    {
+      "id": 621,
+      "district_id": 63,
+      "category_id": 4,
+      "name": "Kanaka Sundari",
+      "area_sq_km": "225.39",
+      "wards": "8"
+    },
+    {
+      "id": 622,
+      "district_id": 63,
+      "category_id": 4,
+      "name": "Sinja",
+      "area_sq_km": "153.29",
+      "wards": "6"
+    },
+    {
+      "id": 623,
+      "district_id": 63,
+      "category_id": 4,
+      "name": "Hima",
+      "area_sq_km": "132.32",
+      "wards": "7"
+    },
+    {
+      "id": 624,
+      "district_id": 63,
+      "category_id": 4,
+      "name": "Guthichaur",
+      "area_sq_km": "427",
+      "wards": "5"
+    },
+    {
+      "id": 625,
+      "district_id": 63,
+      "category_id": 3,
+      "name": "Chandannath",
+      "area_sq_km": "102.03",
+      "wards": "10"
+    },
+    {
+      "id": 626,
+      "district_id": 64,
+      "category_id": 3,
+      "name": "Khandachakra",
+      "area_sq_km": "133.29",
+      "wards": "11"
+    },
+    {
+      "id": 627,
+      "district_id": 64,
+      "category_id": 3,
+      "name": "Raskot",
+      "area_sq_km": "59.73",
+      "wards": "9"
+    },
+    {
+      "id": 628,
+      "district_id": 64,
+      "category_id": 3,
+      "name": "Tilagufa",
+      "area_sq_km": "262.56",
+      "wards": "11"
+    },
+    {
+      "id": 629,
+      "district_id": 64,
+      "category_id": 4,
+      "name": "Narharinath",
+      "area_sq_km": "143.86",
+      "wards": "9"
+    },
+    {
+      "id": 630,
+      "district_id": 64,
+      "category_id": 4,
+      "name": "Palata",
+      "area_sq_km": "318.84",
+      "wards": "9"
+    },
+    {
+      "id": 631,
+      "district_id": 64,
+      "category_id": 4,
+      "name": "Shubha Kalika",
+      "area_sq_km": "97.32",
+      "wards": "8"
+    },
+    {
+      "id": 632,
+      "district_id": 64,
+      "category_id": 4,
+      "name": "Sanni Triveni",
+      "area_sq_km": "136.71",
+      "wards": "9"
+    },
+    {
+      "id": 633,
+      "district_id": 64,
+      "category_id": 4,
+      "name": "Pachaljharana",
+      "area_sq_km": "166.92",
+      "wards": "9"
+    },
+    {
+      "id": 634,
+      "district_id": 64,
+      "category_id": 4,
+      "name": "Mahawai",
+      "area_sq_km": "322.07",
+      "wards": "7"
+    },
+    {
+      "id": 635,
+      "district_id": 65,
+      "category_id": 4,
+      "name": "Khatyad",
+      "area_sq_km": "281.12",
+      "wards": "11"
+    },
+    {
+      "id": 636,
+      "district_id": 65,
+      "category_id": 4,
+      "name": "Soru",
+      "area_sq_km": "365.8",
+      "wards": "11"
+    },
+    {
+      "id": 637,
+      "district_id": 65,
+      "category_id": 4,
+      "name": "Mugum Karmarong",
+      "area_sq_km": "2106.91",
+      "wards": "9"
+    },
+    {
+      "id": 638,
+      "district_id": 65,
+      "category_id": 3,
+      "name": "Chhayanath Rara",
+      "area_sq_km": "480.67",
+      "wards": "14"
+    },
+    {
+      "id": 639,
+      "district_id": 66,
+      "category_id": 4,
+      "name": "Simta",
+      "area_sq_km": "241.64",
+      "wards": "9"
+    },
+    {
+      "id": 640,
+      "district_id": 66,
+      "category_id": 4,
+      "name": "Barahatal",
+      "area_sq_km": "455.09",
+      "wards": "10"
+    },
+    {
+      "id": 641,
+      "district_id": 66,
+      "category_id": 4,
+      "name": "Chaukune",
+      "area_sq_km": "381.01",
+      "wards": "10"
+    },
+    {
+      "id": 642,
+      "district_id": 66,
+      "category_id": 4,
+      "name": "Chingad",
+      "area_sq_km": "170.19",
+      "wards": "6"
+    },
+    {
+      "id": 643,
+      "district_id": 66,
+      "category_id": 3,
+      "name": "Gurbhakot",
+      "area_sq_km": "228.62",
+      "wards": "14"
+    },
+    {
+      "id": 644,
+      "district_id": 66,
+      "category_id": 3,
+      "name": "Birendranagar",
+      "area_sq_km": "245.06",
+      "wards": "16"
+    },
+    {
+      "id": 645,
+      "district_id": 66,
+      "category_id": 3,
+      "name": "Bheriganga",
+      "area_sq_km": "256.2",
+      "wards": "13"
+    },
+    {
+      "id": 646,
+      "district_id": 66,
+      "category_id": 3,
+      "name": "Panchapuri",
+      "area_sq_km": "329.9",
+      "wards": "11"
+    },
+    {
+      "id": 647,
+      "district_id": 66,
+      "category_id": 3,
+      "name": "Lekbeshi",
+      "area_sq_km": "180.92",
+      "wards": "10"
+    },
+    {
+      "id": 648,
+      "district_id": 67,
+      "category_id": 3,
+      "name": "Dullu",
+      "area_sq_km": "156.77",
+      "wards": "13"
+    },
+    {
+      "id": 649,
+      "district_id": 67,
+      "category_id": 4,
+      "name": "Gurans",
+      "area_sq_km": "164.79",
+      "wards": "8"
+    },
+    {
+      "id": 650,
+      "district_id": 67,
+      "category_id": 4,
+      "name": "Bhairabi",
+      "area_sq_km": "110.46",
+      "wards": "7"
+    },
+    {
+      "id": 651,
+      "district_id": 67,
+      "category_id": 4,
+      "name": "Naumule",
+      "area_sq_km": "228.59",
+      "wards": "8"
+    },
+    {
+      "id": 652,
+      "district_id": 67,
+      "category_id": 4,
+      "name": "Mahabu",
+      "area_sq_km": "110.8",
+      "wards": "6"
+    },
+    {
+      "id": 653,
+      "district_id": 67,
+      "category_id": 4,
+      "name": "Thantikandh",
+      "area_sq_km": "88.22",
+      "wards": "6"
+    },
+    {
+      "id": 654,
+      "district_id": 67,
+      "category_id": 4,
+      "name": "Bhagawatimai",
+      "area_sq_km": "151.52",
+      "wards": "7"
+    },
+    {
+      "id": 655,
+      "district_id": 67,
+      "category_id": 4,
+      "name": "Dungeshwar",
+      "area_sq_km": "105.19",
+      "wards": "6"
+    },
+    {
+      "id": 656,
+      "district_id": 67,
+      "category_id": 3,
+      "name": "Aathabis",
+      "area_sq_km": "168",
+      "wards": "9"
+    },
+    {
+      "id": 657,
+      "district_id": 67,
+      "category_id": 3,
+      "name": "Narayan",
+      "area_sq_km": "110.63",
+      "wards": "11"
+    },
+    {
+      "id": 658,
+      "district_id": 67,
+      "category_id": 3,
+      "name": "Chamunda Bindrasaini",
+      "area_sq_km": "90.6",
+      "wards": "9"
+    },
+    {
+      "id": 659,
+      "district_id": 68,
+      "category_id": 3,
+      "name": "Chhedagad",
+      "area_sq_km": "284.2",
+      "wards": "13"
+    },
+    {
+      "id": 660,
+      "district_id": 68,
+      "category_id": 3,
+      "name": "Bheri",
+      "area_sq_km": "219.77",
+      "wards": "13"
+    },
+    {
+      "id": 661,
+      "district_id": 68,
+      "category_id": 3,
+      "name": "Nalgad",
+      "area_sq_km": "387.44",
+      "wards": "13"
+    },
+    {
+      "id": 662,
+      "district_id": 68,
+      "category_id": 4,
+      "name": "Junichande",
+      "area_sq_km": "346.21",
+      "wards": "11"
+    },
+    {
+      "id": 663,
+      "district_id": 68,
+      "category_id": 4,
+      "name": "Kuse",
+      "area_sq_km": "273.97",
+      "wards": "9"
+    },
+    {
+      "id": 664,
+      "district_id": 68,
+      "category_id": 4,
+      "name": "Barekot",
+      "area_sq_km": "577.5",
+      "wards": "9"
+    },
+    {
+      "id": 665,
+      "district_id": 68,
+      "category_id": 4,
+      "name": "Shivalaya",
+      "area_sq_km": "134.26",
+      "wards": "9"
+    },
+    {
+      "id": 666,
+      "district_id": 69,
+      "category_id": 3,
+      "name": "Mahakali",
+      "area_sq_km": "135.11",
+      "wards": "9"
+    },
+    {
+      "id": 667,
+      "district_id": 69,
+      "category_id": 3,
+      "name": "Shailyashikhar",
+      "area_sq_km": "117.81",
+      "wards": "9"
+    },
+    {
+      "id": 668,
+      "district_id": 69,
+      "category_id": 4,
+      "name": "Naugad",
+      "area_sq_km": "180.27",
+      "wards": "6"
+    },
+    {
+      "id": 669,
+      "district_id": 69,
+      "category_id": 4,
+      "name": "Malikarjun",
+      "area_sq_km": "100.82",
+      "wards": "8"
+    },
+    {
+      "id": 670,
+      "district_id": 69,
+      "category_id": 4,
+      "name": "Marma",
+      "area_sq_km": "208.06",
+      "wards": "6"
+    },
+    {
+      "id": 671,
+      "district_id": 69,
+      "category_id": 4,
+      "name": "Lekam",
+      "area_sq_km": "83.98",
+      "wards": "6"
+    },
+    {
+      "id": 672,
+      "district_id": 69,
+      "category_id": 4,
+      "name": "Duhun",
+      "area_sq_km": "65.35",
+      "wards": "5"
+    },
+    {
+      "id": 673,
+      "district_id": 69,
+      "category_id": 4,
+      "name": "Vyans",
+      "area_sq_km": "839.26",
+      "wards": "6"
+    },
+    {
+      "id": 674,
+      "district_id": 69,
+      "category_id": 4,
+      "name": "Apihimal",
+      "area_sq_km": "613.95",
+      "wards": "6"
+    },
+    {
+      "id": 675,
+      "district_id": 70,
+      "category_id": 3,
+      "name": "Jayaprithvi",
+      "area_sq_km": "166.79",
+      "wards": "11"
+    },
+    {
+      "id": 676,
+      "district_id": 70,
+      "category_id": 3,
+      "name": "Bungal",
+      "area_sq_km": "447.59",
+      "wards": "11"
+    },
+    {
+      "id": 677,
+      "district_id": 70,
+      "category_id": 4,
+      "name": "Kedarsyu",
+      "area_sq_km": "113.91",
+      "wards": "9"
+    },
+    {
+      "id": 678,
+      "district_id": 70,
+      "category_id": 4,
+      "name": "Thalara",
+      "area_sq_km": "105.51",
+      "wards": "9"
+    },
+    {
+      "id": 679,
+      "district_id": 70,
+      "category_id": 4,
+      "name": "Bitthadchir",
+      "area_sq_km": "86.15",
+      "wards": "9"
+    },
+    {
+      "id": 680,
+      "district_id": 70,
+      "category_id": 4,
+      "name": "Chhabis Pathibhera",
+      "area_sq_km": "116.34",
+      "wards": "7"
+    },
+    {
+      "id": 681,
+      "district_id": 70,
+      "category_id": 4,
+      "name": "Khaptadchhanna",
+      "area_sq_km": "113.52",
+      "wards": "7"
+    },
+    {
+      "id": 682,
+      "district_id": 70,
+      "category_id": 4,
+      "name": "Masta",
+      "area_sq_km": "109.24",
+      "wards": "7"
+    },
+    {
+      "id": 683,
+      "district_id": 70,
+      "category_id": 4,
+      "name": "Durgathali",
+      "area_sq_km": "61.83",
+      "wards": "7"
+    },
+    {
+      "id": 684,
+      "district_id": 70,
+      "category_id": 4,
+      "name": "Talkot",
+      "area_sq_km": "335.26",
+      "wards": "7"
+    },
+    {
+      "id": 685,
+      "district_id": 70,
+      "category_id": 4,
+      "name": "Surma",
+      "area_sq_km": "270.8",
+      "wards": "5"
+    },
+    {
+      "id": 686,
+      "district_id": 70,
+      "category_id": 4,
+      "name": "Saipal",
+      "area_sq_km": "1467.27",
+      "wards": "5"
+    },
+    {
+      "id": 687,
+      "district_id": 71,
+      "category_id": 3,
+      "name": "Badimalika",
+      "area_sq_km": "276",
+      "wards": "9"
+    },
+    {
+      "id": 688,
+      "district_id": 71,
+      "category_id": 3,
+      "name": "Triveni",
+      "area_sq_km": "170.32",
+      "wards": "9"
+    },
+    {
+      "id": 689,
+      "district_id": 71,
+      "category_id": 3,
+      "name": "Budhiganga",
+      "area_sq_km": "59.2",
+      "wards": "10"
+    },
+    {
+      "id": 690,
+      "district_id": 71,
+      "category_id": 3,
+      "name": "Budhinanda",
+      "area_sq_km": "232.48",
+      "wards": "10"
+    },
+    {
+      "id": 691,
+      "district_id": 71,
+      "category_id": 4,
+      "name": "Khaptad Chhededaha",
+      "area_sq_km": "135.08",
+      "wards": "7"
+    },
+    {
+      "id": 692,
+      "district_id": 71,
+      "category_id": 4,
+      "name": "Swami Kartik Khapar",
+      "area_sq_km": "110.55",
+      "wards": "5"
+    },
+    {
+      "id": 693,
+      "district_id": 71,
+      "category_id": 4,
+      "name": "Jagannath",
+      "area_sq_km": "171.72",
+      "wards": "6"
+    },
+    {
+      "id": 694,
+      "district_id": 71,
+      "category_id": 4,
+      "name": "Himali",
+      "area_sq_km": "830.33",
+      "wards": "7"
+    },
+    {
+      "id": 695,
+      "district_id": 71,
+      "category_id": 4,
+      "name": "Gaumul",
+      "area_sq_km": "314.66",
+      "wards": "6"
+    },
+    {
+      "id": 696,
+      "district_id": 72,
+      "category_id": 3,
+      "name": "Dashrathchanda",
+      "area_sq_km": "135.15",
+      "wards": "11"
+    },
+    {
+      "id": 697,
+      "district_id": 72,
+      "category_id": 3,
+      "name": "Patan",
+      "area_sq_km": "219.26",
+      "wards": "10"
+    },
+    {
+      "id": 698,
+      "district_id": 72,
+      "category_id": 3,
+      "name": "Melauli",
+      "area_sq_km": "119.43",
+      "wards": "9"
+    },
+    {
+      "id": 699,
+      "district_id": 72,
+      "category_id": 3,
+      "name": "Purchaudi",
+      "area_sq_km": "198.52",
+      "wards": "10"
+    },
+    {
+      "id": 700,
+      "district_id": 72,
+      "category_id": 4,
+      "name": "Dogdakedar",
+      "area_sq_km": "126.38",
+      "wards": "8"
+    },
+    {
+      "id": 701,
+      "district_id": 72,
+      "category_id": 4,
+      "name": "Dilashaini",
+      "area_sq_km": "125.28",
+      "wards": "7"
+    },
+    {
+      "id": 702,
+      "district_id": 72,
+      "category_id": 4,
+      "name": "Sigas",
+      "area_sq_km": "245.44",
+      "wards": "9"
+    },
+    {
+      "id": 703,
+      "district_id": 72,
+      "category_id": 4,
+      "name": "Pancheshwar",
+      "area_sq_km": "120.41",
+      "wards": "6"
+    },
+    {
+      "id": 704,
+      "district_id": 72,
+      "category_id": 4,
+      "name": "Surnaya",
+      "area_sq_km": "124.52",
+      "wards": "8"
+    },
+    {
+      "id": 705,
+      "district_id": 72,
+      "category_id": 4,
+      "name": "Shivanath",
+      "area_sq_km": "81.65",
+      "wards": "6"
+    },
+    {
+      "id": 706,
+      "district_id": 73,
+      "category_id": 3,
+      "name": "Dipayal Silgadhi",
+      "area_sq_km": "162.62",
+      "wards": "9"
+    },
+    {
+      "id": 707,
+      "district_id": 73,
+      "category_id": 3,
+      "name": "Shikhar",
+      "area_sq_km": "585.37",
+      "wards": "11"
+    },
+    {
+      "id": 708,
+      "district_id": 73,
+      "category_id": 4,
+      "name": "Aadarsha",
+      "area_sq_km": "128.47",
+      "wards": "7"
+    },
+    {
+      "id": 709,
+      "district_id": 73,
+      "category_id": 4,
+      "name": "Purbichauki",
+      "area_sq_km": "117.66",
+      "wards": "7"
+    },
+    {
+      "id": 710,
+      "district_id": 73,
+      "category_id": 4,
+      "name": "K.I.Singh",
+      "area_sq_km": "127.01",
+      "wards": "7"
+    },
+    {
+      "id": 711,
+      "district_id": 73,
+      "category_id": 4,
+      "name": "Jorayal",
+      "area_sq_km": "419.09",
+      "wards": "6"
+    },
+    {
+      "id": 712,
+      "district_id": 73,
+      "category_id": 4,
+      "name": "Sayal",
+      "area_sq_km": "122.72",
+      "wards": "6"
+    },
+    {
+      "id": 713,
+      "district_id": 73,
+      "category_id": 4,
+      "name": "Bogatan-Phudsil",
+      "area_sq_km": "300.22",
+      "wards": "7"
+    },
+    {
+      "id": 714,
+      "district_id": 73,
+      "category_id": 4,
+      "name": "Badikedar",
+      "area_sq_km": "332.55",
+      "wards": "5"
+    },
+    {
+      "id": 715,
+      "district_id": 74,
+      "category_id": 4,
+      "name": "Ramaroshan",
+      "area_sq_km": "173.33",
+      "wards": "7"
+    },
+    {
+      "id": 716,
+      "district_id": 74,
+      "category_id": 4,
+      "name": "Chaurpati",
+      "area_sq_km": "182.16",
+      "wards": "7"
+    },
+    {
+      "id": 717,
+      "district_id": 74,
+      "category_id": 4,
+      "name": "Turmakhand",
+      "area_sq_km": "232.07",
+      "wards": "8"
+    },
+    {
+      "id": 718,
+      "district_id": 74,
+      "category_id": 4,
+      "name": "Mellekh",
+      "area_sq_km": "134.78",
+      "wards": "8"
+    },
+    {
+      "id": 719,
+      "district_id": 74,
+      "category_id": 4,
+      "name": "Dhakari",
+      "area_sq_km": "227.88",
+      "wards": "8"
+    },
+    {
+      "id": 720,
+      "district_id": 74,
+      "category_id": 4,
+      "name": "Bannigadi Jayagad",
+      "area_sq_km": "58.26",
+      "wards": "6"
+    },
+    {
+      "id": 721,
+      "district_id": 74,
+      "category_id": 3,
+      "name": "Mangalsen",
+      "area_sq_km": "220.14",
+      "wards": "14"
+    },
+    {
+      "id": 722,
+      "district_id": 74,
+      "category_id": 3,
+      "name": "Kamalbazar",
+      "area_sq_km": "120.78",
+      "wards": "10"
+    },
+    {
+      "id": 723,
+      "district_id": 74,
+      "category_id": 3,
+      "name": "Sanfebagar",
+      "area_sq_km": "166.71",
+      "wards": "14"
+    },
+    {
+      "id": 724,
+      "district_id": 74,
+      "category_id": 3,
+      "name": "Panchadewal Binayak",
+      "area_sq_km": "147.75",
+      "wards": "9"
+    },
+    {
+      "id": 725,
+      "district_id": 75,
+      "category_id": 4,
+      "name": "Navadurga",
+      "area_sq_km": "141.89",
+      "wards": "5"
+    },
+    {
+      "id": 726,
+      "district_id": 75,
+      "category_id": 4,
+      "name": "Aalitaal",
+      "area_sq_km": "292.87",
+      "wards": "8"
+    },
+    {
+      "id": 727,
+      "district_id": 75,
+      "category_id": 4,
+      "name": "Ganyapadhura",
+      "area_sq_km": "135.65",
+      "wards": "5"
+    },
+    {
+      "id": 728,
+      "district_id": 75,
+      "category_id": 4,
+      "name": "Bhageshwar",
+      "area_sq_km": "233.38",
+      "wards": "5"
+    },
+    {
+      "id": 729,
+      "district_id": 75,
+      "category_id": 4,
+      "name": "Ajaymeru",
+      "area_sq_km": "148.9",
+      "wards": "6"
+    },
+    {
+      "id": 730,
+      "district_id": 75,
+      "category_id": 3,
+      "name": "Amargadhi",
+      "area_sq_km": "139.33",
+      "wards": "11"
+    },
+    {
+      "id": 731,
+      "district_id": 75,
+      "category_id": 3,
+      "name": "Parshuram",
+      "area_sq_km": "414.07",
+      "wards": "12"
+    },
+    {
+      "id": 732,
+      "district_id": 76,
+      "category_id": 3,
+      "name": "Bhimdatta",
+      "area_sq_km": "171.8",
+      "wards": "19"
+    },
+    {
+      "id": 733,
+      "district_id": 76,
+      "category_id": 3,
+      "name": "Punarbas",
+      "area_sq_km": "103.71",
+      "wards": "11"
+    },
+    {
+      "id": 734,
+      "district_id": 76,
+      "category_id": 3,
+      "name": "Bedkot",
+      "area_sq_km": "159.92",
+      "wards": "10"
+    },
+    {
+      "id": 735,
+      "district_id": 76,
+      "category_id": 3,
+      "name": "Mahakali",
+      "area_sq_km": "56.84",
+      "wards": "10"
+    },
+    {
+      "id": 736,
+      "district_id": 76,
+      "category_id": 3,
+      "name": "Shuklaphanta",
+      "area_sq_km": "162.57",
+      "wards": "12"
+    },
+    {
+      "id": 737,
+      "district_id": 76,
+      "category_id": 3,
+      "name": "Belauri",
+      "area_sq_km": "123.37",
+      "wards": "10"
+    },
+    {
+      "id": 738,
+      "district_id": 76,
+      "category_id": 3,
+      "name": "Krishnapur",
+      "area_sq_km": "252.75",
+      "wards": "9"
+    },
+    {
+      "id": 739,
+      "district_id": 76,
+      "category_id": 4,
+      "name": "Laljhadi",
+      "area_sq_km": "154.65",
+      "wards": "6"
+    },
+    {
+      "id": 740,
+      "district_id": 76,
+      "category_id": 4,
+      "name": "Beldandi",
+      "area_sq_km": "36.7",
+      "wards": "5"
+    },
+    {
+      "id": 741,
+      "district_id": 77,
+      "category_id": 4,
+      "name": "Janaki",
+      "area_sq_km": "107.27",
+      "wards": "9"
+    },
+    {
+      "id": 742,
+      "district_id": 77,
+      "category_id": 4,
+      "name": "Kailari",
+      "area_sq_km": "233.27",
+      "wards": "9"
+    },
+    {
+      "id": 743,
+      "district_id": 77,
+      "category_id": 4,
+      "name": "Joshipur",
+      "area_sq_km": "65.57",
+      "wards": "7"
+    },
+    {
+      "id": 744,
+      "district_id": 77,
+      "category_id": 4,
+      "name": "Bardagoriya",
+      "area_sq_km": "77.26",
+      "wards": "6"
+    },
+    {
+      "id": 745,
+      "district_id": 77,
+      "category_id": 4,
+      "name": "Mohanyal",
+      "area_sq_km": "626.95",
+      "wards": "7"
+    },
+    {
+      "id": 746,
+      "district_id": 77,
+      "category_id": 4,
+      "name": "Chure",
+      "area_sq_km": "493.18",
+      "wards": "6"
+    },
+    {
+      "id": 747,
+      "district_id": 77,
+      "category_id": 3,
+      "name": "Tikapur",
+      "area_sq_km": "118.33",
+      "wards": "9"
+    },
+    {
+      "id": 748,
+      "district_id": 77,
+      "category_id": 3,
+      "name": "Ghodaghodi",
+      "area_sq_km": "354.45",
+      "wards": "12"
+    },
+    {
+      "id": 749,
+      "district_id": 77,
+      "category_id": 3,
+      "name": "Lamkichuha",
+      "area_sq_km": "225",
+      "wards": "10"
+    },
+    {
+      "id": 750,
+      "district_id": 77,
+      "category_id": 3,
+      "name": "Bhajni",
+      "area_sq_km": "176.25",
+      "wards": "9"
+    },
+    {
+      "id": 751,
+      "district_id": 77,
+      "category_id": 3,
+      "name": "Godawari",
+      "area_sq_km": "308.63",
+      "wards": "12"
+    },
+    {
+      "id": 752,
+      "district_id": 77,
+      "category_id": 3,
+      "name": "Gauriganga",
+      "area_sq_km": "244.44",
+      "wards": "11"
+    },
+    {
+      "id": 753,
+      "district_id": 77,
+      "category_id": 2,
+      "name": "Dhangadhi",
+      "area_sq_km": "261.75",
+      "wards": "19"
+    }
+  ]

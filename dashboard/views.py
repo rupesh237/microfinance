@@ -1,29 +1,44 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
+
 from django.contrib.auth import authenticate, login, logout
-from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import User
+from django.contrib import messages
+
+from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 
-import nepali_datetime
 from django.db import transaction
+from django.db.models import Count, Avg, Sum
+
+from django.utils import timezone
+
+from decimal import Decimal
+from datetime import date, timedelta
+from dateutil.relativedelta import relativedelta
+import nepali_datetime
 
 from django.views.generic import (
     CreateView, ListView, UpdateView, DeleteView )
 
-from dashboard.models import Employee, Province, District, Municipality, Branch, GRoup, Member, Center,AddressInformation, PersonalInformation, FamilyInformation, LivestockInformation, HouseInformation, LandInformation, IncomeInformation, ExpensesInformation
-from savings.models import SavingsAccount, INITIAL_SAVING_ACCOUNT_TYPE, Statement
+from dashboard.mixins import RoleRequiredMixin
 
-from dashboard.forms import BranchForm, EmployeeForm, CenterForm, GroupForm
+from dashboard.models import (Province, District, Municipality, 
+                              Branch, Employee, GRoup, Center,
+                              Member, AddressInformation, 
+                              PersonalInformation, PersonalMemberDocument, 
+                              FamilyInformation, FamilyMemberDocument,  
+                              LivestockInformation, HouseInformation, LandInformation, 
+                              IncomeInformation, ExpensesInformation)
+from dashboard.forms import (BranchForm, EmployeeForm, CenterForm, GroupForm, 
+                             PersonalMemberDocumentForm)
 
-from .mixins import RoleRequiredMixin
-
-from django.utils import timezone
-from datetime import date, datetime
+from savings.models import SavingsAccount, CashSheet, PaymentSheet, INITIAL_SAVING_ACCOUNT_TYPE, Statement
+from loans.models import Loan, EMIPayment
+from core.models import Teller, Voucher
 
 
 def user_login(request):
@@ -63,113 +78,370 @@ def dashboard(request):
     except Employee.DoesNotExist:
         messages.error(request, 'Employee profile not found!! please contact to the Admin')        
         return redirect('login')
+
+def calculate_due_principal(branch):
+    """
+    Calculate the total due principal for all loans in a branch.
+    """
+    today = timezone.now().date()
+    time_frame = today - relativedelta(months=1)  # 1 month ago
+    loans = Loan.objects.filter(member__center__branch=branch, status="active")
     
+    due_principal = Decimal('0.00')
+
+    for loan in loans:
+        # Get the last EMI payment
+        last_emi_payment = EMIPayment.objects.filter(loan=loan).order_by('-payment_date').first()
+
+        # Get the EMI schedule breakdown
+        emi_schedule = loan.calculate_emi_breakdown()
+
+        if last_emi_payment:
+            # If the last payment was made over a month ago, check overdue EMIs
+            if last_emi_payment.payment_date < time_frame:
+                for emi in emi_schedule:
+                    if emi['date'] < today:  # EMI date has passed
+                        due_principal += emi['emi_amount']
+        else:
+            # If no payment has been made at all, sum all missed EMIs
+            for emi in emi_schedule:
+                if emi['date'] < today:  # EMI date has passed
+                    due_principal += emi['emi_amount']
+    
+    return due_principal
+
 @login_required
 def admin_dashboard(request):
-    members =Member.objects.all().select_related('personalInfo')
-    address_info= None
-    try:
-        for member in members:
-            address_info = member.address_info.filter(address_type='current').first()
-    except:
-        address_info = 'No Address Found!'
-    groups = GRoup.objects.all()
+    branch = request.user.employee_detail.branch
+    members =Member.objects.all()
     centers = Center.objects.all()
-    employees = Employee.objects.all()
+
+    #Member Summary
+    total_centers = Center.objects.filter(branch=branch).distinct().count()
+    active_members = members.filter(center__branch=branch, status="A").count()
+    droupout_members = members.filter(center__branch=branch, status="D").count()
+    loanee_members = members.filter(center__branch=branch, status="A", loans__isnull=False).count()
+    # Query to count all members in each center for the given branch
+    members_per_center = members.filter(center__branch=branch).values('center').annotate(member_count=Count('id'))
+    # Calculate the total number of members across all centers
+    total_members = sum(item['member_count'] for item in members_per_center)
+    # Calculate the average number of members per center
+    average_members_per_center = round(total_members / total_centers, 2) if total_centers else 0
+    
+    # Deposit and Loan Summary
+    cumulative_savings_deposit = (
+        Statement.objects.filter(member__center__branch=branch, transaction_type="credit")
+        .aggregate(total=Sum('cr_amount'))['total'] or Decimal('0.00')
+    )
+    cumulative_loan_deposit = (
+        EMIPayment.objects.filter(loan__member__center__branch=branch)
+        .aggregate(total_principal_paid=Sum("amount_paid"))['total_principal_paid'] or Decimal('0.00')
+    )
+    total_cumulative_deposit = cumulative_savings_deposit + cumulative_loan_deposit
+
+    cumulative_savings_withdraw = (
+        Statement.objects.filter(member__center__branch=branch, transaction_type="debit")
+        .aggregate(total=Sum('dr_amount'))['total'] or Decimal('0.00')
+    )
+    cumulative_loan_withdraw = (
+        Voucher.objects.filter(branch=branch, voucher_type="Payment", category="Loan")
+        .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    )
+    total_cumulative_withdraw = cumulative_savings_withdraw + cumulative_loan_withdraw
+    total_saving = (
+        CashSheet.objects.filter(member__center__branch=branch)
+        .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    )
+
+    # Loan Summary
+    total_disbursement = (
+        Loan.objects.filter(member__center__branch=branch, status="active")
+        .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    )
+    cumulative_recovery = cumulative_loan_deposit  # Since it's already calculated
+    total_outstanding_loan = total_disbursement - cumulative_recovery
+    overdue_principal = calculate_due_principal(branch=branch)
+
+    # EMI 
+    active_loans = Loan.objects.filter(member__center__branch=branch, status="active")
+    total_emi = sum(loan.total_emi_amount for loan in active_loans) if active_loans.exists() else Decimal("0.00")
+    # Calculate remaining EMI balance
+    remaining_emi = total_emi - cumulative_recovery
+    net_profit = total_emi - remaining_emi
+
     return render(request, "dashboard/admin_dashboard.html",{
         'bank': 'Admin',
-        'groups': groups,
-        'centers': centers,
-        'employees': employees,
-        'members': members,
-        'address_info': address_info
+        'total_centers': total_centers,
+        'active_members': active_members,
+        'droupout_members': droupout_members,
+        'loanee_members': loanee_members,
+        'average_members_per_center': average_members_per_center,
+        'cummulative_deposit': total_cumulative_deposit,
+        'cummulative_withdraw': total_cumulative_withdraw,
+        'total_saving': total_saving,
+        'total_disbursement': total_disbursement,
+        'cummulative_recovery': cumulative_recovery,
+        'total_outstanding_loan': total_outstanding_loan,
+        'overdue_principal': overdue_principal,
+        'total_emi': total_emi,
+        'remaining_emi': remaining_emi,
+        'net_profit': net_profit,
     })
 
 @login_required
 def manager_dashboard(request):
-    employee = Employee.objects.get(user= request.user)
-    branch = employee.branch
+    branch = request.user.employee_detail.branch
+    members =Member.objects.filter(center__branch=branch)
+    centers = Center.objects.filter(branch=branch).all()
+
+    #Member Summary
+    total_centers = centers.distinct().count()
+    active_members = members.filter(center__branch=branch, status="A").count()
+    droupout_members = members.filter(center__branch=branch, status="D").count()
+    loanee_members = members.filter(center__branch=branch, status="A", loans__isnull=False).count()
+    # Query to count all members in each center for the given branch
+    total_members = members.count()
+    members_per_center = members.values('center').annotate(member_count=Count('id'))
+    average_members_per_center = round(total_members / total_centers, 2) if total_centers else 0
+
+    # Deposit and Loan Summary
+    cumulative_savings_deposit = (
+        Statement.objects.filter(member__center__branch=branch, transaction_type="credit")
+        .aggregate(total=Sum('cr_amount'))['total'] or Decimal('0.00')
+    )
+    cumulative_loan_deposit = (
+        EMIPayment.objects.filter(loan__member__center__branch=branch)
+        .aggregate(total_principal_paid=Sum("amount_paid"))['total_principal_paid'] or Decimal('0.00')
+    )
+    total_cumulative_deposit = cumulative_savings_deposit + cumulative_loan_deposit
+
+    cumulative_savings_withdraw = (
+        Statement.objects.filter(member__center__branch=branch, transaction_type="debit")
+        .aggregate(total=Sum('dr_amount'))['total'] or Decimal('0.00')
+    )
+    cumulative_loan_withdraw = (
+        Voucher.objects.filter(branch=branch, voucher_type="Payment", category="Loan")
+        .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    )
+    total_cumulative_withdraw = cumulative_savings_withdraw + cumulative_loan_withdraw
+    total_saving = (
+        CashSheet.objects.filter(member__center__branch=branch)
+        .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    )
+
+    # Loan Summary
+    total_disbursement = (
+        Loan.objects.filter(member__center__branch=branch, status="active")
+        .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    )
+    cumulative_recovery = cumulative_loan_deposit  # Since it's already calculated
+    total_outstanding_loan = total_disbursement - cumulative_recovery
+    overdue_principal = calculate_due_principal(branch=branch)
+
     return render(request, "dashboard/manager_dashboard.html",{
         'branch': branch,
-        'bank': 'Manager'
+        'bank': 'Manager',
+        'total_centers': total_centers,
+        'active_members': active_members,
+        'droupout_members': droupout_members,
+        'loanee_members': loanee_members,
+        'average_members_per_center': average_members_per_center,
+        'cummulative_deposit': total_cumulative_deposit,
+        'cummulative_withdraw': total_cumulative_withdraw,
+        'total_saving': total_saving,
+        'total_disbursement': total_disbursement,
+        'cummulative_recovery': cumulative_recovery,
+        'total_outstanding_loan': total_outstanding_loan,
+        'overdue_principal': overdue_principal,
     })
 
 @login_required
 def employee_dashboard(request):
-    employee = Employee.objects.get(user= request.user)
-    branch = employee.branch
+    branch = request.user.employee_detail.branch
+    members =Member.objects.filter(center__branch=branch)
+    centers = Center.objects.filter(branch=branch).all()
+
+    #Member Summary
+    total_centers = centers.distinct().count()
+    active_members = members.filter(center__branch=branch, status="A").count()
+    droupout_members = members.filter(center__branch=branch, status="D").count()
+    loanee_members = members.filter(center__branch=branch, status="A", loans__isnull=False).count()
+    # Query to count all members in each center for the given branch
+    total_members = members.count()
+    members_per_center = members.values('center').annotate(member_count=Count('id'))
+    average_members_per_center = round(total_members / total_centers, 2) if total_centers else 0
+
+    # Deposit and Loan Summary
+    cumulative_savings_deposit = (
+        Statement.objects.filter(member__center__branch=branch, transaction_type="credit")
+        .aggregate(total=Sum('cr_amount'))['total'] or Decimal('0.00')
+    )
+    cumulative_loan_deposit = (
+        EMIPayment.objects.filter(loan__member__center__branch=branch)
+        .aggregate(total_principal_paid=Sum("amount_paid"))['total_principal_paid'] or Decimal('0.00')
+    )
+    total_cumulative_deposit = cumulative_savings_deposit + cumulative_loan_deposit
+
+    cumulative_savings_withdraw = (
+        Statement.objects.filter(member__center__branch=branch, transaction_type="debit")
+        .aggregate(total=Sum('dr_amount'))['total'] or Decimal('0.00')
+    )
+    cumulative_loan_withdraw = (
+        Voucher.objects.filter(branch=branch, voucher_type="Payment", category="Loan")
+        .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    )
+    total_cumulative_withdraw = cumulative_savings_withdraw + cumulative_loan_withdraw
+    total_saving = (
+        CashSheet.objects.filter(member__center__branch=branch)
+        .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    )
+
+    # Loan Summary
+    total_disbursement = (
+        Loan.objects.filter(member__center__branch=branch, status="active")
+        .aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    )
+    cumulative_recovery = cumulative_loan_deposit  # Since it's already calculated
+    total_outstanding_loan = total_disbursement - cumulative_recovery
+    overdue_principal = calculate_due_principal(branch=branch)
+        
     return render(request, "dashboard/employee_dashboard.html",{
         'branch': branch,
-        'bank': 'Staff'
+        'bank': 'Staff',
+        'total_centers': total_centers,
+        'active_members': active_members,
+        'droupout_members': droupout_members,
+        'loanee_members': loanee_members,
+        'average_members_per_center': average_members_per_center,
+        'cummulative_deposit': total_cumulative_deposit,
+        'cummulative_withdraw': total_cumulative_withdraw,
+        'total_saving': total_saving,
+        'total_disbursement': total_disbursement,
+        'cummulative_recovery': cumulative_recovery,
+        'total_outstanding_loan': total_outstanding_loan,
+        'overdue_principal': overdue_principal,
     })
 
+
+## BRANCH ##
+class BranchCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
+    model = Branch
+    form_class = BranchForm
+    template_name = 'branch/add_branch.html'
+    success_url = reverse_lazy('branch_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Branch created successfully!')
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        return super().form_invalid(form)
+    
 @login_required
-def add_branch(request):
-    if request.method =="POST":
-        form = BranchForm(request.POST)
-        if form.is_valid:
-            form.save()
-            return redirect('branch_list')
+def branch_list_view(request):
+    branches = Branch.objects.all().order_by('id')
+    paginator = Paginator(branches, 10)  # Show 10 centers per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    managers = {branch.id: Employee.objects.filter(branch=branch, role='manager').all() for branch in branches}
+    return render(request, 'branch/branch_list.html', {'branches': page_obj, 'managers': managers})
+
+class BranchUpdateView(LoginRequiredMixin, RoleRequiredMixin, UpdateView):
+    model = Branch
+    form_class = BranchForm
+    template_name = 'branch/update_branch.html'
+    success_url = reverse_lazy('branch_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, "Branch updated successfully!")
+        return super().form_valid(form)
+
+class BranchDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
+    model = Branch
+    success_url = reverse_lazy('branch_list')
+    template_name = 'branch/delete_branch.html'
+
+    def form_valid(self, form):
+        messages.error(self.request, "Branch deleted successfully!")
+        return super().form_valid(form)
+
+
+## EMPLOYEE ##
+class EmployeeListView(LoginRequiredMixin, RoleRequiredMixin, ListView):
+    model = Employee
+    template_name = 'employee/employee_list.html'
+    context_object_name = 'employees'
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_superuser:
+            queryset = Employee.objects.all().order_by('name')
         else:
-            messages.error(request, 'Error saving branch, please try again')
-    form = BranchForm()
-    return render(request, "branch/add_branch.html",{
-        'form': form
-    })
+            queryset = Employee.objects.filter(branch=user.employee_detail.branch).order_by('name')
 
-@login_required
-def update_branch(request, pk):
-    branch = get_object_or_404(Branch, pk=pk)
-    form = BranchForm(instance=branch)
-    # can also check the user status or the user role
-    if request.method == 'POST':
-        form = BranchForm(request.POST, instance=branch)
-        if form.is_valid():
-            branch = form.save()
-            message=messages.success(request, 'Successfully updated the branch!!')
-            return redirect('branch_list')
+        paginator = Paginator(queryset, 10)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        return page_obj
 
-        return messages.error(request, form.errors)
-    return render(request, 'branch/update_branch.html',{
-        'form': form,
-        'branch': branch
-    })
+class EmployeeCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
+    model = Employee
+    form_class = EmployeeForm
+    template_name = 'employee/add_employee.html'
+    success_url = reverse_lazy('employee_list')
 
-@login_required
-def delete_branch(request, pk):
-    branch = get_object_or_404(Branch, pk)
-    if request.method == 'POST':
-        branch.delete()
-        return redirect('branch_list')
-    return messages.error(request, 'Error while deleting branch, please try again')
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
-@login_required
-def add_employee(request):
-    if request.method == "POST":
-        form = EmployeeForm(request.POST, request.FILES)
-        if form.is_valid():
-            cleaned_data = form.cleaned_data
-            # Create the user instance
-            user = User.objects.create_user(
+    def form_valid(self, form):
+        # Set the user who created the center
+        cleaned_data = form.cleaned_data
+        user = User.objects.create_user(
                 username=cleaned_data['email'],
                 email=cleaned_data['email'],
                 password=cleaned_data['password']
-            )
-            # Create the employee instance but do not save to the database yet
-            employee = form.save(commit=False)
-            # Assign the user to the employee
-            employee.user = user
-            # Save the employee instance
-            employee.save()
-            return redirect('employee_list')
-        else:
-            messages.error(request, 'Error while adding Employee, please try again')
-    else:
-        form = EmployeeForm()
+        )
+        # Create the employee instance but do not save to the database yet
+        employee = form.save(commit=False)
+        # Assign the user to the employee
+        employee.user = user
+        employee.save()
+        # Create teller instance for employee
+        teller = Teller.objects.create(employee=user, branch=employee.branch)
+        print(teller)
+        messages.success(self.request, 'Employee added successfully!')
+        return super().form_valid(form)
+    def form_invalid(self, form):
+        # messages.error(self.request, f'Error adding employee: {form.errors}')
+        return super().form_invalid(form)
     
-    return render(request, 'employee/add_employee.html', {
-        'form': form
-    })
+class EmployeeUpdateView(LoginRequiredMixin, RoleRequiredMixin, UpdateView):
+    model = Employee
+    form_class = EmployeeForm
+    template_name = 'employee/edit_employee.html'
+    success_url = reverse_lazy('employee_list')
+
+    def get_form_kwargs(self):
+        kwargs =  super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+    
+    def form_valid(self, form):
+        messages.success(self.request, "Employee details updated successfully!")
+        return super().form_valid(form)
+
+    
+class EmployeeDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
+    model = Employee
+    success_url = reverse_lazy('employee_list')
+    template_name = 'employee/delete_employee.html'
+
+    def form_valid(self, form):
+        messages.error(self.request, "Employee deleted successfully!")
+        return super().form_valid(form)
 
 
 def load_districts(request):
@@ -197,7 +469,12 @@ class CenterListView(LoginRequiredMixin, ListView):
     template_name = 'center/center_list.html'
 
     def get_queryset(self):
-        queryset = Center.objects.all()
+        user = self.request.user
+        if user.is_superuser:
+            queryset = Center.objects.all().order_by('formed_date')
+        else:
+            queryset = Center.objects.filter(branch=user.employee_detail.branch).all().order_by('formed_date')
+
         paginator = Paginator(queryset, 10)  # 10 centers per page
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
@@ -249,11 +526,19 @@ class CenterUpdateView(LoginRequiredMixin, RoleRequiredMixin, UpdateView):
         kwargs =  super().get_form_kwargs()
         kwargs['user'] = self.request.user
         return kwargs
+    
+    def form_valid(self, form):
+        messages.success(self.request, "Center updated successfully!")
+        return super().form_valid(form)
 
 class CenterDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
     model = Center
     success_url = reverse_lazy('center_list')
     template_name = 'center/delete_center.html'
+
+    def form_valid(self, form):
+        messages.error(self.request, "Center deleted successfully!")
+        return super().form_valid(form)
 
 
 ## GROUPS ##
@@ -263,7 +548,12 @@ class GroupListView(LoginRequiredMixin, ListView):
     template_name = 'group/group_list.html'
 
     def get_queryset(self):
-        queryset = GRoup.objects.all()
+        user = self.request.user
+        if user.is_superuser:
+            queryset = GRoup.objects.all().order_by('-created_on')
+        else:
+            queryset = GRoup.objects.filter(center__branch=user.employee_detail.branch).all().order_by('-created_on')
+   
         paginator = Paginator(queryset, 10)  # 10 centers per page
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
@@ -290,6 +580,11 @@ class GroupCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
     template_name = 'group/add_group.html'
     success_url = reverse_lazy('group_list')
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
     def form_valid(self, form):
         form.instance.created_by = self.request.user
         return super().form_valid(form)
@@ -303,11 +598,21 @@ class GroupUpdateView(LoginRequiredMixin, RoleRequiredMixin, UpdateView):
     template_name = 'group/edit_group.html'
     success_url = reverse_lazy('group_list')
 
+    def form_valid(self, form):
+        messages.success(self.request, "Group updated successfully!")
+        return super().form_valid(form)
+
 class GroupDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
     model = GRoup
     success_url = reverse_lazy('group_list')
     template_name = 'group/delete_group.html'
 
+    def form_valid(self, form):
+        messages.warning(self.request, "Group deleted successfully!")
+        return super().form_valid(form)
+
+
+## MEMBERS ##
 from .forms import CenterSelectionForm
 class SelectCenterView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
     model = Member
@@ -315,6 +620,11 @@ class SelectCenterView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
     # template_name = 'dashboard/select_center.html'
     template_name = 'member/add_member/select_center.html'
     success_url = reverse_lazy('address_info') 
+
+    def dispatch(self, request, *args, **kwargs):
+        """Delete any unfinished members before starting a new process."""
+        Member.objects.filter(temporary=True).delete()
+        return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         # Store center and group information in the session instead of saving the Member
@@ -325,14 +635,25 @@ class SelectCenterView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
         code = form.cleaned_data['code']
         position = form.cleaned_data['position']
         print(f"{center_id} {group_id} {member_code} {member_category} {code} {position}")
+
+        # Create and save the Member instance
+        member = Member.objects.create(
+            center_id=center_id,
+            group_id=group_id,
+            member_code=member_code,
+            member_category=member_category,
+            code=code,
+            position=position,
+            temporary=True,  # Mark as temporary
+        )
         
         # Store these details in the session
-        self.request.session['center_id'] = center_id
-        self.request.session['group_id'] = group_id
-        self.request.session['member_code'] = member_code
-        self.request.session['member_category'] = member_category
-        self.request.session['code'] = code
-        self.request.session['position'] = position
+        self.request.session['member_id'] = member.id
+        # self.request.session['group_id'] = group_id
+        # self.request.session['member_code'] = member_code
+        # self.request.session['member_category'] = member_category
+        # self.request.session['code'] = code
+        # self.request.session['position'] = position
 
         return redirect(self.success_url)
 
@@ -350,7 +671,6 @@ class SelectCenterView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
         return super().form_invalid(form)
 
 from django.views.generic.edit import FormView
-import json
 
 from .forms import (
     CenterSelectionForm, AddressInformationForm, PersonalInformationForm, FamilyInformationForm, 
@@ -388,7 +708,8 @@ class AddressInfoView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
             }
 
             # Print debug information
-            print(f"{address_type.capitalize()} Address - Province: {province}, District: {district}, Municipality: {municipality}, Ward: {ward_no}, Tole: {tole}, House: {house_no}")
+            # print(f"{address_type.capitalize()} Address - Province: {province}, District: {district}, Municipality: {municipality}, Ward: {ward_no}, Tole: {tole}, House: {house_no}")
+            print(self.request.session.get('member_id'))
 
         # Save all address data into session
         self.request.session['address_info'] = session_data
@@ -420,18 +741,24 @@ class PersonalInfoView(FormView):
     form_class = PersonalInformationForm
     template_name = 'member/add_member/personal_info.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Retrieve the member object
+        member_id = self.request.session.get('member_id')
+        member = get_object_or_404(Member, id=member_id)
+        # Pass the member instance to the context
+        personal_documents = member.personal_documents.all() or []
+        context['member'] = member
+        context['document_form'] = PersonalMemberDocumentForm()
+        context['personal_documents'] = personal_documents
+        return context
+
     def get_initial(self):
         """Populate initial data for the form from session."""
-        initial_data = self.request.session.get('personal_info', {})
-  # Reset invalid date
-        return initial_data
+        return self.request.session.get('personal_info', {}) or {}
 
     def form_valid(self, form):
         personal_info = form.cleaned_data
-
-        # Debugging: Print cleaned data
-        # print("Cleaned data from form:", personal_info)
-
         # Serialize only the specific fields
         try:
             # Handle date_of_birth (Nepali date)
@@ -493,10 +820,9 @@ class FamilyInfoView(FormView):
         initial_data = {}
         for i, rel in enumerate(predefined_relationships):
             if i < len(family_info):
-                initial_data[f"form-{i}"] = family_info[i]
+                initial_data[f"form-{i}"] = {**family_info[i], "relationship": rel}
             else:
                 initial_data[f"form-{i}"] = {"relationship": rel}
-
         return initial_data
 
     def get(self, request, *args, **kwargs):
@@ -530,11 +856,13 @@ class FamilyInfoView(FormView):
                 valid = False
 
         # Validate additional forms dynamically
-        prefixes = set(
-            key.split("-")[0]
+        prefixes = [
+            key.rsplit("-", 1)[0]
             for key in request.POST.keys()
-            if key.startswith("form-") and "-family_member_name" in key
-        )
+            if "-family_member_name" in key
+        ]
+
+        prefixes = sorted(set(prefixes), key=lambda x: int(x.split("-")[1]))  # Ensure correct order
 
         for prefix in prefixes:
             if prefix not in [f"form-{i}" for i in range(len(predefined_relationships))]:
@@ -543,13 +871,14 @@ class FamilyInfoView(FormView):
                 if not form.is_valid():
                     valid = False
 
+        # print("Extracted prefixes:", prefixes)
         return forms, valid
 
     def post(self, request, *args, **kwargs):
         """Handle POST requests for form submission."""
         forms, valid = self.process_forms(request)
-        print(forms)
-        print(request.POST)
+        # print(forms)
+        # print(request.POST)
         if valid:
             family_info_list = []
             for form in forms:
@@ -580,8 +909,12 @@ def get_new_family_form(request):
     """
     AJAX view to dynamically add a new family member form.
     """
-    existing_count = int(request.GET.get('count', 0))
-    new_form = FamilyInformationForm(prefix=f'form-{existing_count}')
+    try:
+        existing_count = int(request.GET.get('count', 0))
+    except ValueError:
+        return JsonResponse({'error': 'Invalid count'}, status=400)
+
+    new_form = FamilyInformationForm(prefix=f'family-{existing_count}')
     form_html = render_to_string('member/add_member/family_info_form.html', {'form': new_form})
     return JsonResponse({'form_html': form_html})
 
@@ -672,25 +1005,9 @@ def expenses_info_view(request):
 
         try:
             with transaction.atomic():
-                # Retrieve additional information
-                center_id = request.session.get('center_id')
-                group_id = request.session.get('group_id')
-                member_code = request.session.get('member_code')
-                member_category = request.session.get('member_category')
-                code = request.session.get('code')
-                position = request.session.get('position')
-
-                print(f'Center_id: {center_id}, Group_id: {group_id}, Member_code: {member_code}, '
-                      f'Member_category: {member_category}, Code: {code}, Position: {position}')
-                member = Member.objects.create(
-                    center_id=center_id,
-                    group_id=group_id,
-                    member_code=member_code,
-                    member_category=member_category,
-                    code=code,
-                    position=position,
-                )
-
+                member_id = request.session.get('member_id')
+                member = Member.objects.get(id=member_id)
+                
                 # Create AddressInformation objects for each type
                 for address_type, address_data in zip(['current', 'permanent', 'old'],
                                                        [address_info.get('current', {}),
@@ -723,12 +1040,14 @@ def expenses_info_view(request):
                 IncomeInformation.objects.create(member=member, **income_info)
                 ExpensesInformation.objects.create(member=member, **expenses_info)
 
+                if member_id:
+                  Member.objects.filter(id=member_id).update(temporary=False)
+    
                 # Clear session data
                 for key in required_sessions:
                     del request.session[key]
-
+            messages.success(request, "Member created successfully.")        
             return redirect('member_list')
-
         except Exception as e:
             print(f"Error creating member: {e}")
             form.add_error(None, "An error occurred while creating the member. Please try again.")
@@ -817,11 +1136,58 @@ def update_address_info(request, member_id):
         "member": member,
     })
 
+def upload_document(request):
+    if request.method == "POST":
+        form = PersonalMemberDocumentForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                member = Member.objects.get(id=request.POST.get('member'))
+            except Member.DoesNotExist:
+                return JsonResponse({"success": False, "message": "Member not found"}, status=400)
+
+            doc = form.save(commit=False)
+            doc.member = member
+            doc.uploaded_by = request.user
+            doc.save()
+            return JsonResponse({
+                "success": True,
+                "document": {
+                    "id": doc.id,
+                    "document_type": doc.document_type,
+                    "document_file_url": doc.document_file.url,
+                    "document_file_name": doc.document_file.name.split("/member/personal/")[-1],  # Extract filename
+                }
+            }, status=200)  
+
+        return JsonResponse({"success": False, "errors": form.errors})
+    
+    return JsonResponse({"success": False, "message": "Invalid request"}, status=400)
+
+def delete_document(request, document_id):
+    if request.method == "DELETE":
+        document = get_object_or_404(PersonalMemberDocument, id=document_id)
+        document.delete()
+        return JsonResponse({"success": True, "message": "Document deleted successfully."})
+    return JsonResponse({"success": False, "message": "Invalid request."}, status=400)
+
+
 # Step 2: Personal Information Update
 class UpdatePersonalInfoView(UpdateView):
     model = PersonalInformation
     form_class = PersonalInformationForm
     template_name = 'member/add_member/personal_info.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Retrieve the member object
+        member_id = self.kwargs.get('member_id')
+        member = get_object_or_404(Member, id=member_id)
+        # Pass the member instance to the context
+        personal_documents = member.personal_documents.all() or []
+        context['member'] = member
+        context['document_form'] = PersonalMemberDocumentForm()
+        context['personal_documents'] = personal_documents
+        return context
 
     def get_object(self):
         """Retrieve the PersonalInformation object for the given member."""
@@ -835,7 +1201,7 @@ class UpdatePersonalInfoView(UpdateView):
         personal_info.registered_date = nepali_datetime.date.today()  # Assuming Nepali date is needed
         member_id = self.object.member_id
         personal_info.save()
-
+        messages.success(self.request, "Personal information updated successfully!")
         # Redirect to the member detail view with the correct URL argument
         return redirect(reverse('update_family_info', kwargs={'member_id': member_id}))
 
@@ -887,11 +1253,14 @@ class UpdateFamilyInfoView(FormView):
             i += 1
 
         # Save forms
+        print(self.request.POST)
+        print(forms)
         for form in forms:
             family_info = form.save(commit=False)
             family_info.member = member
             family_info.save()
 
+        messages.success(self.request, "Family information updated successfully!")
         # Redirect to the 'update_livestock_info' page after saving the data
         return redirect('update_livestock_info', member_id=member.id)
 
@@ -915,6 +1284,7 @@ def update_livestock_info_view(request, member_id):
             livestock_info = form.save(commit=False)
             livestock_info.member = member
             livestock_info.save()
+            messages.success(request, "Live stock information updated successfully!")
             return redirect('update_house_info', member_id=member.id)
     else:
         form = LivestockInformationForm(instance=livestock_info)
@@ -931,6 +1301,7 @@ def update_house_info_view(request, member_id):
             house_info = form.save(commit=False)
             house_info.member = member
             house_info.save()
+            messages.success(request, "House information updated successfully!")
             return redirect('update_land_info', member_id=member.id)
     else:
         form = HouseInformationForm(instance=house_info)
@@ -947,6 +1318,7 @@ def update_land_info_view(request, member_id):
             land_info = form.save(commit=False)
             land_info.member = member
             land_info.save()
+            messages.success(request, "Land information updated successfully!")
             return redirect('update_income_info', member_id=member.id)
     else:
         form = LandInformationForm(instance=land_info)
@@ -966,6 +1338,7 @@ def update_income_info(request, member_id):
             income_info = form.save(commit=False)
             income_info.member = member
             income_info.save()
+            messages.success(request, "Income information updated successfully!")
             return redirect('update_expenses_info', member_id=member.id)
     else:
         # Initialize the form with the existing data if available
@@ -987,6 +1360,7 @@ def update_expenses_info(request, member_id):
             expenses_info = form.save(commit=False)
             expenses_info.member = member
             expenses_info.save()
+            messages.success(request, "Expenses information updated successfully!")
             try:
                 if request.session['demanding_loan']:
                     return redirect('loan_demand_form', member_id=member.id)
@@ -1028,7 +1402,6 @@ def member_detail_view(request, member_id):
     member = get_object_or_404(Member, id=member_id)
     personal_info = member.personalInfo
     address_info = member.address_info.filter(address_type='current').first()
-    print(address_info)
     family_info = FamilyInformation.objects.filter(member=member).all()
     livestock_info = member.livestockInfo
     house_info = member.houseInfo
@@ -1084,81 +1457,115 @@ class MemberListView(ListView):
         context['member_status'] = Member.MEMBER_STATUS 
         return context
 
-
     def get_queryset(self):
+        user = self.request.user
+
         # Prefetch only current addresses
         current_address_prefetch = Prefetch(
             'address_info', 
             queryset=AddressInformation.objects.filter(address_type='current'),
             to_attr='current_address'
         )
-        queryset = Member.objects.all().select_related('personalInfo').prefetch_related(current_address_prefetch).filter(status='A')
+        if user.is_superuser:
+            queryset = Member.objects.all().prefetch_related(current_address_prefetch).filter(status='A').order_by('-registered_date')
+        else:
+            branch = user.employee_detail.branch
+            queryset = Member.objects.filter(center__branch=branch).prefetch_related(current_address_prefetch).filter(status='A').order_by('-registered_date')
+
         status_filter = self.request.GET.get('status')
         # Ensure the filter value is one of the valid status codes
         valid_status_codes = [code for code, label in Member.MEMBER_STATUS]
         if status_filter in valid_status_codes:
-           queryset = Member.objects.all().select_related('personalInfo').prefetch_related(current_address_prefetch).filter(status__iexact=status_filter)
-        return queryset
-    
+            if user.is_superuser:
+                queryset = Member.objects.all().prefetch_related(current_address_prefetch).filter(status__iexact=status_filter).order_by('-registered_date')
+            else:
+                branch = user.employee_detail.branch
+                queryset = Member.objects.filter(center__branch=branch).prefetch_related(current_address_prefetch).filter(status__iexact=status_filter).order_by('-registered_date')
+        
+        paginator = Paginator(queryset, 10)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        return page_obj
+
 def change_member_status(request):
     if request.method == 'POST':
+        # Debug: Log the POST data
+        print("POST data:", request.POST)
         member_id = request.POST.get('memberId')
         new_status = request.POST.get('status')
 
+        # Fetch member and validate
         member = get_object_or_404(Member, id=member_id)
-        member.status = new_status 
-        member.save() 
 
-       # Check if the accounts should be created automatically
-        if request.POST.get('create_accounts') == 'yes':
-            # Loop through each account type and create them for the member
-            for account_code, account_name in INITIAL_SAVING_ACCOUNT_TYPE:
-                # Set default amount based on account_code
-                if account_code == "CS":
-                    amount = 200.0
-                elif account_code == "CF":
-                    amount = 10.0
-                else:
-                    amount = 0 
-                SavingsAccount.objects.create(
-                    member=member,
-                    account_type=account_code,
-                    account_number=f"{member.code}.{account_code}.1", 
-                    amount=amount,
-                    balance=0.00,
-                )
-            
-        return JsonResponse({'success': True})
+        if new_status == "A":
+            if member.status == "A":
+                return JsonResponse({'success': False, 'error': 'This member is already active.'}, status=400)
+            # Handle account creation and fees
+            if request.POST.get('create_accounts') == 'yes':
+                try:
+                    with transaction.atomic():
+                        # Constants for fees
+                        MEMBERSHIP_FEE = 100.00
+                        PASSBOOK_FEE = 25.00
+                        TOTAL_FEE = MEMBERSHIP_FEE + PASSBOOK_FEE
+
+                        # Ensure current teller exists
+                        current_teller = Teller.objects.filter(employee=request.user).first()
+                        print(current_teller)
+                        if not current_teller:
+                            return JsonResponse({'success': False, 'error': 'Current Teller not found'}, status=400)
+
+                        # Loop through account types and create accounts
+                        for account_code, account_name in INITIAL_SAVING_ACCOUNT_TYPE:
+                            amount = 200.0 if account_code == "CS" else 10.0 if account_code == "CF" else 0
+                            
+                            # Create savings account
+                            SavingsAccount.objects.create(
+                                member=member,
+                                account_type=account_code,
+                                account_number=f"{member.code}.{account_code}.1",
+                                amount=amount,
+                                balance=0.00,
+                            )
+
+                            # Adjust teller balance and create voucher for "CS" account type
+                            if account_code == "CS":
+                                current_teller.balance += Decimal(TOTAL_FEE)
+                                current_teller.save()
+
+                                voucher = Voucher.objects.create(
+                                    voucher_type='Receipt',
+                                    category='Service Fee',
+                                    amount=TOTAL_FEE,
+                                    narration=f"Membership and Passbook Fee for {member.code}",
+                                    transaction_date=timezone.now(),
+                                    created_by=request.user,
+                                )
+                                print(voucher)
+                        member.status = new_status
+                        member.registered_date = timezone.now().date()
+                        member.save()
+                        messages.success(request, f"Member status updated to {new_status} and accounts created successfully for {member.name}.")
+                        return JsonResponse({'success': True, 'redirect_url': f"{reverse('member_list')}?status={new_status}"})
+                except Exception as e:
+                    print("Error:", str(e))
+                    return JsonResponse({'success': False, 'error': str(e)}, status=400)
+            elif request.POST.get('create_accounts') == 'no':
+                member.status = new_status
+                member.dropout_date = timezone.now().date()
+                member.save()
+                messages.success(request, f"Member status updated to {new_status} for {member.personalInfo.first_name} {member.personalInfo.middle_name} {member.personalInfo.last_name}.")
+                return JsonResponse({'success': True, 'redirect_url': f"{reverse('member_list')}?status={new_status}"})
+        elif new_status == "DR":
+            loans = member.loans.all()
+            if loans:
+                return JsonResponse({'success': False, 'error': 'Clear all loans before dropping this member.'}, status=400)
+            member.status = new_status
+            member.save()
+            messages.success(request, f"Member: {member.personalInfo.first_name} {member.personalInfo.middle_name} {member.personalInfo.last_name} is now dropped.")
+            return JsonResponse({'success': True, 'redirect_url': f"{reverse('member_list')}?status={new_status}"})
 
     return JsonResponse({'success': False}, status=400)
-
-
-@login_required
-def branch_list_view(request):
-    branches = Branch.objects.all()
-    paginator = Paginator(branches, 10)  # Show 10 centers per page
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    # managers = {}
-    # for branch in branches:
-    #     manager = Employee.objects.filter(branch=branch, role='manager').first()
-    #     managers = branch.id[manager]
-    managers = {branch.id: Employee.objects.filter(branch=branch, role='manager').all() for branch in branches}
-    return render(request, 'branch/branch_list.html', {'branches': page_obj, 'managers': managers})
-
-
-@login_required
-def employee_list_view(request):
-    employees = Employee.objects.all().select_related('user')
-    paginator = Paginator(employees, 10)  # Show 10 centers per page
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    return render(request, 'employee/employee_list.html', {
-        'employees': page_obj
-    })
-
-
 
 def deposits(request):
     return render(request, 'dashboard/deposits.html')

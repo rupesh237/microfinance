@@ -54,9 +54,16 @@
 
                     let isMatch = false;
                     emiRows.forEach(row => {
-                        const emiAmount = parseFloat(row.querySelector('.emi-amount').textContent);
-                        if (!isNaN(emiAmount) && enteredAmount === emiAmount) {
-                            isMatch = true;
+                        const emiElement = row.querySelector('.emi-amount');
+                        if (emiElement) {
+                            const emiAmount = parseFloat(emiElement.textContent || '0');
+                            console.log('EMI Value:', emiAmount);
+                
+                            if (!isNaN(emiAmount) && enteredAmount === emiAmount) {
+                                isMatch = true;
+                            }
+                        } else {
+                            console.warn('No element with class .emi-amount found in row:', row);
                         }
                     });
 
@@ -118,6 +125,7 @@
                     <thead>
                         <tr>
                             <th>Month</th>
+                            <th>Date</th>
                             <th>EMI Amount</th>
                             <th>Principal Component</th>
                             <th>Interest Component</th>
@@ -128,12 +136,20 @@
                         {% for emi in emi_schedules|get_item:loan.id %}
                         <tr>
                             <td>{{ emi.month }}</td>
+                            <td>{{ emi.date }}</td>
                             <td class="emi-amount">{{ emi.emi_amount|floatformat:2 }}</td>
                             <td>{{ emi.principal_component|floatformat:2 }}</td>
                             <td>{{ emi.interest_component|floatformat:2 }}</td>
                             <td>{{ emi.remaining_principal|floatformat:2 }}</td>
                         </tr>
                         {% endfor %}
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td>{{ total_principal_amount|floatformat:2 }}</td>
+                            <td>{{ total_interest_amount|floatformat:2 }}</td>
+                            <td></td>
+                        </tr>
                     </tbody>
                 </table>
             </div>

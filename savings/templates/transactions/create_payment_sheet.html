@@ -19,37 +19,48 @@
             <p><strong>Member Name:</strong> {{member.personalInfo.first_name}} {{member.personalInfo.middle_name}} {{member.personalInfo.last_name}}</p>
         </div>
 
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-              <li class="breadcrumb-item active">Savings</li>
-            </ol>
-          </nav>
-          
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="bg-primary text-white p-1 rounded text-center" style="width: 100px;">
+                Savings
+            </div>
+            <div class="tooltip-container">
+                <i class="bi bi-box-arrow-right prepare-close btn btn-primary"></i>
+                <span class="custom-tooltip">Prepare Close</span>
+            </div>
+        </div>
         
-        {% if messages %}
-          {% for message in messages %}
-          <div class="alert alert-{{ message.tags }}{% if message.tags == 'error' %} alert-danger{% endif %}">
-              {{ message }}
-          </div>        
-          {% endfor %}
-       {% endif %}
-
+          
         <form method="post">
             {% csrf_token %}
+               <!-- Hidden input to mark account closure -->
+               <input type="hidden" name="close_account" id="close-account" value="false">
+                
              <table>
                 <thead>
                     <tr>
                         <th>Account Number</th>
                         <th>Balance</th>
                         <th>Amount</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for account, amount_field_name in form.account_amount_fields %}
                     <tr>
-                        <td>{{ account.account_number }}</td>
+                        <td>{{ account }}</td>
                         <td>{{ account.balance }}</td>
                         <td>{{ form|get_field:amount_field_name }}</td>
+                        <td>
+                            <div class="tooltip-container">
+                                <i class="bi bi-calculator run-provision" data-member="{{ member.id }}" data-account="{{ account.id }}" style="cursor: pointer;"></i>
+                                <span class="custom-tooltip">Run Provision</span>
+                            </div>
+                            <div class="tooltip-container">
+                                <i class="bi bi-check2-square run-charges" data-member="{{member.id}}" data-account="{{account.id}}" style="cursor: pointer;"></i>
+                                <span class="custom-tooltip">Run Charges</span>
+                            </div>
+                            
+                        </td>                        
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -69,4 +80,71 @@
             <input type="submit" value="Save">
         </form>
     </div>
+
+<script>
+    $(document).ready(function() {
+        // Run Provision Click Event
+        $(".run-provision").click(function() {
+            var memberId = $(this).data("member");
+            var accountId = $(this).data("account");
+            var url = `/savings/run-provision/${memberId}/${accountId}/`;
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: {
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function(response) {
+                    alert(response.message);
+                    location.reload();  // Reload page to update status
+                },
+                error: function(xhr) {
+                    var errorMsg = xhr.responseJSON ? xhr.responseJSON.message : "Something went wrong!";
+                    alert(errorMsg);
+                }
+            });
+        });
+
+        // Run Charges Click Event
+        $(".run-charges").click(function() {
+            var memberId = $(this).data("member");
+            var accountId = $(this).data("account");
+            var url = `/savings/run-charges/${memberId}/${accountId}/`;
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: {
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function(response) {
+                    alert(response.message);
+                    location.reload();  // Reload page to update status
+                },
+                error: function(xhr) {
+                    var errorMsg = xhr.responseJSON ? xhr.responseJSON.message : "Something went wrong!";
+                    alert(errorMsg);
+                }
+            });
+        });
+
+        // Prepare Close Click Event
+        $(".prepare-close").click(function() {
+            $("tbody tr").each(function() {
+                var balance = $(this).find("td:nth-child(2)").text().trim(); // Get balance from second column
+                var inputField = $(this).find("td:nth-child(3) input"); // Get input field in third column
+                
+                if (balance && inputField.length) {
+                    inputField.val(balance); // Set input value to balance
+                }
+            });
+
+            // Set close-account field to true
+            $("#close-account").val("true");
+        });
+    });
+</script>
+
+
 {% endblock content %}

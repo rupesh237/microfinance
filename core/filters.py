@@ -66,13 +66,22 @@ class ReportFilter(django_filters.FilterSet):
         label="Staff",
     )
 
+     # New date filter based on the transaction_date field (or any other date field you have)
+    date = django_filters.DateFilter(
+        field_name="transaction_date",  # Change this to your date field
+        lookup_expr="exact",  # You can change this to gte, lte, or range depending on your needs
+        label="Date",
+        widget=forms.DateInput(attrs={"type": "date"}),
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
         today = timezone.now().date()  
         self.filters['start_date'].field.initial = today
         self.filters['end_date'].field.initial = today
+        self.filters['date'].field.initial = today
 
     class Meta:
         model = Voucher
-        fields = ('start_date', 'end_date', 'staff')
+        fields = ('start_date', 'end_date', 'staff', 'date')

@@ -14,7 +14,7 @@ from .models import Loan, EMIPayment
 from .forms import LoanDemandForm, LoanAnalysisForm, LoanDisburseForm, EMIPaymentForm  # Create EMIPaymentForm as needed
 from dashboard.models import Member, PersonalInformation, AddressInformation, FamilyInformation, LivestockInformation, HouseInformation, LandInformation, IncomeInformation, ExpensesInformation
 from dashboard.forms import PersonalInformationForm, AddressInformationForm, FamilyInformationForm, LivestockInformationForm, HouseInformationForm, LandInformationForm, IncomeInformationForm, ExpensesInformationForm
-from core.models import  Voucher
+from core.models import  Voucher, Teller 
 
 from xhtml2pdf import pisa
 from django.utils import timezone
@@ -31,7 +31,11 @@ class LoanListView(LoginRequiredMixin, RoleRequiredMixin, ListView):
     context_object_name = 'loans'
 
     def get_queryset(self):
-        loans = Loan.objects.prefetch_related('emi_payments')
+        user = self.request.user
+        if user.is_superuser:
+            loans = Loan.objects.prefetch_related('emi_payments')
+        else:
+            loans = Loan.objects.filter(member__center__branch=user.employee_detail.branch).prefetch_related('emi_payments')
         
         # Annotate loans with the latest payment
         for loan in loans:
@@ -52,6 +56,14 @@ def member_loans(request, member_id):
     # Fetch only non-cleared loans
     loans = member.loans.filter(status='active', is_cleared=False)
     emi_schedules = {loan.id: loan.calculate_emi_breakdown() for loan in loans}
+    # Initialize total amounts
+    total_principal_amount = 0
+    total_interest_amount = 0
+    for schedule in emi_schedules.values():
+        for emi in schedule:
+            total_principal_amount += emi['principal_component']
+            total_interest_amount += emi['interest_component']
+            
     payment_form = None
 
     if request.method == 'POST':
@@ -65,17 +77,29 @@ def member_loans(request, member_id):
 
             payment.principal_paid = emi_info['principal_component']
             payment.interest_paid = emi_info['interest_component']
-            payment.save()
+
+            current_teller = Teller.objects.filter(employee=request.user).first()
+            if current_teller is None:
+                messages.error(request, "No teller detected for given employee.")
+                return redirect('member_loans', member_id=member.id)
 
             # Create voucher for payment
-            Voucher.objects.create(
+            voucher = Voucher.objects.create(
                 voucher_type='Receipt',
                 category='Loan',
-                amount=loan.loan_analysis_amount,
-                description=f'Loan Receipt of {loan.member.personalInfo.first_name} {loan.member.personalInfo.middle_name} {loan.member.personalInfo.last_name}: {loan.amount}',
+                amount=payment.amount_paid,
+                narration=f'Loan Receipt of {loan.member.personalInfo.first_name} {loan.member.personalInfo.middle_name} {loan.member.personalInfo.last_name}: {payment.amount_paid}',
                 transaction_date=timezone.now().date(),
                 created_by=request.user,
+                branch=request.user.employee_detail.branch,
             )
+
+            payment.voucher = voucher
+            payment.save()
+
+            # Update teller balance
+            current_teller.balance += payment.amount_paid
+            current_teller.save()
 
             # Mark loan as cleared if balance is zero after this payment
             if payment.closing_balance == 0:
@@ -96,6 +120,8 @@ def member_loans(request, member_id):
         'loans': loans,
         'form': form,
         'emi_schedules': emi_schedules,
+        'total_principal_amount': total_principal_amount,
+        'total_interest_amount': total_interest_amount,
         'payment_form': payment_form,
         'payment_history': payment_history,
     })
@@ -408,7 +434,15 @@ def approve_loan(request, loan_id):
     # Approve the loan (your logic here)
     loan = Loan.objects.get(id=loan_id)
     emi_schedules = loan.calculate_emi_breakdown()
-    installment_amount = emi_schedules[0]['emi_amount']
+    installment_amount = loan.installement_amount
+
+    # Initialize total amounts
+    total_principal_amount = 0
+    total_interest_amount = 0
+
+    for emi in emi_schedules:
+        total_principal_amount += emi['principal_component']
+        total_interest_amount += emi['interest_component']
 
     if request.method == "POST":
         loan = get_object_or_404(Loan, id=loan_id)
@@ -422,13 +456,24 @@ def approve_loan(request, loan_id):
     return render(request, 'loans/views/loan_approve.html', 
                   {'loan': loan,
                    'installment_amount': installment_amount,
-                   'emi_schedules':emi_schedules
+                   'emi_schedules':emi_schedules,
+                   'total_principal_amount': total_principal_amount,
+                   'total_interest_amount': total_interest_amount,
                    })
 
 def loan_payment(request, loan_id):
     loan = get_object_or_404(Loan, id=loan_id)
     emi_schedules = loan.calculate_emi_breakdown()
-    installment_amount = emi_schedules[0]['emi_amount']
+    installment_amount = loan.installement_amount
+
+     # Initialize total amounts
+    total_principal_amount = 0
+    total_interest_amount = 0
+
+    for emi in emi_schedules:
+        total_principal_amount += emi['principal_component']
+        total_interest_amount += emi['interest_component']
+
 
     if request.method == "POST":
         if not request.POST.get('cash_payment'):
@@ -440,28 +485,39 @@ def loan_payment(request, loan_id):
             return redirect('loan_disburse_list', member_id=loan.member.id)
         
         if request.POST.get('cash_payment') == 'yes':
-            # Create voucher for payment
-            Voucher.objects.create(
-                voucher_type='Payment',
-                category='Loan',
-                amount=loan.loan_analysis_amount,
-                description=f'Loan Payment of {loan.member.personalInfo.first_name} {loan.member.personalInfo.middle_name} {loan.member.personalInfo.last_name}: {loan.amount}',
-                transaction_date=timezone.now().date(),
-                created_by=request.user,
-            )
-            # Update the loan status
-            loan.status = "active"
-            loan.created_by = request.user
-            loan.created_date = timezone.now().date()
-            loan.save()  
-            messages.success(request, "Loan payment made successfully!")
-            return redirect('loan_disburse_list', member_id=loan.member.id)
+            current_teller = Teller.objects.filter(employee=request.user).first()
+            if current_teller.balance < loan.loan_analysis_amount:
+                messages.error(request, "Sorry, insufficeint balance.")
+                return redirect('loan_disburse_list', member_id=loan.member.id)
+            else:
+                current_teller.balance -= loan.loan_analysis_amount
+                current_teller.save()
+
+                # Create voucher for payment
+                Voucher.objects.create(
+                    voucher_type='Payment',
+                    category='Loan',
+                    amount=loan.loan_analysis_amount,
+                    narration=f'Loan Payment of {loan.member.personalInfo.first_name} {loan.member.personalInfo.middle_name} {loan.member.personalInfo.last_name}: {loan.amount}',
+                    transaction_date=timezone.now().date(),
+                    created_by=request.user,
+                )
+
+                # Update the loan status
+                loan.status = "active"
+                loan.created_by = request.user
+                loan.created_date = timezone.now().date()
+                loan.save()  
+                messages.success(request, "Loan payment made successfully!")
+                return redirect('loan_disburse_list', member_id=loan.member.id)
 
     # Render payment form
     context = {
         'loan': loan,
         'installment_amount': installment_amount,
         'emi_schedules': emi_schedules,
+        'total_principal_amount': total_principal_amount,
+        'total_interest_amount': total_interest_amount,
     }
     return render(request, 'loans/forms/loan_payment.html', context)
 

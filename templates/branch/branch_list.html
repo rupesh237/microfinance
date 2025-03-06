@@ -48,16 +48,17 @@
                     <td>{{ branch.id }}</td>
                     <td>{{ branch.name }}</td>
                     <td>{{ branch.municipality }}-{{ branch.wardNo }}, {{ branch.district }}</td>
-                    {% for manager in managers|get_item:branch.id %}
-                    <td>{{ manager.name }}</td>
-                    {% empty %}
-                    <td>Not Assigned</td>
-                    {% endfor %}
+                    <td>{% for manager in managers|get_item:branch.id %}
+                        <p>{{ manager.name }}<p>
+                        {% empty %}
+                        <p>Not Assigned</p>
+                        {% endfor %}
+                    </td>
                     <td class="text-center">
                         <a href="{% url 'update_branch' branch.id %}" class="btn btn-warning btn-sm" title="Edit">
                             <i class="bi bi-pencil-fill"></i>
                         </a>
-                        <a href="#" class="btn btn-danger btn-sm" title="Delete">
+                        <a href="{% url 'delete_branch' branch.id %}" class="btn btn-danger btn-sm" title="Delete">
                             <i class="bi bi-trash-fill"></i>
                         </a>
                     </td>

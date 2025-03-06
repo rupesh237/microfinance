@@ -1,6 +1,22 @@
 from django import forms
 from django.forms import modelformset_factory
-from .models import CollectionSheet
+from .models import CollectionSheet, Voucher, VoucherEntry
+
+# class VoucherEntryForm(forms.ModelForm):
+#     class Meta:
+#         model = VoucherEntry
+#         fields = ['account', 'amount', 'entry_type', 'memo']
+
+class VoucherForm(forms.ModelForm):
+      class Meta:
+        model = Voucher
+        fields = ['in_word', 'narration', 'cheque_no', 'encloser']
+        widgets = {
+            'in_word': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Amount in words'}),
+            'narration': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Narration', 'required': True}),
+            'cheque_no': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Cheque number'}),
+            'encloser': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter encloser'}),
+        }
 
 # Create a custom form for the CollectionSheet model
 class CollectionSheetForm(forms.ModelForm):

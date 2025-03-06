@@ -3,9 +3,8 @@ from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from nepali_datetime_field.models import NepaliDateField
+
 # Create your models here.
-# class Nepal(models.MOdel):
-#     name = 'Nepal'
 class Province(models.TextChoices):
     PROVINCE_1 = 'Province No. 1', _('Province No. 1')
     PROVINCE_2 = 'Madhesh Province', _('Madhesh Province')
@@ -45,38 +44,10 @@ class InterestTypes(models.TextChoices):
     DECLINING = 'Declining', _('Declining')
     INTEREST_ONLY = 'Interest Only', _('Interest Only')
 
-
-class ReceiptTypes(models.TextChoices):
-    ENTRANCE_FEE = 'EntranceFee', _('Entrance Fee')
-    MEMBERSHIP_FEE = 'MembershipFee', _('Membership Fee')
-    BOOK_FEE = 'BookFee', _('Book Fee')
-    LOAN_PROCESSING_FEE = 'LoanProcessingFee', _('Loan Processing Fee')
-    SAVINGS_DEPOSIT = 'SavingsDeposit', _('Savings Deposit')
-    FIXED_DEPOSIT = 'FixedDeposit', _('Fixed Deposit')
-    RECURRING_DEPOSIT = 'RecurringDeposit', _('Recurring Deposit')
-    ADDITIONAL_SAVINGS = 'AdditionalSavings', _('Additional Savings')
-    SHARE_CAPITAL = 'ShareCapital', _('Share Capital')
-    PENAL_INTEREST = 'PenalInterest', _('Penal Interest')
-    LOAN_DEPOSIT = 'LoanDeposit', _('Loan Deposit')
-    INSURANCE = 'Insurance', _('Insurance')
-
-
 class FdRdStatus(models.TextChoices):
     OPENED = 'Opened', _('Opened')
     PAID = 'Paid', _('Paid')
     CLOSED = 'Closed', _('Closed')
-
-
-class PaymentTypes(models.TextChoices):
-    LOANS = 'Loans', _('Loans')
-    TRAVELLING_ALLOWANCE = 'TravellingAllowance', _('Travelling Allowance')
-    PAYMENT_OF_SALARY = 'PaymentOfSalary', _('Payment of Salary')
-    PRINTING_CHARGES = 'PrintingCharges', _('Printing Charges')
-    STATIONARY_CHARGES = 'StationaryCharges', _('Stationary Charges')
-    OTHER_CHARGES = 'OtherCharges', _('Other Charges')
-    SAVINGS_WITHDRAWAL = 'SavingsWithdrawal', _('Savings Withdrawal')
-    FIXED_WITHDRAWAL = 'FixedWithdrawal', _('Fixed Deposit Withdrawal')
-    RECURRING_WITHDRAWAL = 'RecurringWithdrawal', _('Recurring Deposit Withdrawal')
 
 GENDER_CHOICES = [
         ('Male', 'Male'),
@@ -145,7 +116,6 @@ class District(models.Model):
     
 class Municipality(models.Model):
     name = models.CharField(max_length=64)
-    
     district = models.ForeignKey(District, on_delete=models.CASCADE, related_name="municipalities")
 
     def __str__(self):
@@ -163,7 +133,7 @@ class Branch(models.Model):
     wardNo = models.IntegerField(default=1)
 
     def __str__(self):
-        return f'{self.name} ({self.municipality})'
+        return f'{self.code}: {self.name}'
 
 class Employee(models.Model):
     ROLE_CHOICES = [
@@ -274,7 +244,7 @@ class Member(models.Model):
         ('A', 'Active'),
         ('IA', 'In-Active'),
         ('RTR', 'Ready To Register'),
-        ('D', 'Dropout'),
+        ('DR', 'Dropout'),
         ('p', 'Public'),
         ('D', 'Death'), 
     ]
@@ -287,9 +257,41 @@ class Member(models.Model):
     position = models.IntegerField(null=True)
 
     status = models.CharField(max_length=25, choices=MEMBER_STATUS, default='RTR')
+    registered_date = models.DateField(null=True, blank=True)
+    dropout_date = models.DateField(null=True, blank=True)
+
+    temporary = models.BooleanField(default=True)
     def __str__(self):
         return f'Member {self.id} in group {self.group.name}'
 
+# Member documents:
+DOC_TYPE_CHOICES = [
+    ('Citizenship', 'Citizenship'),
+    ('Passport', 'Passport'),
+    ('Voter ID', 'Voter ID'),
+    ('Driver License', 'Driver License'),
+]
+
+class PersonalMemberDocument(models.Model):
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name="personal_documents")
+    document_type = models.CharField(max_length=50, choices=DOC_TYPE_CHOICES)
+    document_file = models.FileField(upload_to='member/personal/', blank=True, null=True)
+    uploaded_date = models.DateField(auto_now=True)
+    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='uploaded_member_documents', null=True)
+
+    def __str__(self):
+        return f"{self.member.personalInfo.first_name} {self.member.personalInfo.middle_name} {self.member.personalInfo.last_name} - Personal Document"
+
+class FamilyMemberDocument(models.Model):
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name="family_documents")
+    relationship = models.CharField(max_length=100)  # Example: Father, Mother, Spouse
+    document = models.FileField(upload_to='member/family/', blank=True, null=True)
+    uploaded_date = models.DateField(null=True, blank=True)
+    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='uploaded_family_documents', null=True)
+
+    def __str__(self):
+        return f"{self.member.personalInfo.first_name} {self.member.personalInfo.middle_name} {self.member.personalInfo.last_name} - {self.relationship} Document"
+    
 # Member information from here on:
 class AddressInformation(models.Model):
     ADDRESS_TYPE_CHOICES = [
@@ -318,6 +320,7 @@ class PersonalInformation(models.Model):
     first_name = models.CharField(max_length=50)
     middle_name = models.CharField(max_length=50, blank=True)
     last_name = models.CharField(max_length=50)
+    photo = models.ImageField(upload_to='member/personal/', blank=True, null=True)
     phone_number = models.CharField(max_length=15, null=True)
     gender = models.CharField(max_length=15, choices=GENDER_CHOICES, default='Female')
     marital_status = models.CharField(max_length=30, choices=MARITAL_STATUS_CHOICES)

@@ -33,7 +33,11 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-3">
-                    <img src="rupesh.jpg" alt="Profile" class="img-fluid rounded-circle mb-3">
+                    {% if personal_info.photo %}
+                        <img src="{{ personal_info.photo.url }}" alt="Profile" class="img-fluid rounded-circle mb-3">
+                    {% else %}
+                        <img src="{% static '/images/default-profile.avif' %}" alt="Profile" class="img-fluid rounded-circle mb-3">
+                    {% endif %}
                 </div>
                 <div class="col-md-9">
                     <p><strong>Name:</strong> {{ personal_info.first_name }} {{ personal_info.middle_name }} {{ personal_info.last_name }}</p>

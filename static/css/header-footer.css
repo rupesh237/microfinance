@@ -80,8 +80,8 @@ body {
     display: none;
     position: absolute;
     left: 100%;
-    top: 60%;
-    min-width: 260px;
+    top: 30%;
+    min-width: 250px;
     background-color: #333;
     box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
     z-index: 1;

@@ -68,6 +68,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "django_htmx.middleware.HtmxMiddleware",
+    'dashboard.middleware.CleanupTemporaryMembersMiddleware',
 ]
 
 ROOT_URLCONF = 'microfinance.urls'
@@ -83,6 +84,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'microfinance.context_processors.branch_name',
             ],
         },
     },

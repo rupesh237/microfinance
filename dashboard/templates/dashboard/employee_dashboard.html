@@ -1,11 +1,285 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Employee Dashboard</title>
-</head>
-<body>
-    <h2>Employee Dashboard</h2>
-    <p>Branch: {{ branch.name }}</p>
-    <a href="{% url 'logout' %}">Logout</a>
-</body>
-</html>
+{% extends 'base/index.html' %}
+{% load static %}
+{% load humanize %}
+{% block corecss %}
+    {% comment %} <link rel="stylesheet" href="{% static 'css/loans.css' %}"> {% endcomment %}
+    <link rel="stylesheet" href="{% static 'css/dashboard.css'%}">
+{% endblock corecss %}
+{% block content %}
+
+    <div class="summary-container">
+        <!-- First Row of Divs -->
+        <div class="summary-row">
+            <div class="summary-box">
+                <h3>Member Summary</h3>
+                <ul>
+                    <li><span class="label">Total active member:</span> <span class="value">{{active_members}}</span></li>
+                    <li><span class="label">Total drop out member:</span> <span class="value">{{droupout_members}}</span></li>
+                    <li><span class="label">Total center:</span> <span class="value">{{total_centers}}</span></li>
+                    <li><span class="label">Total loanee member:</span> <span class="value">{{loanee_members}}</span></li>
+                    <li><span class="label">Member per center:</span> <span class="value">{{average_members_per_center}}</span></li>
+                </ul>
+            </div>
+            <div class="summary-box">
+                <h3>Deposit/Loan Summary</h3>
+                <ul>
+                    <li><span class="label">Cummulative deposit:</span> <span class="value">{{cummulative_deposit|floatformat:2|intcomma}}</span></li>
+                    <li><span class="label">Cummulative withdraw:</span> <span class="value">{{cummulative_withdraw|floatformat:2|intcomma}}</span></li>
+                    <li><span class="label">Total Saving:</span> <span class="value">{{total_saving|floatformat:2|intcomma}}</span></li>
+                    <li><span class="label">Total disbursement:</span> <span class="value">{{total_disbursement|floatformat:2|intcomma}}</span></li>
+                    <li><span class="label">Cummulative Recovery:</span> <span class="value">{{cummulative_recovery|floatformat:2|intcomma}}</span></li>
+                    <li><span class="label">Total out standing:</span> <span class="value">{{total_outstanding_loan|floatformat:2|intcomma}}</span></li>
+                    <li><span class="label">Overdue Principal:</span> <span class="value">{{overdue_principal|floatformat:2|intcomma}}</span></li>
+                </ul>
+            </div>
+            <div class="summary-box">
+                <h3>Financial Summary</h3>
+                <ul>
+                    <li><span class="label">Income:</span> <span class="value">{{total_emi|floatformat:2|intcomma}}</span></li>
+                    <li><span class="label">Expenses:</span> <span class="value">{{total_disbursement|floatformat:2|intcomma}}</span></li>
+                    <li><span class="label">Net profit:</span> <span class="value">{{net_profit|floatformat:2|intcomma}}</span></li>
+                    <li><span class="label">Financial expenses:</span> <span class="value">Undefined</span></li>
+                    <li><span class="label">Operating expenses:</span> <span class="value">Undefined</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Second Row of Divs -->
+        <div class="summary-row">
+            <div class="summary-box" style="max-width: 600px; height: 350px;">
+                <h3>Active vs Dropout Member</h3>
+                <canvas id="memberChart"></canvas>
+            </div>
+            <div class="summary-box" style="max-width: 450px; height: 400px;">
+                <h3>Saving Balances</h3>
+                <canvas id="savingsChart"></canvas>
+            </div>
+            <div class="summary-box">
+                <h3>Loans Outstanding </h3>
+                <canvas id="loanOutstandingChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="summary-row">
+            <div class="summary-box" style="max-width: 450px; height: 400px;">
+                <h3>Loans Disburse </h3>
+                <canvas id="loanDisburseChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+
+    <script>
+        fetch("{% url 'member_chart' %}")
+            .then(response => response.json())
+            .then(data => {
+                const ctx = document.getElementById("memberChart").getContext("2d");
+    
+                new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: data.labels,  // Month labels
+                        datasets: [
+                            {
+                                label: "Active Member",
+                                data: data.active_data, // Active members count
+                                backgroundColor: "rgba(25, 131, 43, 0.7)",
+                                fill: false,
+                                tension: 0.2
+                            },
+                            {
+                                label: "Dropout Member",
+                                data: data.dropout_data, // Dropout members count
+                                backgroundColor: "rgba(230, 125, 125, 0.6)",
+                                fill: false,
+                                tension: 0.2
+                            },
+                            {
+                                label: "Loanee Member",
+                                data: data.loanee_data, // Dropout members count
+                                borderColor: "rgb(75, 192, 192)",
+                                backgroundColor: "rgb(75, 192, 192)",
+                                fill: false,
+                                tension: 0.2
+                            }
+                        ]
+                    },
+                     options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                suggestedMax: 100,  // Adjust max value if needed
+                                ticks: {
+                                    stepSize: 20  // Set y-axis increments (0, 20, 40, 60, etc.)
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+    </script>
+    <script>
+        fetch("{% url 'saving_chart' %}")
+            .then(response => response.json())
+            .then(data => {
+                const ctx = document.getElementById("savingsChart").getContext("2d");
+                const amounts = data.amounts.map(Number);  // Ensure all values are numbers
+                // Calculate total amount for percentage calculations
+                const total = amounts.reduce((sum, value) => sum + value, 0);
+                {% comment %} console.log('total', total); {% endcomment %}
+    
+                new Chart(ctx, {
+                    type: "pie",
+                    data: {
+                        labels: data.labels,  // Month labels
+                        datasets: [
+                            {
+                                data: data.amounts, // Active members count
+                                backgroundColor: [
+                                'rgb(255, 99, 132)',
+                                'rgb(54, 162, 235)',
+                                'rgb(255, 205, 86)',
+                                'rgb(75, 192, 192)',
+                                'rgb(153, 102, 255)'
+                            ],
+                                fill: false,
+                                tension: 0.2
+                            },
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            datalabels: {
+                                color: '#000', // Text color
+                                font: {
+                                    weight: 'bold'
+                                },
+                                formatter: (value) => {
+                                    let percentage = ((value / total) * 100).toFixed(1); // Calculate percentage
+                                    return percentage + "%"; // Show percentage
+                                },
+                                align: (context) => {
+                                    let percentage = (context.dataset.data[context.dataIndex] / total) * 100;
+                                    return percentage < 10 ? 'end' : 'center'; // Small values align differently
+                                },
+                                rotation: (context) => {
+                                    let percentage = (context.dataset.data[context.dataIndex] / total) * 100;
+                                    return percentage < 10 ? -90 : 0; // Rotate only small values
+                                },
+                                offset: (context) => {
+                                    let percentage = (context.dataset.data[context.dataIndex] / total) * 100;
+                                    return percentage < 10 ? 30 : 2; // Adjust spacing for better readability
+                                }
+                            }
+                        }
+                    },
+                    plugins: [ChartDataLabels] // Enable the plugin
+                });
+                // Move legend outside canvas
+               document.getElementById("savingsChart").parentNode.id = "savingsChartContainer";
+            });
+    </script>
+
+    <script>
+        fetch("{% url 'loan_outstanding_chart' %}")
+            .then(response => response.json())
+            .then(data => {
+                const ctx = document.getElementById("loanOutstandingChart").getContext("2d");    
+                new Chart(ctx, {
+                    type: "pie",
+                    data: {
+                        labels: data.labels,  // Month labels
+                        datasets: [
+                            {
+                                data: data.remaining_principal, // Active members count
+                                backgroundColor: [
+                                'rgb(255, 99, 132)',
+                                'rgb(54, 162, 235)',
+                                'rgb(255, 205, 86)',
+                                'rgb(75, 192, 192)',
+                                'rgb(153, 102, 255)'
+                            ],
+                                fill: false,
+                                tension: 0.2
+                            },
+                        ]
+                    },
+                });
+            });
+    </script>
+
+    <script>
+        fetch("{% url 'loan_disburse_chart' %}")
+            .then(response => response.json())
+            .then(data => {
+                const ctx = document.getElementById("loanDisburseChart").getContext("2d");
+                const amounts = data.amounts.map(Number);  // Ensure all values are numbers
+                // Calculate total amount for percentage calculations
+                const total = amounts.reduce((sum, value) => sum + value, 0);
+                {% comment %} console.log('total', total); {% endcomment %}
+    
+                new Chart(ctx, {
+                    type: "pie",
+                    data: {
+                        labels: data.labels,  // Month labels
+                        datasets: [
+                            {
+                                data: data.amounts, // Active members count
+                                backgroundColor: [
+                                'rgb(255, 99, 132)',
+                                'rgb(54, 162, 235)',
+                                'rgb(255, 205, 86)',
+                                'rgb(75, 192, 192)',
+                                'rgb(153, 102, 255)'
+                            ],
+                                fill: false,
+                                tension: 0.2
+                            },
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            datalabels: {
+                                color: '#000', // Text color
+                                font: {
+                                    weight: 'bold'
+                                },
+                                formatter: (value) => {
+                                    let percentage = ((value / total) * 100).toFixed(1); // Calculate percentage
+                                    return percentage + "%"; // Show percentage
+                                },
+                                align: (context) => {
+                                    let percentage = (context.dataset.data[context.dataIndex] / total) * 100;
+                                    return percentage < 10 ? 'end' : 'center'; // Small values align differently
+                                },
+                                rotation: (context) => {
+                                    let percentage = (context.dataset.data[context.dataIndex] / total) * 100;
+                                    return percentage < 10 ? -90 : 0; // Rotate only small values
+                                },
+                                offset: (context) => {
+                                    let percentage = (context.dataset.data[context.dataIndex] / total) * 100;
+                                    return percentage < 10 ? 30 : 2; // Adjust spacing for better readability
+                                }
+                            }
+                        }
+                    },
+                    plugins: [ChartDataLabels] // Enable the plugin
+                });
+            });
+    </script>
+    
+    
+
+{% endblock %}

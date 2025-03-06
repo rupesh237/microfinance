@@ -38,6 +38,7 @@
                         Branch
                         <input type="text" id="searchBranch" placeholder="Search Branch">
                     </th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -48,6 +49,10 @@
                     <td>{{ employee.phone_number }}</td>
                     <td>{{ employee.role }}</td>
                     <td>{{ employee.branch.name }}</td>
+                    <td>
+                        <a href="{% url 'edit_employee' employee.id %}"><i class="bi bi-pencil-fill"></i></a> |
+                        <a href="{% url 'delete_employee' employee.id %}"><i class="bi bi-trash-fill"></i></a>
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>

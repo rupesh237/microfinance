@@ -38,6 +38,11 @@ def number_to_words(value):
     except Exception:
         return ''
 
+@register.filter(name="replace")
+def replace(value, arg):
+    """Replace underscores with spaces"""
+    return value.replace("_", " ") if value else value
+
 # Debugging registered filters
 # print(register.filters)
 

@@ -2,7 +2,7 @@ from django.contrib import admin
 from .forms import EmployeeForm, BranchForm
 
 # Register your models here.
-from .models import Province, District, Municipality, Employee, Branch, Center, GRoup, AddressInformation, PersonalInformation, IncomeInformation, LandInformation, FamilyInformation, Member, LivestockInformation, ExpensesInformation, HouseInformation
+from .models import Province, District, Municipality, Employee, Branch, Center, GRoup, AddressInformation, PersonalInformation, PersonalMemberDocument, FamilyMemberDocument,IncomeInformation, LandInformation, FamilyInformation, Member, LivestockInformation, ExpensesInformation, HouseInformation
 
 class BranchAdmin(admin.ModelAdmin):
     form = BranchForm
@@ -33,3 +33,5 @@ admin.site.register(LandInformation)
 admin.site.register(LivestockInformation)
 admin.site.register(PersonalInformation)
 admin.site.register(FamilyInformation)
+admin.site.register(PersonalMemberDocument)
+admin.site.register(FamilyMemberDocument)

@@ -1,9 +1,12 @@
 from django.db import models, transaction
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth.models import User
+from django.utils.translation import gettext_lazy as _
 
-from dashboard.models import Branch, Center, Member
+from dashboard.models import Branch, Employee, Center, Member
 
 # Create your models here.
 class Teller(models.Model):
@@ -15,11 +18,11 @@ class Teller(models.Model):
     created_at = models.DateField(auto_now_add=True)
 
     def __str__(self):
-        return f"Teller -{self.employee.employee_detail.name}-{self.branch.code}"
+        return f"Teller-{self.employee.employee_detail.name}-{self.branch.code}"
 
 class CashVault(models.Model):
     branch = models.OneToOneField(Branch, on_delete=models.CASCADE, related_name="cash_vault")
-    current_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     last_updated = models.DateTimeField()
     pending_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, null=True, blank=True)
 
@@ -81,6 +84,7 @@ class Voucher(models.Model):
         ('Payment', 'Payment'),
         ('Receipt', 'Receipt'),
         ('Journal', 'Journal'),
+        ('Other', 'Other'),
     ]
     VOUCHER_CATEGORY_CHOICES = [
         ('Cash Sheet', 'Cash Sheet'),
@@ -88,6 +92,9 @@ class Voucher(models.Model):
         ('Collection Sheet', 'Collection Sheet'),
         ('Loan', 'Loan'),
         ('Cash and Bank', 'Cash and Bank'),
+        ('Service Fee', 'Service Fee'),
+        ('Saving Interest', 'Saving Interest'),
+        ('Tax Charges', 'Tax Charges'),
         ('Manual', 'Manual'),
     ]
 
@@ -95,8 +102,12 @@ class Voucher(models.Model):
     voucher_type = models.CharField(max_length=10, choices=VOUCHER_TYPE_CHOICES)
     category = models.CharField(max_length=30, choices=VOUCHER_CATEGORY_CHOICES)
     amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    description = models.TextField(blank=True)
+    narration = models.TextField(blank=True)
     transaction_date = models.DateField()
+
+    in_word = models.TextField(max_length=255, null=True, blank=True)
+    cheque_no = models.BigIntegerField(null=True, blank=True)
+    encloser = models.TextField(max_length=255, null=True, blank=True)
     
     
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="created_vouchers")
@@ -112,7 +123,7 @@ class Voucher(models.Model):
         verbose_name_plural = "Vouchers"
 
     def __str__(self):
-        return f"{self.voucher_type.capitalize()} Voucher #{self.voucher_number}"
+        return f"{self.voucher_type.capitalize()} : {self.category} Voucher #{self.voucher_number}"
 
     def save(self, *args, **kwargs):
         # Generate voucher_number if it doesn't already exist
@@ -121,8 +132,9 @@ class Voucher(models.Model):
         super().save(*args, **kwargs)
     
     def generate_voucher_number(self):
+        branch = self.request.user.employee_detail.branch
         today_str = timezone.now().strftime('%Y%m%d')
-        last_voucher = Voucher.objects.filter(transaction_date=timezone.now().date()).order_by('voucher_number').last()
+        last_voucher = Voucher.objects.filter(transaction_date=timezone.now().date(), branch=branch).order_by('voucher_number').last()
         if last_voucher:
             last_sequence = int(last_voucher.voucher_number[-3:])
             next_sequence = last_sequence + 1
@@ -130,6 +142,24 @@ class Voucher(models.Model):
             next_sequence = 1
         return f"{today_str}{next_sequence:03}"
     
+class VoucherEntry(models.Model):
+    ENTRY_TYPE_CHOICES = [
+        ('debit', 'Debit'),
+        ('credit', 'Credit')
+    ]
+
+    voucher = models.ForeignKey(Voucher, on_delete=models.CASCADE, related_name="entries")
+
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    account = GenericForeignKey("content_type", "object_id")
+    # account = models.CharField(max_length=100)  # Replace with ForeignKey if needed
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    entry_type = models.CharField(max_length=6, choices=ENTRY_TYPE_CHOICES)
+    memo = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.entry_type.capitalize()} - {self.account}: {self.amount}"
 
 class CollectionSheet(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name="collection_sheets")
@@ -138,7 +168,7 @@ class CollectionSheet(models.Model):
     member_collection = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, blank=True, null=True)
     special_record = models.CharField(max_length=100, choices=[( 'A', 'A'), ('P', 'P'), ('L', 'L'), ('S', 'S'),('D', 'D'), ('B', 'B'), ('M', 'M'),('E', 'E')], default='P', null=True, blank=True)
 
-    meeting_no = models.IntegerField(default=1)
+    meeting_no = models.IntegerField(null=True, blank=True)
     meeting_date = models.DateField()
 
     evaluation_no = models.IntegerField()
@@ -156,7 +186,7 @@ class CollectionSheet(models.Model):
         if not self.meeting_date:
             self.meeting_date = self.calculate_meeting_date()
 
-        if not self.meeting_no:
+        if self._state.adding and not self.meeting_no:
             self.meeting_no = self.calculate_meeting_no()
 
         super().save(*args, **kwargs)
@@ -166,14 +196,18 @@ class CollectionSheet(models.Model):
         Calculate the meeting number for this center based on existing meetings.
         The meeting_no will be based on the number of meetings that have already occurred for the center.
         """
-        # Get the meetings for the current center that are already scheduled
-        meetings = CollectionSheet.objects.filter(center=self.center).order_by('meeting_date')
+        # Get unique meeting dates for this center
+        unique_meeting_dates = CollectionSheet.objects.filter(center=self.center).values_list('meeting_date', flat=True).distinct()
         
-        # Get the number of meetings already scheduled for this center
-        meeting_count = meetings.count()
-
-        # The next meeting number will be the next in the sequence
-        return meeting_count + 1
+        # Count unique meeting dates to determine the meeting number
+        meeting_count = unique_meeting_dates.count()
+        
+        # If the new meeting date is already in the list, reuse its meeting_no; otherwise, increment
+        if self.meeting_date in unique_meeting_dates:
+            last_meeting_no = CollectionSheet.objects.filter(center=self.center, meeting_date=self.meeting_date).order_by('-meeting_no').first()
+            return last_meeting_no.meeting_no if last_meeting_no else meeting_count
+        else:
+            return meeting_count + 1
 
     def calculate_meeting_date(self):
         """
@@ -196,4 +230,29 @@ class CollectionSheet(models.Model):
     def __str__(self):
         return f"CollectionSheet {self.id} for Member {self.member} on {self.meeting_date}"
 
+
+class ReceiptTypes(models.TextChoices):
+    ENTRANCE_FEE = 'EntranceFee', _('Entrance Fee')
+    MEMBERSHIP_FEE = 'MembershipFee', _('Membership Fee')
+    PASSBOOK_FEE = 'PassbookFee', _('Passbook Fee')
+    LOAN_PROCESSING_FEE = 'LoanProcessingFee', _('Loan Processing Fee')
+    SAVINGS_DEPOSIT = 'SavingsDeposit', _('Savings Deposit')
+    FIXED_DEPOSIT = 'FixedDeposit', _('Fixed Deposit')
+    RECURRING_DEPOSIT = 'RecurringDeposit', _('Recurring Deposit')
+    ADDITIONAL_SAVINGS = 'AdditionalSavings', _('Additional Savings')
+    SHARE_CAPITAL = 'ShareCapital', _('Share Capital')
+    PENAL_INTEREST = 'PenalInterest', _('Penal Interest')
+    LOAN_DEPOSIT = 'LoanDeposit', _('Loan Deposit')
+    INSURANCE = 'Insurance', _('Insurance')
+
+class PaymentTypes(models.TextChoices):
+    LOANS = 'Loans', _('Loans')
+    TRAVELLING_ALLOWANCE = 'TravellingAllowance', _('Travelling Allowance')
+    PAYMENT_OF_SALARY = 'PaymentOfSalary', _('Payment of Salary')
+    PRINTING_CHARGES = 'PrintingCharges', _('Printing Charges')
+    STATIONARY_CHARGES = 'StationaryCharges', _('Stationary Charges')
+    OTHER_CHARGES = 'OtherCharges', _('Other Charges')
+    SAVINGS_WITHDRAWAL = 'SavingsWithdrawal', _('Savings Withdrawal')
+    FIXED_WITHDRAWAL = 'FixedWithdrawal', _('Fixed Deposit Withdrawal')
+    RECURRING_WITHDRAWAL = 'RecurringWithdrawal', _('Recurring Deposit Withdrawal')
 

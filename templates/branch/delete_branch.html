@@ -1,0 +1,14 @@
+{% extends "base/index.html" %}
+
+{% block title %}
+    <title>Branch</title>
+{% endblock title %}
+{% block content %}
+    <h2>Delete Branch</h2>
+    <form method="post" class="div">
+        {% csrf_token %}
+        <p>Are you sure you want to delete Branch "{{ object.name }}"?</p>
+        <input type="submit" class="btn btn-danger" value='Confirm'>
+        <a href="{% url 'branch_list' %}" class="btn btn-warning">Cancel</a>
+    </form>
+{% endblock %}

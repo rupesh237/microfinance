@@ -2,6 +2,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from dashboard.models import Member, Branch
+from decimal import Decimal
+from django.db import transaction
 
 from core.models import Voucher
 
@@ -42,11 +44,12 @@ class SavingsAccount(models.Model):
     created_on = models.DateTimeField(auto_now_add=True)
 
     ACCOUNT_STATUS = [
-        ('A', 'Active'),
-        ('IA', 'In-Active'),
+        ('active', 'Active'),
+        ('inactive', 'In-Active'),
+        ('closed', 'Closed'), 
     ]
 
-    status = models.CharField(max_length=25, choices=ACCOUNT_STATUS, default='A')
+    status = models.CharField(max_length=25, choices=ACCOUNT_STATUS, default='active')
 
     objects = SavingsAccountManager()
     
@@ -57,6 +60,58 @@ class SavingsAccount(models.Model):
     @property
     def account_type_display(self):
         return self.get_account_type_display()
+    
+    def calculate_provision(self):
+        """
+        Run the provision for the savings account.
+        """
+        last_deposited = self.cashsheets.all().order_by('-transaction_date').first()
+        print(last_deposited.transaction_date)
+
+        # provision = self.balance * Decimal(self.interest_rate / 100)
+        # self.balance += provision
+        # self.save()
+
+    
+    def close_account(self):
+        """
+        Close the savings account after handling provisions and charges.
+        """
+        if self.status == 'closed':
+            raise ValueError("Account is already closed.")
+        
+         # Define charges (e.g., closing fee)
+        TAX_CHARGE = Decimal(50.00)  # Example closing charge
+        provision_amount = self.balance - TAX_CHARGE if self.balance > TAX_CHARGE else Decimal(0.00)
+
+        with transaction.atomic():
+            # Deduct closing fee if applicable
+            if TAX_CHARGE > 0:
+                Voucher.objects.create(
+                    voucher_type='Charge',
+                    category='Closing Fee',
+                    amount=TAX_CHARGE,
+                    narration=f"Closing fee for {self.account_number}",
+                    transaction_date=timezone.now(),
+                    created_by=self.request.user,
+                )
+
+            # Transfer provision amount to another account or return in cash
+            if provision_amount > 0:
+                Voucher.objects.create(
+                    voucher_type='Provision',
+                    category='Account Closure',
+                    amount=provision_amount,
+                    narration=f"Provision balance for {self.account_number}",
+                    transaction_date=timezone.now(),
+                    created_by=self.request.user,
+                )
+
+            # Mark account as closed
+            self.balance = Decimal(0.00)
+            self.status = 'closed'
+            self.save()
+        return True
 
 
 class FixedDeposit(models.Model):
@@ -66,7 +121,7 @@ class FixedDeposit(models.Model):
     maturity_date = models.DateField()
 
     def __str__(self):
-        return f"FD - {self.amount} by {self.member.personalInfo.name}"
+        return f"FD - {self.amount} by {self.member.personalInfo.first_name} {self.member.personalInfo.middle_name} {self.member.personalInfo.last_name}"
 
 class RecurringDeposit(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='recurring_deposits')
@@ -75,12 +130,12 @@ class RecurringDeposit(models.Model):
     interest_rate = models.DecimalField(max_digits=5, decimal_places=2)
 
     def __str__(self):
-        return f"RD - {self.amount} by {self.member.personalInfo.name}"
+        return f"RD - {self.amount} by {self.member.personalInfo.first_name} {self.member.personalInfo.middle_name} {self.member.personalInfo.last_name}"
 
 
 class CashSheet(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name="cashsheet")
-    account = models.ForeignKey(SavingsAccount, on_delete=models.CASCADE, related_name='cashsheet_account')
+    account = models.ForeignKey(SavingsAccount, on_delete=models.CASCADE, related_name='cashsheets')
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     deposited_by = models.CharField(max_length=30, null=True, blank=True)
@@ -95,9 +150,10 @@ class CashSheet(models.Model):
             voucher_type='Receipt',
             category='Cash Sheet',
             amount=self.amount,
-            description=f'Receipt of {self.account.account_number} {self.account.account_type}',
+            narration=f'Receipt of {self.account.account_number} {self.account.account_type}',
             transaction_date=self.transaction_date,
             created_by=self.created_by,
+            branch=self.member.center.branch,
         )
         return voucher
 
@@ -106,7 +162,7 @@ class CashSheet(models.Model):
     
 class PaymentSheet(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name="paymentsheet")
-    account = models.ForeignKey(SavingsAccount, on_delete=models.CASCADE, related_name='payment_account')
+    account = models.ForeignKey(SavingsAccount, on_delete=models.CASCADE, related_name='paymentsheets')
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     withdrawn_by = models.CharField(max_length=30, null=True, blank=True)
@@ -117,13 +173,18 @@ class PaymentSheet(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def create_voucher(self):
+        if self.member.status == "DR":
+            narration = "Account balance withdrawn before closure."
+        else:
+            narration = f'Approved by {self.created_by}'
         voucher = Voucher.objects.create(
             voucher_type='Payment',
             category='Payment Sheet',
             amount=self.amount,
-            description=f'Approved by {self.created_by}',
+            narration=narration,
             transaction_date=self.transaction_date,
             created_by=self.created_by,
+            branch=self.member.center.branch,
         )
         return voucher
 
@@ -141,7 +202,9 @@ class Statement(models.Model):
         ('Payment Sheet', 'Payment Sheet'),
         ('Loan', 'Loan'),
         ('Charge', 'Charge'),
+        ('Tax Charges', 'Tax Charges'),
         ('Collection', 'Collection'),
+        ('Interest', 'Interest'),
     ]
 
     account = models.ForeignKey(SavingsAccount, on_delete=models.CASCADE, related_name='account_stat')

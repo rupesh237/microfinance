@@ -9,13 +9,15 @@ urlpatterns= [
     path('dashboard/manager', views.manager_dashboard, name ="manager_dashboard"),
     path('dashboard/employee', views.employee_dashboard, name='employee_dashboard'),
 
-    path('add-employee', views.add_employee, name="add_employee"),
-    path('employees/', views.employee_list_view, name='employee_list'),
-
-    path('add-branch', views.add_branch, name="add_branch"),
+    path('add-branch', views.BranchCreateView.as_view(), name="add_branch"),
     path('branches/', views.branch_list_view, name='branch_list'),
-    path('branch/update/<int:pk>/', views.update_branch, name='update_branch'),
-    path('branch/delete/<int:pk>/', views.delete_branch, name='delete_branch'),
+    path('branch/update/<int:pk>/', views.BranchUpdateView.as_view(), name='update_branch'),
+    path('branch/delete/<int:pk>/', views.BranchDeleteView.as_view(), name='delete_branch'),
+
+    path('add-employee', views.EmployeeCreateView.as_view(), name="add_employee"),
+    path('employees/', views.EmployeeListView.as_view(), name='employee_list'),
+    path('edit-employee/<int:pk>/', views.EmployeeUpdateView.as_view(), name='edit_employee'),
+    path('delete-employee/<int:pk>/', views.EmployeeDeleteView.as_view(), name='delete_employee'),
 
     path('ajax/load-districts', views.load_districts, name="load_districts"),
     path('ajax/load-municipalities', views.load_municipalities, name="load_municipalities"),
@@ -38,6 +40,9 @@ urlpatterns= [
     path('load-member-codes/', views.load_member_codes, name='load_member_codes'), 
     path('select-center/', views.SelectCenterView.as_view(), name='select_center'),
 
+    path('add-document/', views.upload_document, name='upload_document'),
+    path('delete-document/<int:document_id>/', views.delete_document, name='delete_document'),
+
     path('address-information/', views.AddressInfoView.as_view(), name = 'address_info'),
     path('personal-information/', views.PersonalInfoView.as_view(), name = 'personal_info'),
     path('family-information/', views.FamilyInfoView.as_view(), name = 'family_info'),
@@ -52,7 +57,7 @@ urlpatterns= [
     path('member/<int:member_id>/', views.member_detail_view, name='member_detail'),
     # path('update-member/<int:member_id>', views.MemberUpdateWizard.as_view(views.FORMSS), name='update_members'),
     
-# update of member information urls
+    # update of member information urls
     path('update_address/<int:member_id>/', views.update_address_info, name='update_member'),
     path('update_personal/<int:member_id>/', views.UpdatePersonalInfoView.as_view(), name='update_personal_info'),
     path('update-family-info/<int:member_id>/', views.UpdateFamilyInfoView.as_view(), name='update_family_info'),    

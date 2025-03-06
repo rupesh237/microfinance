@@ -27,8 +27,12 @@
         <nav class="navbar">
             <ul class="nav-left">
                 <li><a href="{% url 'dashboard' %}">Home</a></li>
+                {% if user.is_superuser %}
                 <li><a href="{% url 'branch_list' %}">Branch</a></li>
+                {% endif %}
+                {% if request.user.employee_detail.role == "admin" or request.user.is_superuser %}
                 <li><a href="{% url 'employee_list' %}">Employee</a></li>
+                {% endif %}
                 <li><a href="{% url 'center_list' %}">Center</a></li>
                 <li><a href="{% url 'group_list' %}">Group</a></li>
                 <li><a href="{% url 'member_list' %}">Member</a></li>
@@ -36,9 +40,6 @@
                     <a href="#" class="dropbtn">Transactions <i class="bi bi-chevron-down"></i></a>
                     <div class="dropdown-content">
                         <a href="{% url 'loans' %}">Loans</a>
-                        <a href="#">Payments</a>
-                        <a href="#">Receipts</a>
-                        <a href="#">Withdraw</a>
                         <div class="nested-dropdown">
                             <a href="#" class="dropbtn">Collection Sheet</a>
                             <div class="nested-content">
@@ -46,7 +47,14 @@
                                 <a href="{% url 'collection_sheet_by_center' %}">By Center</a>
                             </div>
                         </div>
-                        <a href="{% url 'vouchers' %}">Voucher</a>
+                        <div class="nested-dropdown">
+                            <a href="{% url 'vouchers' %}" class="dropbtn">Voucher</a>
+                            <div class="nested-content">
+                                <a href="{% url 'new_receipt' %}">Receipt</a>
+                                <a href="{% url 'new_payment' %}">Payment</a>
+                                <a href="{% url 'new_journal' %}">Journal</a>
+                            </div>
+                        </div>
                         <a href="{% url 'cash_management_view' %}">Cash Management</a>
                     </div>
                 </li>
@@ -64,14 +72,13 @@
                         <a href="#">General ledger</a>
                         <a href="{% url 'generate_pdf_receipt' %}">Receipts Compile voucher report</a>
                         <a href="{% url 'generate_pdf_payment' %}">Payments compile voucher report</a>
-                        <a href="#">Daybook report</a>
-                        <a href="#">statements</a>
+                        <a href="{% url 'generate_pdf_daybook' %}">Daybook report</a>
                     </div>
                 </li>
             </ul>
             <div class="nav-right">
-                <p><i class="bi bi-bank"></i> Branch Office - Baneshwor <i class="bi bi-calendar"></i> 2081-06-1</p>
-                <p>Rupesh Kumar Mandal <a href="{% url 'logout' %}"> <i class="bi bi-person-check" style="font-size: 25px; color: white;"></i></a></p>
+                <p><i class="bi bi-bank"></i> Branch Office - {{branch.name}} <i class="bi bi-calendar"></i> {% now "Y-m-d" %}</p>
+                <p>{{request.user.employee_detail.name}}<a href="{% url 'logout' %}"> <i class="bi bi-person-check" style="font-size: 25px; color: white;"></i></a></p>
             </div>
         </nav>
         {% endblock navbar %}
@@ -92,7 +99,7 @@
     
 <!-- Bootstrap JS (include this line) -->
 <script src="{% static 'bootstrap/bootstrap.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/nepali-date@1.0.0/dist/nepali-date.min.js"></script>
 
-    
 </body>
 </html>

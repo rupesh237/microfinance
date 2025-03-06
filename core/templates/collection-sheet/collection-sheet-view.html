@@ -220,10 +220,16 @@
 
         // Get the current status from the server-rendered context
         const currentStatus = "{{ status|default:'' }}";
+        console.log("Current Status:", currentStatus);
+
         
          // Set initial button states based on status
-         function updateButtonStates() {
-            if (currentStatus === "Submitted") {
+         function updateButtonStates(){
+            if (currentStatus === "Saved") {
+                // Disable Submit and enable Approve
+                submitBtn.disabled = false;
+                updateBtn.disabled = false;
+            } else if (currentStatus === "Submitted") {
                 // Disable Submit and enable Approve
                 submitBtn.disabled = true;
                 approveBtn.disabled = false;
