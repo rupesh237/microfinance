@@ -1560,12 +1560,13 @@ def change_member_status(request):
                                     narration=f"Membership and Passbook Fee for {member.code}",
                                     transaction_date=timezone.now(),
                                     created_by=request.user,
+                                    branch = request.user.employee_detail.branch
                                 )
                                 print(voucher)
                         member.status = new_status
                         member.registered_date = timezone.now().date()
                         member.save()
-                        messages.success(request, f"Member status updated to {new_status} and accounts created successfully for {member.name}.")
+                        messages.success(request, f"Member status updated to active and accounts created successfully for {member.personalInfo.first_name} {member.personalInfo.middle_name} {member.personalInfo.last_name}.")
                         return JsonResponse({'success': True, 'redirect_url': f"{reverse('member_list')}?status={new_status}"})
                 except Exception as e:
                     print("Error:", str(e))

@@ -132,7 +132,7 @@ class Voucher(models.Model):
         super().save(*args, **kwargs)
     
     def generate_voucher_number(self):
-        branch = self.request.user.employee_detail.branch
+        branch = self.branch
         today_str = timezone.now().strftime('%Y%m%d')
         last_voucher = Voucher.objects.filter(transaction_date=timezone.now().date(), branch=branch).order_by('voucher_number').last()
         if last_voucher:
