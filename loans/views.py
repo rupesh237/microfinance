@@ -496,22 +496,23 @@ def loan_payment(request, loan_id):
                     current_teller.balance -= loan.loan_analysis_amount
                     current_teller.save()
 
-                    # Create voucher for payment
-                    Voucher.objects.create(
-                        voucher_type='Payment',
-                        category='Loan',
-                        amount=loan.loan_analysis_amount,
-                        narration=f'Loan Payment of {loan.member.personalInfo.first_name} {loan.member.personalInfo.middle_name} {loan.member.personalInfo.last_name}: {loan.amount}',
-                        transaction_date=timezone.now().date(),
-                        created_by=request.user,
-                        branch=request.user.employee_detail.branch,
-                    )
-                    # Update the loan status
-                    loan.status = "active"
-                    loan.created_by = request.user
-                    loan.created_date = timezone.now().date()
-                    loan.save()  
-                    messages.success(request, "Loan payment made successfully!")
+                # Create voucher for payment
+                Voucher.objects.create(
+                    voucher_type='Payment',
+                    category='Loan',
+                    amount=loan.loan_analysis_amount,
+                    narration=f'Loan Payment of {loan.member.personalInfo.first_name} {loan.member.personalInfo.middle_name} {loan.member.personalInfo.last_name}: {loan.amount}',
+                    transaction_date=timezone.now().date(),
+                    created_by=request.user,
+                    branch=request.user.employee_detail.branch,
+                )
+
+                # Update the loan status
+                loan.status = "active"
+                loan.created_by = request.user
+                loan.created_date = timezone.now().date()
+                loan.save()  
+                messages.success(request, "Loan payment made successfully!")
                 return redirect('loan_disburse_list', member_id=loan.member.id)
 
     # Render payment form

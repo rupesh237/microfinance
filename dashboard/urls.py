@@ -70,9 +70,5 @@ urlpatterns= [
     path('get_saving_accounts/<int:member_id>/', views.get_saving_accounts, name='get_saving_accounts'),
     path('members/', views.MemberListView.as_view(), name="member_list"),
     path('change_member_status/', views.change_member_status, name="change_member_status"),
-    path('delete-member/<int:pk>/', views.MemberDeleteView.as_view(), name='delete_member'),
 
-    path('deposits/', views.deposits, name='deposits'),
-    path('transactions/', views.transactions, name='transactions'),
-    path('reports/', views.reports, name='reports')
 ]

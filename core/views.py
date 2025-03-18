@@ -1103,8 +1103,7 @@ def collection_sheet_view(request, center_id):
                                             'status': data['status'],
                                         }
                                     )
-                                    print(created)
-                                    print(collection_sheet)
+                                  
 
                                     if not created:  # Update fields if the record already exists
                                         collection_sheet.member_collection = member_collection
@@ -1222,7 +1221,6 @@ def collection_sheet_pdf(request, center_id):
     # Convert to a sorted list for consistent header ordering
     loan_types = sorted(set(loan_types))
 
-    # Generate initial data for members
     # Prepare initial data with total amount calculation
     initial_data = []
     for member in members:

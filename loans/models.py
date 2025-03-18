@@ -6,6 +6,7 @@ from core.models import Voucher
 from decimal import Decimal
 from dateutil.relativedelta import relativedelta
 from django.utils import timezone
+
 LOAN_TYPE_CHOICES = [
         ('Flat', 'Flat Interest'),
         ('Declining', 'Declining Balance'),
