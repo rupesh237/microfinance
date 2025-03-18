@@ -112,7 +112,10 @@ def calculate_due_principal(branch):
 
 @login_required
 def admin_dashboard(request):
-    branch = request.user.employee_detail.branch
+    if not request.user.is_superuser:
+        branch = request.user.employee_detail.branch
+    else:
+        branch = None
     members =Member.objects.all()
     centers = Center.objects.all()
 
