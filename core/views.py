@@ -862,12 +862,10 @@ def update_member_accounts(request, initial_data):
         savings_accounts = data['account_details']
         for account_type, details in savings_accounts.items():
             account = SavingsAccount.objects.filter(account_type=account_type, member=member).first()
-            voucher_number=generate_voucher_number()
             # Create a Voucher
             try:
                 with transaction.atomic(): 
                     voucher = Voucher.objects.create(
-                        voucher_number=voucher_number,
                         voucher_type='Receipt',
                         category='Collection Sheet',
                         amount=details['amount'],
@@ -1105,8 +1103,7 @@ def collection_sheet_view(request, center_id):
                                             'status': data['status'],
                                         }
                                     )
-                                    print(created)
-                                    print(collection_sheet)
+                                  
 
                                     if not created:  # Update fields if the record already exists
                                         collection_sheet.member_collection = member_collection
@@ -1224,7 +1221,6 @@ def collection_sheet_pdf(request, center_id):
     # Convert to a sorted list for consistent header ordering
     loan_types = sorted(set(loan_types))
 
-    # Generate initial data for members
     # Prepare initial data with total amount calculation
     initial_data = []
     for member in members:

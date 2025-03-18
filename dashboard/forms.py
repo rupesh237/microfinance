@@ -318,7 +318,11 @@ class CenterSelectionForm(forms.ModelForm):
         fields = ['member_category', 'center', 'group', 'member_code', 'code', 'position']
 
     def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
         super(CenterSelectionForm, self).__init__(*args, **kwargs)
+
+        center_queryset = self.get_center_queryset(user)
+        self.fields['center'].queryset = center_queryset
 
         # Add 'form-control' class to all fields
         for field_name, field in self.fields.items():
@@ -342,6 +346,22 @@ class CenterSelectionForm(forms.ModelForm):
         self.fields['group'].queryset = GRoup.objects.filter(center=center)
         max_member_code = center.no_of_group * center.no_of_members if center.no_of_group and center.no_of_members else 0
         self.fields['member_code'].choices = [(i, i) for i in range(1, max_member_code + 1)]
+
+    def get_center_queryset(self, user):
+        """Returns queryset for the center field based on user role."""
+        if not user or not user.is_authenticated:
+            return Center.objects.none()
+
+        if user.is_superuser:
+            return Center.objects.all()
+
+        try:
+            employee = user.employee_detail
+            if employee.role == 'admin':
+                return Center.objects.all()
+            return Center.objects.filter(branch=employee.branch)
+        except AttributeError:
+            return Center.objects.none()
 
     def clean_member_code(self):
         member_code = self.cleaned_data.get('member_code')

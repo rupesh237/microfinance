@@ -38,7 +38,7 @@ from dashboard.forms import (BranchForm, EmployeeForm, CenterForm, GroupForm,
 
 from savings.models import SavingsAccount, CashSheet, PaymentSheet, INITIAL_SAVING_ACCOUNT_TYPE, Statement
 from loans.models import Loan, EMIPayment
-from core.models import Teller, Voucher
+from core.models import Teller, CashVault,Voucher
 
 
 def user_login(request):
@@ -112,7 +112,10 @@ def calculate_due_principal(branch):
 
 @login_required
 def admin_dashboard(request):
-    branch = request.user.employee_detail.branch
+    if not request.user.is_superuser:
+        branch = request.user.employee_detail.branch
+    else:
+        branch = None
     members =Member.objects.all()
     centers = Center.objects.all()
 
@@ -351,6 +354,13 @@ class BranchCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
     success_url = reverse_lazy('branch_list')
 
     def form_valid(self, form):
+        branch = form.save()
+        # Create vault for given branch
+        CashVault.objects.create(
+            branch=branch, 
+            balance=0.0,
+            last_updated=timezone.mow())
+
         messages.success(self.request, 'Branch created successfully!')
         return super().form_valid(form)
 
@@ -431,7 +441,6 @@ class EmployeeCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
         employee.save()
         # Create teller instance for employee
         teller = Teller.objects.create(employee=user, branch=employee.branch)
-        print(teller)
         messages.success(self.request, 'Employee added successfully!')
         return super().form_valid(form)
     def form_invalid(self, form):
@@ -640,6 +649,11 @@ class SelectCenterView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
     # template_name = 'dashboard/select_center.html'
     template_name = 'member/add_member/select_center.html'
     success_url = reverse_lazy('address_info') 
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
     def dispatch(self, request, *args, **kwargs):
         """Delete any unfinished members before starting a new process."""
@@ -1409,13 +1423,6 @@ def load_member_codes(request):
         member_codes = []
     
     return JsonResponse(member_codes, safe=False)
-
-
-   
-class MemberDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
-    model = Member
-    success_url = reverse_lazy('member_list')
-    template_name = 'member/delete_member.html'
     
 
 def member_detail_view(request, member_id):
@@ -1587,12 +1594,3 @@ def change_member_status(request):
             return JsonResponse({'success': True, 'redirect_url': f"{reverse('member_list')}?status={new_status}"})
 
     return JsonResponse({'success': False}, status=400)
-
-def deposits(request):
-    return render(request, 'dashboard/deposits.html')
-
-def transactions(request):
-    return render(request, 'dashboard/transactions.html')
-
-def reports(request):
-    return render(request, 'dashboard/reports.html')

@@ -501,6 +501,7 @@ def loan_payment(request, loan_id):
                     narration=f'Loan Payment of {loan.member.personalInfo.first_name} {loan.member.personalInfo.middle_name} {loan.member.personalInfo.last_name}: {loan.amount}',
                     transaction_date=timezone.now().date(),
                     created_by=request.user,
+                    branch=request.user.employee_detail.branch,
                 )
 
                 # Update the loan status

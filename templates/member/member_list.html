@@ -66,7 +66,7 @@
             </thead>
             <tbody>
                 {% for member in members %}
-                    <tr class="selectable-row" data-member-id="{{ member.id }}">
+                    <tr class="selectable-row" data-member-id="{{ member.id }}" data-member-status="{{member.status}}">
                         <td>{{ member.code }}</td>
                         <td>{{ member.personalInfo.first_name }} {{ member.personalInfo.middle_name }} {{ member.personalInfo.last_name }}</td>
                         <td>{{ member.center }}</td>
@@ -238,21 +238,27 @@
             rows.forEach(row => {
                 row.addEventListener('click', function() {
                     const memberId = this.getAttribute('data-member-id');
-
-                    // Update the Update Member link to point to the selected member's update URL
-                    const updateMemberLink = document.getElementById('updateMemberLink');
-                    updateMemberLink.href = `{% url 'update_member' 0 %}`.replace(/0/, memberId); // Replace with the selected member's ID
-                    // Update the navbar for transactions
-                     const memberCashSheet = document.getElementById('memberCashSheet');
-                     memberCashSheet.href = `{% url 'create_cash_sheet' 0 %}`.replace(/0/, memberId);
-                     const memberPaymentSheet = document.getElementById('memberPaymentSheet');
-                     memberPaymentSheet.href = `{% url 'create_payment_sheet' 0 %}`.replace(/0/, memberId);
-                     const memberStatement = document.getElementById('memberStatement');
-                     memberStatement.href = `{% url 'member-statement' 0 %}`.replace(/0/, memberId);
-                     const memberLoan = document.getElementById('memberLoan');
-                     memberLoan.href = `{% url 'loan_demand_list' 0 %}`.replace(/0/, memberId);
-                     const memberSavingAccounts = document.getElementById('memberSavingAccounts');
-                     memberSavingAccounts.href = `{% url 'member_savings' 0 %}`.replace(/0/, memberId);
+                    const memberStatus = this.getAttribute('data-member-status');
+                    console.log(memberStatus)
+                    if (memberStatus === 'RTR') {
+                        transactionsNavbar.classList.add('disabled');
+                    } else {
+                        transactionsNavbar.classList.remove('disabled');
+                        // Update the Update Member link to point to the selected member's update URL
+                        const updateMemberLink = document.getElementById('updateMemberLink');
+                        updateMemberLink.href = `{% url 'update_member' 0 %}`.replace(/0/, memberId); // Replace with the selected member's ID
+                        // Update the navbar for transactions
+                         const memberCashSheet = document.getElementById('memberCashSheet');
+                         memberCashSheet.href = `{% url 'create_cash_sheet' 0 %}`.replace(/0/, memberId);
+                         const memberPaymentSheet = document.getElementById('memberPaymentSheet');
+                         memberPaymentSheet.href = `{% url 'create_payment_sheet' 0 %}`.replace(/0/, memberId);
+                         const memberStatement = document.getElementById('memberStatement');
+                         memberStatement.href = `{% url 'member-statement' 0 %}`.replace(/0/, memberId);
+                         const memberLoan = document.getElementById('memberLoan');
+                         memberLoan.href = `{% url 'loan_demand_list' 0 %}`.replace(/0/, memberId);
+                         const memberSavingAccounts = document.getElementById('memberSavingAccounts');
+                         memberSavingAccounts.href = `{% url 'member_savings' 0 %}`.replace(/0/, memberId);
+                    }
 
                     // Fetch saving accounts data for the selected member
                     fetch(`/get_saving_accounts/${memberId}/`)
