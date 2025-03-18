@@ -122,7 +122,7 @@ def admin_dashboard(request):
     droupout_members = members.filter(center__branch=branch, status="D").count()
     loanee_members = members.filter(center__branch=branch, status="A", loans__isnull=False).count()
     # Query to count all members in each center for the given branch
-    members_per_center = members.filter(center__branch=branch).values('center').annotate(member_count=Count('id'))
+    members_per_center = members.filter(center__branch=branch, status="A").values('center').annotate(member_count=Count('id'))
     # Calculate the total number of members across all centers
     total_members = sum(item['member_count'] for item in members_per_center)
     # Calculate the average number of members per center
@@ -200,8 +200,8 @@ def manager_dashboard(request):
     droupout_members = members.filter(center__branch=branch, status="D").count()
     loanee_members = members.filter(center__branch=branch, status="A", loans__isnull=False).count()
     # Query to count all members in each center for the given branch
-    total_members = members.count()
-    members_per_center = members.values('center').annotate(member_count=Count('id'))
+    total_members = members.filter(status="A").count()
+    members_per_center = members.filter(status="A").values('center').annotate(member_count=Count('id'))
     average_members_per_center = round(total_members / total_centers, 2) if total_centers else 0
 
     # Deposit and Loan Summary
@@ -237,6 +237,13 @@ def manager_dashboard(request):
     cumulative_recovery = cumulative_loan_deposit  # Since it's already calculated
     total_outstanding_loan = total_disbursement - cumulative_recovery
     overdue_principal = calculate_due_principal(branch=branch)
+
+    # EMI 
+    active_loans = Loan.objects.filter(member__center__branch=branch, status="active")
+    total_emi = sum(loan.total_emi_amount for loan in active_loans) if active_loans.exists() else Decimal("0.00")
+    # Calculate remaining EMI balance
+    remaining_emi = total_emi - cumulative_recovery
+    net_profit = total_emi - remaining_emi
 
     return render(request, "dashboard/manager_dashboard.html",{
         'branch': branch,
@@ -253,6 +260,9 @@ def manager_dashboard(request):
         'cummulative_recovery': cumulative_recovery,
         'total_outstanding_loan': total_outstanding_loan,
         'overdue_principal': overdue_principal,
+        'total_emi': total_emi,
+        'remaining_emi': remaining_emi,
+        'net_profit': net_profit,
     })
 
 @login_required
@@ -267,8 +277,8 @@ def employee_dashboard(request):
     droupout_members = members.filter(center__branch=branch, status="D").count()
     loanee_members = members.filter(center__branch=branch, status="A", loans__isnull=False).count()
     # Query to count all members in each center for the given branch
-    total_members = members.count()
-    members_per_center = members.values('center').annotate(member_count=Count('id'))
+    total_members = members.filter(status="A").count()
+    members_per_center = members.filter(status="A").values('center').annotate(member_count=Count('id'))
     average_members_per_center = round(total_members / total_centers, 2) if total_centers else 0
 
     # Deposit and Loan Summary
@@ -304,6 +314,13 @@ def employee_dashboard(request):
     cumulative_recovery = cumulative_loan_deposit  # Since it's already calculated
     total_outstanding_loan = total_disbursement - cumulative_recovery
     overdue_principal = calculate_due_principal(branch=branch)
+
+    # EMI 
+    active_loans = Loan.objects.filter(member__center__branch=branch, status="active")
+    total_emi = sum(loan.total_emi_amount for loan in active_loans) if active_loans.exists() else Decimal("0.00")
+    # Calculate remaining EMI balance
+    remaining_emi = total_emi - cumulative_recovery
+    net_profit = total_emi - remaining_emi
         
     return render(request, "dashboard/employee_dashboard.html",{
         'branch': branch,
@@ -320,6 +337,9 @@ def employee_dashboard(request):
         'cummulative_recovery': cumulative_recovery,
         'total_outstanding_loan': total_outstanding_loan,
         'overdue_principal': overdue_principal,
+        'total_emi': total_emi,
+        'remaining_emi': remaining_emi,
+        'net_profit': net_profit,
     })
 
 
