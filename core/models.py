@@ -129,12 +129,15 @@ class Voucher(models.Model):
         # Generate voucher_number if it doesn't already exist
         if not self.voucher_number:
             self.voucher_number = self.generate_voucher_number()
+            print(self.voucher_number)
         super().save(*args, **kwargs)
     
     def generate_voucher_number(self):
         branch = self.branch
         today_str = timezone.now().strftime('%Y%m%d')
+        print(timezone.now().date())
         last_voucher = Voucher.objects.filter(transaction_date=timezone.now().date(), branch=branch).order_by('voucher_number').last()
+        print(last_voucher)
         if last_voucher:
             last_sequence = int(last_voucher.voucher_number[-3:])
             next_sequence = last_sequence + 1

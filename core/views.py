@@ -862,12 +862,10 @@ def update_member_accounts(request, initial_data):
         savings_accounts = data['account_details']
         for account_type, details in savings_accounts.items():
             account = SavingsAccount.objects.filter(account_type=account_type, member=member).first()
-            voucher_number=generate_voucher_number()
             # Create a Voucher
             try:
                 with transaction.atomic(): 
                     voucher = Voucher.objects.create(
-                        voucher_number=voucher_number,
                         voucher_type='Receipt',
                         category='Collection Sheet',
                         amount=details['amount'],
