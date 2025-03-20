@@ -35,13 +35,14 @@ urlpatterns= [
     path('edit-group/<int:pk>/', views.GroupUpdateView.as_view(), name='edit_group'),
     path('delete-group/<int:pk>/', views.GroupDeleteView.as_view(), name='delete_group'),
 
-    # path('select-group/', views.select_group, name='select_group'),
     path('load-groups/', views.load_groups, name='load_groups'),
     path('load-member-codes/', views.load_member_codes, name='load_member_codes'), 
     path('select-center/', views.SelectCenterView.as_view(), name='select_center'),
 
-    path('add-document/', views.upload_document, name='upload_document'),
-    path('delete-document/<int:document_id>/', views.delete_document, name='delete_document'),
+    path('add-document/', views.upload_personal_document, name='upload_personal_document'),
+    path('delete-document/<int:document_id>/', views.delete_personal_document, name='delete_personal_document'),
+    path('add-document/family/', views.upload_family_document, name='upload_family_document'),
+    path('delete-document/family/<int:document_id>/', views.delete_family_document, name='delete_family_document'),
 
     path('address-information/', views.AddressInfoView.as_view(), name = 'address_info'),
     path('personal-information/', views.PersonalInfoView.as_view(), name = 'personal_info'),

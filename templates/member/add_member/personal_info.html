@@ -137,7 +137,7 @@
             }
 
     
-            fetch("{% url 'upload_document' %}", {
+            fetch("{% url 'upload_personal_document' %}", {
                 method: "POST",
                 body: formData
             })
@@ -160,7 +160,7 @@
                         noRecordsRow.remove();
                     }
                     let newRow = document.createElement("tr");
-                    let deleteUrl = `{% url 'delete_document' 999999 %}`.replace('999999', data.document.id);
+                    let deleteUrl = `{% url 'delete_personal_document' 999999 %}`.replace('999999', data.document.id);
                     newRow.innerHTML = `
                         <td>${tableBody.children.length + 1}</td>
                         <td>${data.document.document_type}</td>
@@ -230,8 +230,7 @@
         });
     });
     
-    
-    </script>
+</script>
     
 
 

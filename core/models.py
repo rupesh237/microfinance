@@ -23,7 +23,7 @@ class Teller(models.Model):
 class CashVault(models.Model):
     branch = models.OneToOneField(Branch, on_delete=models.CASCADE, related_name="cash_vault")
     balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    last_updated = models.DateTimeField()
+    last_updated = models.DateTimeField(auto_now=True)
     pending_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, null=True, blank=True)
 
     def __str__(self):

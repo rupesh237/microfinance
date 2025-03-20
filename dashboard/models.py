@@ -277,7 +277,7 @@ class PersonalMemberDocument(models.Model):
     document_type = models.CharField(max_length=50, choices=DOC_TYPE_CHOICES)
     document_file = models.FileField(upload_to='member/personal/', blank=True, null=True)
     uploaded_date = models.DateField(auto_now=True)
-    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='uploaded_member_documents', null=True)
+    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='uploaded_member_documents', null=True)
 
     def __str__(self):
         return f"{self.member.personalInfo.first_name} {self.member.personalInfo.middle_name} {self.member.personalInfo.last_name} - Personal Document"
@@ -286,8 +286,8 @@ class FamilyMemberDocument(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name="family_documents")
     relationship = models.CharField(max_length=100)  # Example: Father, Mother, Spouse
     document = models.FileField(upload_to='member/family/', blank=True, null=True)
-    uploaded_date = models.DateField(null=True, blank=True)
-    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='uploaded_family_documents', null=True)
+    uploaded_date = models.DateField(auto_now_add=True)
+    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='uploaded_family_documents', null=True)
 
     def __str__(self):
         return f"{self.member.personalInfo.first_name} {self.member.personalInfo.middle_name} {self.member.personalInfo.last_name} - {self.relationship} Document"
@@ -421,7 +421,13 @@ class IncomeInformation(models.Model):
     government_post = models.FloatField(default=0.0, null=True, blank=True)
     pension = models.FloatField(default=0.0, null=True, blank=True)
     other = models.FloatField(default=0.0, null=True, blank=True)
+
+    @property
+    def total_income(self):
+        return self.agriculture_income + self.animal_farming_income + self.business_income + self.abroad_employment_income + self.wages_income + self.personal_job_income + self.government_post + self.pension + self.other
     
+    def __str__(self):
+        return f"{self.member.personalInfo.first_name}  {self.member.personalInfo.middle_name} {self.member.personalInfo.last_name}"
 
 class ExpensesInformation(models.Model):
     member = models.OneToOneField(Member, on_delete=models.CASCADE, related_name='expensesInfo')
@@ -434,3 +440,12 @@ class ExpensesInformation(models.Model):
     fuel_expenses = models.FloatField(default=0.0, null=True, blank=True)
     entertaiment_expenses = models.FloatField(default=0.0, null=True, blank=True)
     other_expenses = models.FloatField(default=0.0, null=True, blank=True)
+
+    @property
+    def total_expenses(self):
+        return self.house_expenses + self.health_expenses + self.education_expenses + self.festival_expenses + self.clothes_expenses + self.communication_expenses + self.fuel_expenses + self.entertaiment_expenses + self.other_expenses
+    
+    def __str__(self):
+        return f"{self.member.personalInfo.first_name}  {self.member.personalInfo.middle_name} {self.member.personalInfo.last_name}"
+
+    

@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
 from django.http import JsonResponse, HttpResponseRedirect
+from django.template.loader import render_to_string
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -34,7 +35,7 @@ from dashboard.models import (Province, District, Municipality,
                               LivestockInformation, HouseInformation, LandInformation, 
                               IncomeInformation, ExpensesInformation)
 from dashboard.forms import (BranchForm, EmployeeForm, CenterForm, GroupForm, 
-                             PersonalMemberDocumentForm)
+                             PersonalMemberDocumentForm, FamilyMemberDocumentForm)
 
 from savings.models import SavingsAccount, CashSheet, PaymentSheet, INITIAL_SAVING_ACCOUNT_TYPE, Statement
 from loans.models import Loan, EMIPayment
@@ -822,10 +823,6 @@ class PersonalInfoView(FormView):
         # Save the cleaned data to session
         self.request.session['personal_info'] = personal_info
         self.request.session.modified = True
-
-        # Debugging: Check session data
-        # print("Session data saved:", self.request.session['personal_info'])
-
         return redirect('family_info')  # Redirect to the next step
 
     def form_invalid(self, form):
@@ -874,7 +871,18 @@ class FamilyInfoView(FormView):
             for i in range(len(predefined_relationships))
         ]
 
-        return self.render_to_response({"forms": forms})
+        # Family documents
+        member_id = self.request.session.get('member_id')
+        member = get_object_or_404(Member, id=member_id)
+        family_documents = member.family_documents.all() or []
+        family_document_form = FamilyMemberDocumentForm()
+
+        return self.render_to_response({
+            "forms": forms,
+            'member': member,
+            'family_document_form': family_document_form,
+            'family_documents': family_documents,
+        })
 
     def process_forms(self, request):
         """Process forms submitted via POST."""
@@ -937,8 +945,6 @@ class FamilyInfoView(FormView):
         response_kwargs.setdefault("content_type", self.content_type)
         return super().render_to_response(context, **response_kwargs)
 
-
-from django.template.loader import render_to_string
 def get_new_family_form(request):
     """
     AJAX view to dynamically add a new family member form.
@@ -1170,7 +1176,7 @@ def update_address_info(request, member_id):
         "member": member,
     })
 
-def upload_document(request):
+def upload_personal_document(request):
     if request.method == "POST":
         form = PersonalMemberDocumentForm(request.POST, request.FILES)
         if form.is_valid():
@@ -1197,13 +1203,50 @@ def upload_document(request):
     
     return JsonResponse({"success": False, "message": "Invalid request"}, status=400)
 
-def delete_document(request, document_id):
+def delete_personal_document(request, document_id):
     if request.method == "DELETE":
         document = get_object_or_404(PersonalMemberDocument, id=document_id)
         document.delete()
         return JsonResponse({"success": True, "message": "Document deleted successfully."})
     return JsonResponse({"success": False, "message": "Invalid request."}, status=400)
 
+
+def upload_family_document(request):
+    if request.method == "POST":
+        form = FamilyMemberDocumentForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                member = Member.objects.get(id=request.POST.get('member'))
+                realtionship = request.POST.get('relationship')
+            except Member.DoesNotExist:
+                return JsonResponse({"success": False, "message": "Member not found"}, status=400)
+
+            doc = form.save(commit=False)
+            doc.member = member
+            doc.relationship = realtionship 
+            doc.uploaded_by = request.user
+            doc.uploaded_date = timezone.now().date()
+            doc.save()
+            return JsonResponse({
+                "success": True,
+                "document": {
+                    "id": doc.id,
+                    "relationship": doc.relationship,
+                    "document_url": doc.document.url,
+                    "document_name": doc.document.name.split("/member/family/")[-1],  # Extract filename
+                }
+            }, status=200)  
+
+        return JsonResponse({"success": False, "errors": form.errors})
+    
+    return JsonResponse({"success": False, "message": "Invalid request"}, status=400)
+
+def delete_family_document(request, document_id):
+    if request.method == "DELETE":
+        document = get_object_or_404(FamilyMemberDocument, id=document_id)
+        document.delete()
+        return JsonResponse({"success": True, "message": "Document deleted successfully."})
+    return JsonResponse({"success": False, "message": "Invalid request."}, status=400)
 
 # Step 2: Personal Information Update
 class UpdatePersonalInfoView(UpdateView):
@@ -1261,10 +1304,16 @@ class UpdateFamilyInfoView(FormView):
             form = FamilyInformationForm(instance=instance, prefix=f'family-{i}')
             forms.append(form)
 
+        # For family document
+        family_document_form = FamilyMemberDocumentForm()
+        family_documents = member.family_documents.all() or []
+
         # Prepare context for dynamic form (add more family members)
         return {
             'member': member,
             'forms': forms,
+            'family_document_form': family_document_form,
+            'family_documents': family_documents,
         }
 
     def form_valid(self, form):
@@ -1285,10 +1334,6 @@ class UpdateFamilyInfoView(FormView):
             if not form.is_valid():
                 return self.form_invalid(form)
             i += 1
-
-        # Save forms
-        print(self.request.POST)
-        print(forms)
         for form in forms:
             family_info = form.save(commit=False)
             family_info.member = member

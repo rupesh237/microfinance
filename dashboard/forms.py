@@ -462,6 +462,11 @@ class PersonalMemberDocumentForm(forms.ModelForm):
         model = PersonalMemberDocument
         fields = ['document_type', 'document_file',]
 
+class FamilyMemberDocumentForm(forms.ModelForm):
+    class Meta:
+        model = FamilyMemberDocument
+        fields = ['document',]
+
 class PersonalInformationForm(forms.ModelForm):
     class Meta:
         model = PersonalInformation
@@ -522,9 +527,9 @@ class LandInformationForm(forms.ModelForm):
     class Meta:
         model = LandInformation
         fields = [ 'farming_land','other_land']
-        widgets = {
-            'farming_land': forms.TextInput(attrs={'placeholder': 'Farming Land (Dhur)'}),
-            'other_land': forms.TextInput(attrs={'placeholder': 'Other Land (Dhur)'})
+        labels = {
+            'farming_land': 'Farming Land (Dhur)',
+            'other_land': 'Other Land (Dhur)',
         }
 
     def __init__(self, *args, **kwargs):
@@ -536,16 +541,16 @@ class IncomeInformationForm(forms.ModelForm):
     class Meta:
         model = IncomeInformation
         fields = ['agriculture_income', 'animal_farming_income', 'business_income', 'abroad_employment_income', 'wages_income', 'personal_job_income', 'government_post', 'pension', 'other']
-        widgets = {
-            'agriculture_income': forms.TextInput(attrs={'placeholder': '(Montly)'}),
-            'animal_farming_income': forms.TextInput(attrs={'placeholder': '(Montly)'}),
-            'business_income': forms.TextInput(attrs={'placeholder': '(Montly)'}),
-            'abroad_employment_income': forms.TextInput(attrs={'placeholder': '(Montly)'}),
-            'wages_income': forms.TextInput(attrs={'placeholder': '(Montly)'}),
-            'personal_job_income': forms.TextInput(attrs={'placeholder': '(Montly)'}),
-            'government_post': forms.TextInput(attrs={'placeholder': '(Montly)'}),
-            'pension': forms.TextInput(attrs={'placeholder': '(Montly)'}),
-            'other': forms.TextInput(attrs={'placeholder': '(Montly)'}),
+        labels = {
+            'agriculture_income': 'Agriculture Income (Yearly)',
+            'animal_farming_income': 'Animal Farming Income (Yearly)',
+            'business_income': 'Business Income (Yearly)',
+            'abroad_employment_income': 'Abroad Employment Income (Monthly)',
+            'wages_income': 'Wages Income (Daily)',
+            'personal_job_income': 'Personal Job Income (Monthly)',
+            'government_post': 'Government Post Income (Monthly)',
+            'pension': 'Pension Income (Monthly)',
+            'other': 'Other Income (Yearly)',
         }
 
     def __init__(self, *args, **kwargs):
@@ -557,16 +562,16 @@ class ExpensesInformationForm(forms.ModelForm):
     class Meta:
         model = ExpensesInformation
         fields = ['house_expenses', 'education_expenses', 'health_expenses', 'festival_expenses', 'clothes_expenses', 'communication_expenses', 'fuel_expenses', 'entertaiment_expenses', 'other_expenses']
-        widgets = {
-            'house_expenses': forms.TextInput(attrs={'placeholder': '(Montly)'}),
-            'education_expenses': forms.TextInput(attrs={'placeholder': '(Montly)'}),
-            'health_expenses': forms.TextInput(attrs={'placeholder': '(Montly)'}),
-            'festival_expenses': forms.TextInput(attrs={'placeholder': '(Montly)'}),
-            'clothes_expenses': forms.TextInput(attrs={'placeholder': '(Montly)'}),
-            'communication_expenses': forms.TextInput(attrs={'placeholder': '(Montly)'}),
-            'fuel_expenses': forms.TextInput(attrs={'placeholder': '(Montly)'}),
-            'entertaiment_expenses': forms.TextInput(attrs={'placeholder': '(Montly)'}),
-            'other_expenses': forms.TextInput(attrs={'placeholder': '(Montly)'}),
+        labels = {
+            'house_expenses': "House Expenses (Monthly)",
+            'education_expenses': "Education Expenses (Yearly)",
+            'health_expenses': "Health Expenses (Yearly)",
+            'festival_expenses': "Festival Expenses (Yearly)",
+            'clothes_expenses': "Clothes Expenses (Yearly)",
+            'communication_expenses': "Communication Expenses (Monthly)",
+            'fuel_expenses': "Fuel Expenses (Monthly)",
+            'entertaiment_expenses': "Entertaiment Expenses (Monthly)",
+            'other_expenses': "Other Expenses (Yearly)",
         }
 
     def __init__(self, *args, **kwargs):
