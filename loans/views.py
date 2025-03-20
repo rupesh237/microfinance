@@ -46,7 +46,6 @@ class LoanListView(LoginRequiredMixin, RoleRequiredMixin, ListView):
             else:
                 loan.last_amount_paid = 0.00
                 loan.last_closing_balance = loan.amount
-
         return loans
 
 
@@ -57,10 +56,12 @@ def member_loans(request, member_id):
     loans = member.loans.filter(status='active', is_cleared=False)
     emi_schedules = {loan.id: loan.calculate_emi_breakdown() for loan in loans}
     # Initialize total amounts
+    total_emi_amount = 0
     total_principal_amount = 0
     total_interest_amount = 0
     for schedule in emi_schedules.values():
         for emi in schedule:
+            total_emi_amount += emi['emi_amount']
             total_principal_amount += emi['principal_component']
             total_interest_amount += emi['interest_component']
             
@@ -120,6 +121,7 @@ def member_loans(request, member_id):
         'loans': loans,
         'form': form,
         'emi_schedules': emi_schedules,
+        'total_emi_amount': total_emi_amount,
         'total_principal_amount': total_principal_amount,
         'total_interest_amount': total_interest_amount,
         'payment_form': payment_form,
@@ -310,7 +312,9 @@ def loan_analysis_form(request,loan_id):
 
     # Fetch the existing IncomeInformation for the member or create one if none exists
     income_info = IncomeInformation.objects.get(member=member)
+    total_member_income = income_info.total_income
     expenses_info = ExpensesInformation.objects.get(member=member)
+    total_member_expenses = expenses_info.total_expenses
 
     if request.method == 'POST':
         income_form = IncomeInformationForm(request.POST, instance=income_info, prefix='income')
@@ -333,6 +337,8 @@ def loan_analysis_form(request,loan_id):
     context = {
         'income_form': income_form,
         'expenses_form': expenses_form,
+        'total_member_income': total_member_income,
+        'total_member_expenses': total_member_expenses,
         'loan_analysis_form': loan_analysis_form,
     }
     return render(request, 'loans/forms/loan_analysis_form.html', context)

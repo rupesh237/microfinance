@@ -61,7 +61,7 @@
                             </select>
                         </form>
                     </th>
-                    <th>Details</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -82,8 +82,12 @@
                         </td>
                         <td>{{ member.member_category }}</td>
                         <td>{{ member.get_status_display }}</td>
-                        <td><a href="{% url 'member_detail' member.id %}"><i class="bi bi-file-person"></i></a></td>
-                        <td><a href="#"><i class="bi bi-journal-text"></i></a></td>
+                        <td>
+                            <a href="{% url 'member_detail' member.id %}"><i class="bi bi-file-person"></i></a>
+                            <a href="{% url 'update_member' member.id %}" class="ml-3" title="Edit">
+                                <i class="bi bi-pencil-fill"></i>
+                            </a>
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>

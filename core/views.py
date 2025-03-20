@@ -39,7 +39,6 @@ def member_chart(request):
     months = [today.replace(day=1) - timedelta(days=30 * i) for i in range(6, -1, -1)]
     month_labels = [month.strftime("%B") for month in months]  # Format as "January 2024"
     
-
     # Query active members by month
     active_members = (
         Member.objects.filter(center__branch=branch, status='A')
@@ -1380,7 +1379,6 @@ def create_vault_transaction(request, vault, teller, transaction_type, amount):
             
             # update cashvault balance
             vault.balance -= Decimal(amount)
-            vault.last_updated = datetime.now()
             vault.save()
 
             # Add teller's pending amount
@@ -1426,7 +1424,6 @@ def update_vault_transaction(request, transaction_id):
         vault = vault_transaction.cash_vault
         vault.balance += vault_transaction.amount
         vault.pending_amount -= vault_transaction.amount
-        vault.last_updated = datetime.now()
         vault.save()
 
         vault_transaction.status = "Approved"
