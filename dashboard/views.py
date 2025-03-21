@@ -1581,7 +1581,7 @@ def change_member_status(request):
                 messages.success(request, f"Member status updated to {new_status} for {member.personalInfo.first_name} {member.personalInfo.middle_name} {member.personalInfo.last_name}.")
                 return JsonResponse({'success': True, 'redirect_url': f"{reverse('member_list')}?status={new_status}"})
         elif new_status == "DR":
-            loans = member.loans.all()
+            loans = member.loans.filter(status="active").all()
             if loans:
                 return JsonResponse({'success': False, 'error': 'Clear all loans before dropping this member.'}, status=400)
             member.status = new_status
