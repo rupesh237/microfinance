@@ -359,8 +359,7 @@ class BranchCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
         # Create vault for given branch
         CashVault.objects.create(
             branch=branch, 
-            balance=0.0,
-            last_updated=timezone.mow())
+            balance=0.0,)
 
         messages.success(self.request, 'Branch created successfully!')
         return super().form_valid(form)
