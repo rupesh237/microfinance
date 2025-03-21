@@ -14,13 +14,12 @@ click==8.1.7
 click-didyoumean==0.3.1
 click-plugins==1.1.1
 click-repl==0.3.0
-colorama==0.4.6
 cryptography==43.0.3
 cssselect2==0.7.0
 Django==4.2.14
 django-appconf==1.0.6
 django-compressor==4.5.1
-django-filter==24.3
+django-filter==23.2
 django-formtools==2.5.1
 django-htmx==1.21.0
 django-nepali-datetime-field==0.7.1
@@ -28,7 +27,8 @@ django-widget-tweaks==1.5.0
 fonttools==4.53.1
 html5lib==1.1
 idna==3.10
-inflect==7.4.0
+importlib_metadata==8.5.0
+inflect==7.5.0
 kombu==5.3.7
 lxml==5.3.0
 more-itertools==10.5.0
@@ -38,9 +38,9 @@ pillow==10.4.0
 prompt_toolkit==3.0.47
 pycparser==2.22
 pydyf==0.11.0
-pyHanko==0.25.3
-pyhanko-certvalidator==0.26.5
-pypdf==5.1.0
+pyHanko==0.25.1
+pyhanko-certvalidator==0.26.3
+pypdf==5.0.1
 pyphen==0.15.0
 python-bidi==0.6.3
 python-dateutil==2.9.0.post0
@@ -66,4 +66,5 @@ wcwidth==0.2.13
 weasyprint==62.3
 webencodings==0.5.1
 xhtml2pdf==0.2.16
+zipp==3.21.0
 zopfli==0.2.3
