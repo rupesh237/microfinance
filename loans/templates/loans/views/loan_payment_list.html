@@ -37,7 +37,7 @@
     </thead>
     <tbody>
         {% if loan %}
-        <tr>
+        <tr id="loan-row-{{ loan.id }}">
             <td>{{ loan.loan_demand_date }}</td>
             <td>{{ loan.loan_disburse_date }}</td>
             <td>{{ loan.loan_type }}</td>
@@ -45,7 +45,11 @@
             <td>{{ loan.loan_analysis_amount }}</td>
             <td>{{ loan.loan_purpose }}</td>
             <td>
-                <i class="bi bi-trash-fill"></i>
+                <i class="bi bi-trash-fill text-danger update-loan-processing" 
+                   data-loan-id="{{ loan.id }}" 
+                   data-status="disburse" 
+                   style="cursor: pointer;">
+                </i>
             </td>
         </tr>
         {% else %}
@@ -57,5 +61,6 @@
         {% endif %}
     </tbody>
 </table>   
+
 {% endblock loan_table %}
                

@@ -10,7 +10,7 @@ from django.contrib import messages
 from django.template.loader import get_template
 from django.views.generic import ListView
 
-from .models import Loan, EMIPayment
+from .models import Loan, LoanProcessing,EMIPayment
 from .forms import LoanDemandForm, LoanAnalysisForm, LoanDisburseForm, EMIPaymentForm  # Create EMIPaymentForm as needed
 from dashboard.models import Member, PersonalInformation, AddressInformation, FamilyInformation, LivestockInformation, HouseInformation, LandInformation, IncomeInformation, ExpensesInformation
 from dashboard.forms import PersonalInformationForm, AddressInformationForm, FamilyInformationForm, LivestockInformationForm, HouseInformationForm, LandInformationForm, IncomeInformationForm, ExpensesInformationForm
@@ -258,8 +258,6 @@ def update_address_info(request, member_id):
     })
 
 
-
-
 ## LOAN DEMAND ##
 def loan_demand_form(request, member_id):
     member = get_object_or_404(Member, id =member_id)
@@ -272,6 +270,8 @@ def loan_demand_form(request, member_id):
             loan = form.save(commit=False)
             loan.member = member
             loan.save()
+            # Start loan processing
+            LoanProcessing.objects.create(loan=loan)
             return redirect('loan_demand_list', member_id=member.id)
     else:
         form = LoanDemandForm(initial={'member': member})
@@ -286,7 +286,12 @@ def loan_demand_form(request, member_id):
 
 def loan_demand_list(request, member_id):
     member = get_object_or_404(Member, id =member_id)
-    loan = Loan.objects.filter(member=member).first()
+    loan_processing = LoanProcessing.objects.filter(loan__member=member).first() 
+    if loan_processing is None:
+        loan = None
+    else:
+        loan = loan_processing.loan
+
     return render (request, 'loans/views/loan_demand_list.html', {
        'loan': loan,
        'member': member
@@ -295,12 +300,14 @@ def loan_demand_list(request, member_id):
 ## LOAN ANALYSIS ##
 def loan_analysis_list(request, member_id):
     member = get_object_or_404(Member, id =member_id)
-    loan = Loan.objects.filter(member=member).first()
-    if loan is not None:
-        if loan.status == 'analysis' or loan.status != 'applied':
-            loan = loan
+    loan_processing = LoanProcessing.objects.filter(loan__member=member).first()
+    if loan_processing is not None:
+        if (loan_processing.status == 'analysis' or loan_processing.status != 'applied'):
+            loan = loan_processing.loan
         else:
             loan = None
+    else:
+        loan = None
     return render (request, 'loans/views/loan_analysis_list.html', {
        'loan': loan,
        'member': member
@@ -328,6 +335,10 @@ def loan_analysis_form(request,loan_id):
             loan_info = loan_analysis_form.save(commit=False)
             loan_info.status = "analysis"
             loan_info.save() 
+            # update loan processing status
+            loan_processing = loan_info.loan_processings.first()
+            loan_processing.status = "analysis"
+            loan_processing.save()
             return redirect('loan_demand_list', member_id=member.id)
     else:
         income_form = IncomeInformationForm(instance=income_info, prefix='income')
@@ -349,15 +360,16 @@ def loan_disburse_list(request, member_id):
     This view renders the list of loans which are ready for disbursement.
     """
     member = get_object_or_404(Member, id =member_id)
-    # Fetch the latest loan of the member which is ready for disbursement
-    loan = Loan.objects.filter(member=member).first()
-    if loan is not None:
+    loan_processing = LoanProcessing.objects.filter(loan__member=member).first()
+    if loan_processing is not None:
         # If the loan is in disburse or active status, show it to the user
-        if loan.status == 'disburse' or loan.status == 'approved' or loan.status == 'active':
-            loan = loan
+        if loan_processing.status == 'disburse' or loan_processing.status == 'approved' or loan_processing.status == 'active':
+            loan = loan_processing.loan
         else:
             # If the loan is in any other status, don't show it to the user
             loan = None
+    else:
+        loan = None
     return render (request, 'loans/views/loan_disburse_list.html', {
        'loan': loan,
        'member': member
@@ -411,6 +423,10 @@ def loan_disburse_form(request, loan_id):
             loan_info.installement_amount = emis['emi_amount']
             loan_info.status = "disburse"
             loan_info.save() 
+            # update loan processing status
+            loan_processing = loan_info.loan_processings.first()
+            loan_processing.status = "disburse"
+            loan_processing.save()
             return redirect('loan_analysis_list', member_id=member.id)
         
     else:
@@ -425,16 +441,33 @@ def loan_disburse_form(request, loan_id):
 ## LOAN PAYMNET ##
 def loan_payment_list(request, member_id):
     member = get_object_or_404(Member, id =member_id)
-    loan = Loan.objects.filter(member=member).first()
-    if loan is not None:
-        if loan.status == 'active':
-            loan = loan
+    loan_processing = LoanProcessing.objects.filter(loan__member=member).first()
+    if loan_processing is not None:
+        if loan_processing.status == 'active':
+            loan = loan_processing.loan
         else:
             loan = None
+    else:
+        loan = None
     return render (request, 'loans/views/loan_payment_list.html', {
        'loan': loan,
        'member': member
     })
+
+@csrf_exempt
+def change_loan_processing_status(request, loan_id, status):
+    if request.method == "POST":
+        loan_processing = get_object_or_404(LoanProcessing, loan_id=loan_id)
+        if status == 'delete':
+            loan = loan_processing.loan
+            loan_processing.delete()
+            if loan.status != 'active':
+                loan.delete()
+            return JsonResponse({"success": True})
+        loan_processing.status = status
+        loan_processing.save()
+        return JsonResponse({"success": True})
+    return JsonResponse({"success": False, "error": "Invalid request"}, status=400)
 
 def approve_loan(request, loan_id):
     # Approve the loan (your logic here)
@@ -455,6 +488,11 @@ def approve_loan(request, loan_id):
         # Update the loan status
         loan.status = "approved"
         loan.save()
+        # update loan processing status
+        loan_processing = loan.loan_processings.first()
+        loan_processing.status = "approved"
+        loan_processing.save()
+    
         messages.success(request, f"Loan has been approved successfully!")
         return redirect('loan_disburse_list', member_id=loan.member.id)
 
@@ -515,6 +553,10 @@ def loan_payment(request, loan_id):
                 loan.created_by = request.user
                 loan.created_date = timezone.now().date()
                 loan.save()  
+                # update loan processing status
+                loan_processing = loan.loan_processings.first()
+                loan_processing.status = "active"
+                loan_processing.save()
                 messages.success(request, "Loan payment made successfully!")
                 return redirect('loan_disburse_list', member_id=loan.member.id)
 
@@ -535,7 +577,9 @@ from django.utils import timezone
 # Need to be updated
 @login_required
 def confirm_clear_loan(request, loan_id):
-    loan = get_object_or_404(Loan, id=loan_id)
+    branch = request.user.employee_detail.branch
+    loan = get_object_or_404(Loan, id=loan_id, member__center__branch=branch)
+    print(loan)
 
     # Ensure loan is not already cleared
     if loan.is_cleared:
@@ -565,25 +609,46 @@ def confirm_clear_loan(request, loan_id):
         })
 
     if request.method == 'POST':
-        try:
-            amount_paid = Decimal(request.POST.get('amount_paid'))
-            if amount_paid == total_due:
-                EMIPayment.objects.create(
-                    loan=loan,
-                    payment_date=today,
-                    amount_paid=amount_paid,
-                    principal_paid=remaining_principal,
-                    interest_paid=accrued_interest,
-                )
-                loan.is_cleared = True
-                loan.status = 'closed'
-                loan.save()
-                messages.success(request, f'Loan "{loan.loan_type}" has been successfully cleared.')
-                return HttpResponseRedirect(reverse('member_loans', args=[loan.member.id]))
-            else:
-                messages.error(request, 'The amount entered does not match the outstanding total due.')
-        except (ValueError, InvalidOperation):
-            messages.error(request, 'Invalid payment amount entered.')
+        with transaction.atomic():
+            try:
+                current_teller = Teller.objects.filter(employee=request.user, branch=branch).first()
+                print(current_teller)
+                if not current_teller:
+                    messages.error(request, 'No teller found for given employee.')
+                    return HttpResponseRedirect(reverse('confirm_clear_loan', args=[loan.member.id]))
+                
+                amount_paid = Decimal(request.POST.get('amount_paid'))
+                if amount_paid == total_due:
+                    EMIPayment.objects.create(
+                        loan=loan,
+                        payment_date=today,
+                        amount_paid=amount_paid,
+                        principal_paid=remaining_principal,
+                        interest_paid=accrued_interest,
+                    )
+                    loan.is_cleared = True
+                    loan.status = 'closed'
+                    loan.save()
+                    # Create voucher for clearing loan
+                    Voucher.objects.create(
+                        voucher_type='Receipt',
+                        category='Loan',
+                        amount=amount_paid,
+                        narration=f'Loan Clearance of {loan.member.personalInfo.first_name} {loan.member.personalInfo.middle_name} {loan.member.personalInfo.last_name}: {loan.amount}',
+                        transaction_date=timezone.now().date(),
+                        created_by=request.user,
+                        branch=branch,
+                    )
+                    # update teller balance
+                    current_teller.balance += amount_paid
+                    current_teller.save()
+
+                    messages.success(request, f'Loan "{loan.loan_type}" has been successfully cleared.')
+                    return HttpResponseRedirect(reverse('member_loans', args=[loan.member.id]))
+                else:
+                    messages.error(request, 'The amount entered does not match the outstanding total due.')
+            except (ValueError, InvalidOperation):
+                messages.error(request, 'Invalid payment amount entered.')
 
     return HttpResponseRedirect(reverse('confirm_clear_loan', args=[loan.id]))
 

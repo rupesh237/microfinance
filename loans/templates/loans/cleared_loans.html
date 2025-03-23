@@ -31,7 +31,7 @@
                         <td>{{ loan.amount|floatformat:2 }}</td>
                         <td>{{ loan.interest_rate|floatformat:2 }}</td>
                         <td>{{ loan.duration_months }}</td>
-                        <td>{{ loan.start_date }}</td>
+                        <td>{{ loan.created_date }}</td>
                         <td>{{ loan.emi_payments.last.payment_date }}</td>
                     </tr>
                     {% endfor %}

@@ -14,7 +14,7 @@
     </thead>
     <tbody>
         {% if loan %}
-        <tr class="{% if loan.status != 'applied' %}highlight-loan-row{% endif %}">
+        <tr class="{% if loan.status != 'applied' %}highlight-loan-row{% endif %}" id="loan-row-{{ loan.id }}">
             <td>{{ loan.loan_demand_date }}</td>
             <td>{{ loan.loan_disburse_date }}</td>
             <td>{{ loan.loan_type }}</td>
@@ -28,7 +28,11 @@
                     </a>
                 </div>
                 
-                <i class="bi bi-trash-fill"></i>
+                <i class="bi bi-trash-fill text-danger update-loan-processing" 
+                    data-loan-id="{{ loan.id }}" 
+                    data-status="delete" 
+                    style="cursor: pointer;">
+                </i>
             </td>
         </tr>
         {% else %}

@@ -83,6 +83,43 @@
                     });
                 });
             });
+
+            document.addEventListener("DOMContentLoaded", function () {
+                document.querySelectorAll(".update-loan-processing").forEach((icon) => {
+                    icon.addEventListener("click", function () {
+                        let loanId = this.getAttribute("data-loan-id");
+                        let status = this.getAttribute("data-status");
+            
+                        if (confirm("Are you sure you want to remove this loan from processing?")) {
+                            fetch(`/loans/change-loan-processing-status/${loanId}/${status}/`, {
+                                method: "POST",
+                                headers: {
+                                    "X-CSRFToken": getCSRFToken(),
+                                    "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify({}),
+                            })
+                            .then((response) => response.json())
+                            .then((data) => {
+                                if (data.success) {
+                                    let row = document.getElementById(`loan-row-${loanId}`);
+                                    if (row) row.remove();
+                                    alert("Loan removed successfully.");
+                                } else {
+                                    alert("Error removing loan.");
+                                }
+                            })
+                            .catch((error) => console.error("Error:", error));
+                        }
+                    });
+                });
+            
+                function getCSRFToken() {
+                    let tokenElement = document.querySelector("[name=csrfmiddlewaretoken]");
+                    return tokenElement ? tokenElement.value : "";
+                }
+            });    
+
         </script>
     </div>
 

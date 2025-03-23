@@ -15,6 +15,7 @@ urlpatterns = [
     
     path('loan-analysis/<int:loan_id>', views.loan_analysis_form, name= 'loan_analysis_form'),
     path('<int:member_id>/loan-analysis', views.loan_analysis_list, name= 'loan_analysis_list'),
+    path('change-loan-processing-status/<int:loan_id>/<str:status>/', views.change_loan_processing_status, name="update_loan_processing"),
 
     path("loans/preview-schedule/", views.preview_schedule, name="loan_preview_schedule"),
     path('loan-disburse/<int:loan_id>', views.loan_disburse_form, name= 'loan_disburse_form'),

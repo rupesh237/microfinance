@@ -155,7 +155,14 @@ class Loan(models.Model):
         total_emi = sum(item['emi_amount'] for item in breakdown)
         return round(total_emi, 2)
 
+class LoanProcessing(models.Model):
+    loan = models.ForeignKey(Loan, on_delete=models.CASCADE, related_name='loan_processings')
+    status = models.CharField(max_length=100, choices=[( 'applied', 'Applied'), ('analysis', 'Analysis'), ('disburse', 'Disburse'), ('approved', 'Approved'),('active', 'Active'), ('processed', 'Processed')], default='applied')
+    timestamp = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return f"{self.loan} - {self.status}"
 
 class EMIPayment(models.Model):
     loan = models.ForeignKey(Loan, on_delete=models.CASCADE, related_name='emi_payments')

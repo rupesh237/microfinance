@@ -355,15 +355,19 @@ class BranchCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
     success_url = reverse_lazy('branch_list')
 
     def form_valid(self, form):
-        branch = form.save()
-        # Create vault for given branch
-        CashVault.objects.create(
-            branch=branch, 
-            balance=0.0,
-            last_updated=timezone.mow())
+        with transaction.atomic():
+            try:
+                branch = form.save()
+                # Create vault for given branch
+                CashVault.objects.create(
+                    branch=branch, 
+                    balance=0.0,)
 
-        messages.success(self.request, 'Branch created successfully!')
-        return super().form_valid(form)
+                messages.success(self.request, 'Branch created successfully!')
+                return super().form_valid(form)
+            except Exception as e:
+                messages.error(self.request, f'Error occurred while creating branch: {e}')
+                return super().form_invalid(form)
 
     def form_invalid(self, form):
         return super().form_invalid(form)
@@ -430,20 +434,26 @@ class EmployeeCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
     def form_valid(self, form):
         # Set the user who created the center
         cleaned_data = form.cleaned_data
-        user = User.objects.create_user(
-                username=cleaned_data['email'],
-                email=cleaned_data['email'],
-                password=cleaned_data['password']
-        )
-        # Create the employee instance but do not save to the database yet
-        employee = form.save(commit=False)
-        # Assign the user to the employee
-        employee.user = user
-        employee.save()
-        # Create teller instance for employee
-        teller = Teller.objects.create(employee=user, branch=employee.branch)
-        messages.success(self.request, 'Employee added successfully!')
-        return super().form_valid(form)
+        with transaction.atomic():
+            try:
+                user = User.objects.create_user(
+                        username=cleaned_data['email'],
+                        email=cleaned_data['email'],
+                        password=cleaned_data['password']
+                )
+                # Create the employee instance but do not save to the database yet
+                employee = form.save(commit=False)
+                # Assign the user to the employee
+                employee.user = user
+                employee.save()
+                # Create teller instance for employee
+                teller = Teller.objects.create(employee=user, branch=employee.branch)
+                messages.success(self.request, 'Employee added successfully!')
+                return super().form_valid(form)
+            except Exception as e:
+                messages.error(self.request, f'Error adding employee: {e}')
+                return super().form_invalid(form)
+            
     def form_invalid(self, form):
         # messages.error(self.request, f'Error adding employee: {form.errors}')
         return super().form_invalid(form)
@@ -1630,7 +1640,7 @@ def change_member_status(request):
                 messages.success(request, f"Member status updated to {new_status} for {member.personalInfo.first_name} {member.personalInfo.middle_name} {member.personalInfo.last_name}.")
                 return JsonResponse({'success': True, 'redirect_url': f"{reverse('member_list')}?status={new_status}"})
         elif new_status == "DR":
-            loans = member.loans.all()
+            loans = member.loans.filter(status='active').all()
             if loans:
                 return JsonResponse({'success': False, 'error': 'Clear all loans before dropping this member.'}, status=400)
             member.status = new_status
